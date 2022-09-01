@@ -1,0 +1,6 @@
+name = "counter"
+version = "1"
+
+[data]
+[data.kv]
+namespace = "counter"

@@ -1,0 +1,8 @@
+[package]
+name = "rust-basic"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.63"
+wasm-workers-rs = { path = "../../kits/rust" }

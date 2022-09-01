@@ -1,0 +1,6 @@
+name = "tictactoe"
+version = "1"
+
+[data]
+[data.kv]
+namespace = "tictactoe"

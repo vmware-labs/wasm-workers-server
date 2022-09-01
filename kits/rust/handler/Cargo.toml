@@ -1,0 +1,18 @@
+[package]
+name = "handler"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+proc-macro = true
+path = "src/lib.rs"
+
+[dependencies]
+quote = "1.0.21"
+syn = { version = "1.0.99", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.85"
+http = "0.2.8"
+anyhow = "1.0.63"
+wasi = "0.11.0"
