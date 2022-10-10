@@ -73,7 +73,14 @@ impl Route {
                 .replace(".wasm", "")
                 .replace(".js", "")
                 .replace(base_path.to_str().unwrap_or_else(|| "./"), "");
-            String::from("/") + &parsed_path.replace("index", "")
+            let mut normalized = String::from("/") + &parsed_path.replace("index", "");
+
+            // Remove trailing / to avoid 404 errors
+            if normalized.ends_with('/') && normalized.len() > 1 {
+                normalized.pop();
+            }
+
+            normalized
         } else {
             // TODO: Manage better unexpected characters in paths
             String::from(path.to_str().unwrap_or_else(|| "/unknown"))
@@ -106,4 +113,80 @@ pub fn initialize_routes(base_path: &Path) -> Vec<Route> {
     }
 
     routes
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unix_route_index_path_retrieval() {
+        // In a subfolder
+        assert_eq!(
+            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("examples/index.js")),
+            String::from("/examples")
+        );
+        assert_eq!(
+            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("examples/index.wasm")),
+            String::from("/examples")
+        );
+        // Multiple levels
+        assert_eq!(
+            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("examples/api/index.js")),
+            String::from("/examples/api")
+        );
+        assert_eq!(
+            Route::retrieve_route(
+                &PathBuf::from("."),
+                &PathBuf::from("examples/api/index.wasm")
+            ),
+            String::from("/examples/api")
+        );
+        // Root
+        assert_eq!(
+            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("index.js")),
+            String::from("/")
+        );
+        assert_eq!(
+            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("index.wasm")),
+            String::from("/")
+        );
+    }
+
+    #[test]
+    fn unix_route_path_retrieval() {
+        // In a subfolder
+        assert_eq!(
+            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("examples/handler.js")),
+            String::from("/examples/handler")
+        );
+        assert_eq!(
+            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("examples/handler.wasm")),
+            String::from("/examples/handler")
+        );
+        // Multiple levels
+        assert_eq!(
+            Route::retrieve_route(
+                &PathBuf::from("."),
+                &PathBuf::from("examples/api/handler.js")
+            ),
+            String::from("/examples/api/handler")
+        );
+        assert_eq!(
+            Route::retrieve_route(
+                &PathBuf::from("."),
+                &PathBuf::from("examples/api/handler.wasm")
+            ),
+            String::from("/examples/api/handler")
+        );
+        // Root
+        assert_eq!(
+            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("handler.js")),
+            String::from("/handler")
+        );
+        assert_eq!(
+            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("handler.wasm")),
+            String::from("/handler")
+        );
+    }
 }
