@@ -4,7 +4,7 @@ The wasm-workers-server team welcomes contributions from the community. First, w
 
 Please familiarize yourself with the [Code of Conduct](https://github.com/vmware/.github/blob/main/CODE_OF_CONDUCT.md) before contributing.
 
-Before you start working with `wasm-workers-rs`, please read and sign our Contributor License Agreement [CLA](https://cla.vmware.com/cla/1/preview). If you wish to contribute code and you have not signed our contributor license agreement (CLA), our bot will prompt you to do so when you open a Pull Request. For any questions about the CLA process, please refer to our [FAQ](https://cla.vmware.com/faq).
+Before you start working with `wasm-workers-server`, please read and sign our Contributor License Agreement [CLA](https://cla.vmware.com/cla/1/preview). If you wish to contribute code and you have not signed our contributor license agreement (CLA), our bot will prompt you to do so when you open a Pull Request. For any questions about the CLA process, please refer to our [FAQ](https://cla.vmware.com/faq).
 
 ## Ways to contribute
 
@@ -41,7 +41,7 @@ Example:
 ```
 # After forking the project:
 git clone MY_FORK_URL
-cd wasm-workers-rs
+cd wasm-workers-server
 git switch -c my-new-feature
 git commit -s -S -a
 git push origin my-new-feature
