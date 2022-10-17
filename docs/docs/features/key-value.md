@@ -4,13 +4,13 @@ sidebar_position: 2
 
 # Key / Value Store
 
-Wasm Workers Server integrates an in-memory [Key / Value (K/V) store](https://en.wikipedia.org/wiki/Key%E2%80%93value_database). This K/V store allows to read and write data from the different workers.
+Wasm Workers Server integrates an in-memory [Key / Value (K/V) store](https://en.wikipedia.org/wiki/Key%E2%80%93value_database). This K/V store allows the server to read and write data from the different workers.
 
 For now, the data is only stored in memory and cleaned up on every restart.
 
 ## How it works?
 
-The K/V store follows the same approach as [Requests / Responses](../how-it-works.md#how-it-works). On every request, the worker receive a snapshot of the K/V status for the configured namespace.
+The K/V store follows the same snapshot approach as [Requests / Responses](../how-it-works.md#how-it-works) data. On every request, the worker receives a snapshot of the K/V status for the configured namespace.
 
 The worker may access all the data and perform changes over it. Then, a new K/V status is returned and the internal status is overriden.
 
