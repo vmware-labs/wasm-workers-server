@@ -121,72 +121,45 @@ mod tests {
 
     #[test]
     fn unix_route_index_path_retrieval() {
+        let check_route = |path: &str, expected_route: &str| {
+            assert_eq!(
+                Route::retrieve_route(&Path::new("."), &PathBuf::from(path)),
+                String::from(expected_route),
+            )
+        };
+
         // In a subfolder
-        assert_eq!(
-            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("examples/index.js")),
-            String::from("/examples")
-        );
-        assert_eq!(
-            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("examples/index.wasm")),
-            String::from("/examples")
-        );
+        check_route("examples/index.js", "/examples");
+        check_route("examples/index.wasm", "/examples");
+
         // Multiple levels
-        assert_eq!(
-            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("examples/api/index.js")),
-            String::from("/examples/api")
-        );
-        assert_eq!(
-            Route::retrieve_route(
-                &PathBuf::from("."),
-                &PathBuf::from("examples/api/index.wasm")
-            ),
-            String::from("/examples/api")
-        );
+        check_route("examples/api/index.js", "/examples/api");
+        check_route("examples/api/index.wasm", "/examples/api");
+
         // Root
-        assert_eq!(
-            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("index.js")),
-            String::from("/")
-        );
-        assert_eq!(
-            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("index.wasm")),
-            String::from("/")
-        );
+        check_route("index.js", "/");
+        check_route("index.wasm", "/");
     }
 
     #[test]
     fn unix_route_path_retrieval() {
+        let check_route = |path: &str, expected_route: &str| {
+            assert_eq!(
+                Route::retrieve_route(&Path::new("."), &PathBuf::from(path)),
+                String::from(expected_route),
+            )
+        };
+
         // In a subfolder
-        assert_eq!(
-            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("examples/handler.js")),
-            String::from("/examples/handler")
-        );
-        assert_eq!(
-            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("examples/handler.wasm")),
-            String::from("/examples/handler")
-        );
+        check_route("examples/handler.js", "/examples/handler");
+        check_route("examples/handler.wasm", "/examples/handler");
+
         // Multiple levels
-        assert_eq!(
-            Route::retrieve_route(
-                &PathBuf::from("."),
-                &PathBuf::from("examples/api/handler.js")
-            ),
-            String::from("/examples/api/handler")
-        );
-        assert_eq!(
-            Route::retrieve_route(
-                &PathBuf::from("."),
-                &PathBuf::from("examples/api/handler.wasm")
-            ),
-            String::from("/examples/api/handler")
-        );
+        check_route("examples/api/handler.js", "/examples/api/handler");
+        check_route("examples/api/handler.wasm", "/examples/api/handler");
+
         // Root
-        assert_eq!(
-            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("handler.js")),
-            String::from("/handler")
-        );
-        assert_eq!(
-            Route::retrieve_route(&PathBuf::from("."), &PathBuf::from("handler.wasm")),
-            String::from("/handler")
-        );
+        check_route("handler.js", "/handler");
+        check_route("handler.wasm", "/handler");
     }
 }
