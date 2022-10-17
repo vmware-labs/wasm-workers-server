@@ -4,11 +4,19 @@ sidebar_position: 2
 
 # Getting Started
 
-Wasm Workers runs almost anywhere. Thanks to its portability, downloading and running it anywhere is quite simple:
+Wasm Workers runs almost anywhere. Thanks to its portability, downloading and running it anywhere is quite simple.
+
+First, you need to install the `wws` server:
 
 ```bash
-$ curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/install.sh | bash
-$ wws --help
+curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/install.sh | bash
+```
+
+Now, you can check the server:
+
+```bash
+wws --help
+
 Usage: wws [OPTIONS] [PATH]
 
 Arguments:
@@ -21,16 +29,22 @@ Options:
   -V, --version          Print version information
 ```
 
-You can download some of our example `.wasm` modules and try them:
+You can download some of our example `.js` modules:
 
 ```bash
-$ curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/examples/compiled/hello.wasm \
-    -o ./index.wasm
-$ wasm-workers .
+curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/examples/js-basic/handler.js \
+    -o ./index.js
+```
+
+Finally, you can run wws and check the response from the worker:
+
+```bash
+wws .
+
 ⚙️  Loading routes from: ./examples
 🗺  Detected routes:
     - http://127.0.0.1:8080/
-      => index.wasm (handler: default)
+      => index.js (handler: default)
 🚀 Start serving requests at http://127.0.0.1:8080
 ```
 
