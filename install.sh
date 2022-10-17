@@ -5,8 +5,8 @@
 REPO="vmware-labs/wasm-workers-server"
 GITHUB_URL="https://github.com/$REPO"
 GITHUB_API_URL="https://api.github.com/repos/$REPO"
-TMP_FOLDER="/tmp/wws"
-TMP_FILE="/tmp/wws.tar.gz"
+TMP_FOLDER="/tmp/wasm-workers-server"
+TMP_FILE="/tmp/wasm-workers-server.tar.gz"
 # This may change based on the --local argument
 TOOL_LOCATION="/usr/local/bin/wws"
 LOCAL_INSTALLATION=false
@@ -87,10 +87,10 @@ if [ $LOCAL_INSTALLATION = false ] && [ "$OS_TYPE" = "Darwin" ] || [ "$OS_TYPE" 
     echo "in your current directory, run the installer with --local."
     echo "If you want it to be global, just type your password:"
 
-    sudo mv $TMP_FOLDER/wasm-worksers-server-*/wws $TOOL_LOCATION
+    sudo mv $TMP_FOLDER/wws $TOOL_LOCATION
     sudo chmod +x $TOOL_LOCATION
 else
-    mv $TMP_FOLDER/wasm-worksers-server-*/wws $TOOL_LOCATION
+    mv $TMP_FOLDER/wws $TOOL_LOCATION
     chmod +x $TOOL_LOCATION
 fi
 
