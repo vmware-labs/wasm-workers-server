@@ -73,7 +73,14 @@ impl Route {
                 .replace(".wasm", "")
                 .replace(".js", "")
                 .replace(base_path.to_str().unwrap_or_else(|| "./"), "");
-            String::from("/") + &parsed_path.replace("index", "")
+            let mut normalized = String::from("/") + &parsed_path.replace("index", "");
+
+            // Remove trailing / to avoid 404 errors
+            if normalized.ends_with('/') && normalized.len() > 1 {
+                normalized.pop();
+            }
+
+            normalized
         } else {
             // TODO: Manage better unexpected characters in paths
             String::from(path.to_str().unwrap_or_else(|| "/unknown"))
@@ -106,4 +113,53 @@ pub fn initialize_routes(base_path: &Path) -> Vec<Route> {
     }
 
     routes
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unix_route_index_path_retrieval() {
+        let check_route = |path: &str, expected_route: &str| {
+            assert_eq!(
+                Route::retrieve_route(&Path::new("."), &PathBuf::from(path)),
+                String::from(expected_route),
+            )
+        };
+
+        // In a subfolder
+        check_route("examples/index.js", "/examples");
+        check_route("examples/index.wasm", "/examples");
+
+        // Multiple levels
+        check_route("examples/api/index.js", "/examples/api");
+        check_route("examples/api/index.wasm", "/examples/api");
+
+        // Root
+        check_route("index.js", "/");
+        check_route("index.wasm", "/");
+    }
+
+    #[test]
+    fn unix_route_path_retrieval() {
+        let check_route = |path: &str, expected_route: &str| {
+            assert_eq!(
+                Route::retrieve_route(&Path::new("."), &PathBuf::from(path)),
+                String::from(expected_route),
+            )
+        };
+
+        // In a subfolder
+        check_route("examples/handler.js", "/examples/handler");
+        check_route("examples/handler.wasm", "/examples/handler");
+
+        // Multiple levels
+        check_route("examples/api/handler.js", "/examples/api/handler");
+        check_route("examples/api/handler.wasm", "/examples/api/handler");
+
+        // Root
+        check_route("handler.js", "/handler");
+        check_route("handler.wasm", "/handler");
+    }
 }
