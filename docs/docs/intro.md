@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # What's Wasm Workers Server?
 
-Wasm Workers Server is a project that allows you to run serverless code using a lightweight construct called ‘workers’, explained later in the document. Ther server itself is implemented as a self-contained binary that routes HTTP requests to a WebAssembly runtime that hosts the workers. It looks for .wasm and other compatible modules (like JavaScript files) in the given folder and associate HTTP endpoints based on their path:
+Wasm Workers Server is a project that allows you to run serverless code using a lightweight construct called "workers", explained later in the document. Ther server itself is implemented as a self-contained binary that routes HTTP requests to a WebAssembly runtime that hosts the workers. It looks for `.wasm` and other compatible modules (like JavaScript files) in the given folder and associate HTTP endpoints based on their path:
 
 ```bash
 $ wws --help

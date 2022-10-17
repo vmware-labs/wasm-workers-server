@@ -30,8 +30,8 @@ export default function Home() {
   const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />">
+      title={siteConfig.title}
+      description="Wasm Workers Server is a project that allows you to run serverless code using a lightweight construct called workers. It's a self-contained binary that you can run almost anywhere.">
       <HomepageHeader />
       <main>
         <HomepageFeatures />
