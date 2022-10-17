@@ -78,7 +78,7 @@ const html = (game, roomId) => `
     <main>
       <div class="block">
         <h1>Welcome to Tic Tac Toe ❌ ⭕️</h1>
-        <p>This game is a demo of Wasm Web Workers! Hope you enjoy it</p>
+        <p>This game is a demo of Wasm Workers Server! Hope you enjoy it</p>
         <div class="alert waiting">Waiting next movement</div>
         <div class="alert turn">Your turn</div>
         <div class="alert win">You win :)!</div>
