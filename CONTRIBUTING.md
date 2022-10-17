@@ -1,6 +1,6 @@
-# Contributing to mod_wasm
+# Contributing to Wasm Workers Server
 
-The wasm-workers-rs project team welcomes contributions from the community. First, we want to thank you for taking the time to contribute!
+The wasm-workers-server team welcomes contributions from the community. First, we want to thank you for taking the time to contribute!
 
 Please familiarize yourself with the [Code of Conduct](https://github.com/vmware/.github/blob/main/CODE_OF_CONDUCT.md) before contributing.
 
