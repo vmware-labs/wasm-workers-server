@@ -44,7 +44,7 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'VMware OCTO / WebAssembly Workers',
+        title: 'VMware OCTO / Wasm Workers Server',
         items: [
           {
             type: 'doc',
