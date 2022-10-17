@@ -4,11 +4,11 @@ sidebar_position: 1
 
 # Create a JavaScript worker
 
-Workers based on JavaScript work out of the box with Wasm Workers Server. The server integrates a JavaScript interpreter compiled into a WebAssembly module. Currently, the interpreter we support is [quickjs](https://bellard.org/quickjs/), although we are working on adding new ones.
+Workers based on JavaScript work out of the box with Wasm Workers Server. The server integrates a JavaScript interpreter compiled into a WebAssembly module. Currently, the interpreter we support is [quickjs](https://bellard.org/quickjs/) and we are working on adding new ones.
 
 ## Your first worker
 
-JavaScript workers are based on the [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) / [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects from the Web Fetch API. Your worker needs to listen to the `fetch` event, that will include a associated `Request` object. The worker function will receive the request and generate a `Response` object to reply to the request.
+JavaScript workers are based on the [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) / [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects from the Web Fetch API. Your worker needs to listen to the `fetch` event, which will include an associated `Request` object. The worker function will receive the request and generate a `Response` object to reply to the request.
 
 In this example, the worker will get a request and print all the related information.
 
@@ -77,7 +77,7 @@ Wasm Workers allows you to add a Key / Value store to your workers. Read more in
 
 To add a KV store to your worker, follow these steps:
 
-1. First, create a `counter.js` file. It will access to the KV store through the `Cache` object:
+1. First, create a `counter.js` file. It will access the KV store through the `Cache` object:
 
     ```javascript title="./counter.js"
     const CACHE_KEY = "counter";

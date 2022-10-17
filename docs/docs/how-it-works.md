@@ -23,7 +23,7 @@ Based on these two principles, the server performs the following tasks:
 * Create a Key / Value in-memory store if required
 * Initialize the [Wasmtime](https://wasmtime.dev/) runtime
 * Compile the different modules and initialize them
-* Spin a HTTP server to start serving the requests
+* Spin an HTTP server to start serving the requests
 
 ## Convention over configuration
 
