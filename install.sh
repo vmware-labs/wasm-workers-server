@@ -81,7 +81,7 @@ mkdir -p $TMP_FOLDER
 tar xvf $TMP_FILE -C $TMP_FOLDER
 
 echo "⚙️  Installing"
-if [ $LOCAL_INSTALLATION = false ] && [ "$OS_TYPE" = "Darwin" ] || [ "$OS_TYPE" = "darwin" ]; then
+if [ $LOCAL_INSTALLATION = false ]; then
     echo "Wasm Workers Server will be installed in /usr/local/bin."
     echo "This requires sudo permissions. If you prefer to install it"
     echo "in your current directory, run the installer with --local."
