@@ -53,7 +53,7 @@ const config = {
             label: 'Documentation',
           },
           {
-            href: 'https://github.com/vmware-labs/wasm-workers',
+            href: 'https://github.com/vmware-labs/wasm-workers-server',
             label: 'GitHub',
             position: 'right',
           },
