@@ -12,7 +12,7 @@ RUN set -eux; \
     ls -l .; \
     case "${ARCH}" in \
         amd64) bldArch='x86_64-unknown-linux-gnu' ;; \
-        arm64v8) bldArch='aarch64-unknown-linux-musl' ;; \
+        arm64v8) bldArch='aarch64-unknown-linux-gnu' ;; \
         *) echo >&2 "unsupported architecture: $ARCH"; exit 1 ;; \
     esac; \
     rustup target add $bldArch; \
