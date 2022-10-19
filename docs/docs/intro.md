@@ -42,7 +42,7 @@ Applications can be developed by combining multiple workers. Every worker listen
 
 This concept may sound familiar to you. [Serverless computing](https://en.wikipedia.org/wiki/Serverless_computing) is a popular model to build web applications. Services like [AWS Lambda](https://aws.amazon.com/lambda/) and [Google Cloud Functions](https://cloud.google.com/functions) implement this model.
 
-Workers is an implementation of serverless. Many of the existing serverless platforms run functions in a centralized infrastructure where related services are close to them. With the workers model, platforms like [Cloudflare Workers®](https://workers.cloudflare.com/), [Deno Deploy](https://deno.com/deploy), [Vercel](https://vercel.com/), [Fermyon](https://www.fermyon.com/) and [Suborbital](https://suborbital.dev/) deploy your workers close to your users. For this task, they created a new set of "edge runtimes" that allows them to quickly distribute your workers around the globe.
+Workers is an implementation of serverless. Many of the existing serverless platforms run functions in a centralized infrastructure where related services are close to them. With the workers model, platforms like [Cloudflare Workers®](https://workers.cloudflare.com/), [Deno Deploy](https://deno.com/deploy), [Vercel](https://vercel.com/), [Fermyon](https://www.fermyon.com/), [Suborbital](https://suborbital.dev/) and [wasmCloud](https://wasmcloud.dev) deploy your workers and actors close to your users. For this task, they created a new set of "edge runtimes" that allows them to quickly distribute your workers around the globe.
 
 ## Why Wasm Workers Server?
 
