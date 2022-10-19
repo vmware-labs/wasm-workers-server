@@ -73,6 +73,20 @@ curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/inst
   ./wws --help
 ```
 
+### Running in a container
+
+If you don't want to install anything locally you could just run `wws` from the `projects.registry.vmware.com/wasmlabs/containers/wasm-workers-server:latest` container image. All you need to do is:
+
+ - map a local folder with handlers to `/app` within the container
+ - expose port `8080` from the container
+
+Here is how to quickly run a container with an ad-hoc handler from the /tmp/wws-app folder:
+
+```bash
+mkdir /tmp/wws-app 2>/dev/null;
+echo 'addEventListener("fetch", (e) => { return e.respondWith(new Response("Hello from WWS\n"));});' > /tmp/wws-app/index.js;
+docker run --rm -v /tmp/wws-app:/app -p 8080:8080 projects.registry.vmware.com/wasmlabs/containers/wasm-workers-server:latest
+```
 ## Language Support
 
 Wasm Workers Server focuses on simplicity. We want you to run handlers (written in different languages) safely in WebAssembly. For interpreted languages, we add different interpreters:
