@@ -75,7 +75,7 @@ curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/inst
 
 ### Running in a container
 
-If you don't want to install anything locally you could just run `wws` from the `projects.registry.vmware.com/wasmlabs/containers/wasm-workers-server:latest` container image. All you need to do is:
+If you don't want to install anything locally you can just run `wws` from the `projects.registry.vmware.com/wasmlabs/containers/wasm-workers-server:latest` container image. All you need to do is:
 
  - map a local folder with handlers to `/app` within the container
  - expose port `8080` from the container
