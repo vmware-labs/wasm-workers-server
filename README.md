@@ -77,7 +77,7 @@ curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/inst
 
 Wasm Workers Server focuses on simplicity. We want you to run handlers (written in different languages) safely in WebAssembly. For interpreted languages, we add different interpreters:
 
-| Language | Wasm module | Interpeter |
+| Language | Wasm module | Interpreter |
 | --- | --- | --- |
 | Rust | ✅ | ❌ |
 | JavaScript | ❌ | ✅ |
