@@ -16,13 +16,13 @@ fn handler(req: Request<String>) -> Result<Response<String>> {
     <meta charset=\"UTF-8\">
     <link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/water.css@2/out/water.css\">
     <style>
-        body { max-width: 1000px; }
-        main { margin: 5rem 0; }
-        h1, p { text-align: center; }
-        h1 { margin-bottom: 2rem; }
-        pre { font-size: .9rem; }
-        pre > code { padding: 2rem; }
-        p { margin-top: 2rem; }
+        body {{ max-width: 1000px; }}
+        main {{ margin: 5rem 0; }}
+        h1, p {{ text-align: center; }}
+        h1 {{ margin-bottom: 2rem; }}
+        pre {{ font-size: .9rem; }}
+        pre > code {{ padding: 2rem; }}
+        p {{ margin-top: 2rem; }}
     </style>
 </head>
 <body>
