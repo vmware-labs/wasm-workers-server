@@ -174,7 +174,7 @@ async fn main() -> std::io::Result<()> {
 
         app
     })
-    .bind((args.hostname.as_str(), args.port))?;
+    .bind(format!("{}:{}", args.hostname.as_str(), args.port))?;
 
     println!(
         "🚀 Start serving requests at http://{}:{}\n",
