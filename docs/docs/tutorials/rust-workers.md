@@ -122,7 +122,7 @@ To add a KV store to your worker, follow these steps:
 1. Create a new Rust project:
 
     ```bash
-    cargo new --name worker-kv
+    cargo new --name worker-kv worker-kv
     ```
 
 1. Add the dependencies to the `Cargo.toml` file:
