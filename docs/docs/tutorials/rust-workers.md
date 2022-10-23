@@ -16,7 +16,7 @@ In this example, the worker will get a request and print all the related informa
 1. Create a new Rust project:
 
     ```bash
-    cargo new --name worker
+    cargo new --name worker worker
     ```
 
 1. Add the dependencies to the `Cargo.toml` file:
