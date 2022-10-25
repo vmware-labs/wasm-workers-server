@@ -16,7 +16,7 @@ In this example, the worker will get a request and print all the related informa
 1. Create a new Rust project:
 
     ```bash
-    cargo new --name worker
+    cargo new --name worker worker
     ```
 
 1. Add the dependencies to the `Cargo.toml` file:
@@ -95,7 +95,7 @@ In this example, the worker will get a request and print all the related informa
     ```bash
     # Install the component and build
     rustup target add wasm32-wasi && \
-      cargo build –release
+      cargo build --release --target wasm32-wasi
     ```
 
 1. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../start.md) guide.
@@ -122,7 +122,7 @@ To add a KV store to your worker, follow these steps:
 1. Create a new Rust project:
 
     ```bash
-    cargo new --name worker-kv
+    cargo new --name worker-kv worker-kv
     ```
 
 1. Add the dependencies to the `Cargo.toml` file:
@@ -200,7 +200,7 @@ To add a KV store to your worker, follow these steps:
     ```bash
     # Install the component and build
     rustup target add wasm32-wasi && \
-      cargo build –release
+      cargo build --release --target wasm32-wasi
     ```
 
 1. Create a `worker-kv.toml` file with the following content. Note the name of the TOML file must match the name of the handler. In this case we have `worker-kv.wasm` and `worker-kv.toml` in the same folder (`target/wasm32-wasi/release`):
