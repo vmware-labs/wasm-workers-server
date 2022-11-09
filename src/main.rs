@@ -55,7 +55,7 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
 
     for route in routes.routes.iter() {
         if route.path == req.path() {
-            let body_str = String::from_utf8(body.to_vec()).unwrap_or(String::from(""));
+            let body_str = String::from_utf8(body.to_vec()).unwrap_or_else(|_| String::from(""));
 
             // Init KV
             let kv_namespace = match &route.config {
@@ -68,10 +68,7 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
                     let connector = data_connectors.read().unwrap();
                     let kv_store = connector.kv.find_store(namespace);
 
-                    match kv_store {
-                        Some(store) => Some(store.clone()),
-                        None => None,
-                    }
+                    kv_store.map(|store| store.clone())
                 }
                 None => None,
             };
@@ -95,7 +92,7 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
             for (key, val) in handler_result.headers.iter() {
                 // Note that QuickJS is replacing the "-" character
                 // with "_" on property keys. Here, we rollback it
-                builder.insert_header((key.replace("_", "-").as_str(), val.as_str()));
+                builder.insert_header((key.replace('_', "-").as_str(), val.as_str()));
             }
 
             // Write to the state if required

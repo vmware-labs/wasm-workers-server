@@ -6,7 +6,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use wasi_common::{pipe::ReadPipe, pipe::WritePipe};
 use wasmtime::*;
 use wasmtime_wasi::sync::WasiCtxBuilder;
@@ -39,8 +39,8 @@ impl WasmInput {
             url: request.uri().to_string(),
             method: String::from(request.method().as_str()),
             headers: build_headers_hash(request.headers()),
-            body: body,
-            kv: kv.unwrap_or(HashMap::new()),
+            body,
+            kv: kv.unwrap_or_default(),
         }
     }
 }
@@ -113,8 +113,7 @@ impl Runner {
                 RunnerHandlerType::JavaScript,
                 module,
                 fs::read_to_string(path)
-                    .expect(&format!("Error reading {}", path.display()))
-                    .to_string(),
+                    .unwrap_or_else(|_| panic!("Error reading {}", path.display())),
             )
         } else {
             let module = Module::from_file(&engine, path)?;
@@ -130,7 +129,7 @@ impl Runner {
         })
     }
 
-    fn is_js_file(path: &PathBuf) -> bool {
+    fn is_js_file(path: &Path) -> bool {
         match path.extension() {
             Some(os_str) => os_str == "js",
             None => false,
@@ -162,9 +161,9 @@ impl Runner {
 
         // WASI context
         let wasi = WasiCtxBuilder::new()
-            .stdin(Box::new(stdin.clone()))
+            .stdin(Box::new(stdin))
             .stdout(Box::new(stdout.clone()))
-            .stderr(Box::new(stderr.clone()))
+            .stderr(Box::new(stderr))
             .inherit_args()?
             .build();
         let mut store = Store::new(&self.engine, wasi);
