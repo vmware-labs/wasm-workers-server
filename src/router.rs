@@ -57,14 +57,14 @@ impl Route {
         Self {
             path: Self::retrieve_route(base_path, &filepath),
             handler: filepath,
-            runner: runner,
-            config: config,
+            runner,
+            config,
         }
     }
 
     // Process the given path to return the proper route for the API.
     // It will transform paths like test/index.wasm into /test.
-    fn retrieve_route(base_path: &Path, path: &PathBuf) -> String {
+    fn retrieve_route(base_path: &Path, path: &Path) -> String {
         // TODO: Improve this entire method
         // @ref #13
         if let Some(api_path) = path.to_str() {
@@ -72,7 +72,7 @@ impl Route {
                 .to_string()
                 .replace(".wasm", "")
                 .replace(".js", "")
-                .replace(base_path.to_str().unwrap_or_else(|| "./"), "");
+                .replace(base_path.to_str().unwrap_or("./"), "");
             let mut normalized = String::from("/") + &parsed_path.replace("index", "");
 
             // Remove trailing / to avoid 404 errors
@@ -83,7 +83,7 @@ impl Route {
             normalized
         } else {
             // TODO: Manage better unexpected characters in paths
-            String::from(path.to_str().unwrap_or_else(|| "/unknown"))
+            String::from(path.to_str().unwrap_or("/unknown"))
         }
     }
 }
@@ -106,7 +106,7 @@ pub fn initialize_routes(base_path: &Path) -> Vec<Route> {
     for entry in glob_items {
         match entry {
             Ok(filepath) => {
-                routes.push(Route::new(&base_path, filepath));
+                routes.push(Route::new(base_path, filepath));
             }
             Err(e) => println!("Could not read the file {:?}", e),
         }
