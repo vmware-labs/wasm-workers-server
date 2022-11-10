@@ -5,7 +5,7 @@ on:
     branches: [ main ]
     tags:
     - "[0-9]+.[0-9]+.[0-9]+"
-  # TODO: For testing. Run this workflow only on a new release.
+  # TODO: For tesgting. Run this workflow only on a new release.
   pull_request:
     branches: [ main ]
 
@@ -28,7 +28,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        arch: [x86_64, aarch64]
         include:
           - os: ubuntu-latest
             arch: x86_64
@@ -71,19 +70,20 @@ jobs:
       run: |
         cargo install cross
         echo "CARGO=cross" >> $GITHUB_ENV
+    - name: Install target
+      if: matrix.cross == false
+      run: rustup target add ${{ matrix.arch }}-${{ matrix.platform }}
     - name: Build
-      run: |
-        rustup component add rust-std-${{ matrix.arch }}-${{matrix.platform}}
-        ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{matrix.platform}}
+      run: ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{ matrix.platform }}
     - name: Tarball
       run: |
         mkdir out
         cp {README.md,LICENSE} out
 
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          cp "target/${{ matrix.arch }}-${{matrix.platform}}/release/wws.exe" ./out
+          cp "target/${{ matrix.arch }}-${{ matrix.platform }}/release/wws.exe" ./out
         else
-          cp "target/${{ matrix.arch }}-${{matrix.platform}}/release/wws" ./out
+          cp "target/${{ matrix.arch }}-${{ matrix.platform }}/release/wws" ./out
         fi
 
         tar czf "wws-${{ matrix.name }}-${{ matrix.arch }}.tar.gz" ./out
