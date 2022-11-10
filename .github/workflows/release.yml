@@ -97,12 +97,12 @@ jobs:
           cp "target/${{ matrix.arch }}-${{ matrix.platform }}/release/wws" ./out
         fi
 
-        tar czf "wws-${{ matrix.name }}-${{ matrix.arch }}.tar.gz" ./out
+        tar -C ./out czvf "wws-${{ matrix.name }}-${{ matrix.arch }}.tar.gz" .
         echo "TARBALL=wws-${{ matrix.name }}-${{ matrix.arch }}.tar.gz" >> $GITHUB_ENV
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
-        name: wws-${{ matrix.name }}-${{ matrix.arch }}
+        name: wws-${{ matrix.name }}-${{ matrix.arch }}.tar.gz
         path: ${{ env.TARBALL }}
         # TODO: This is for testing
         retention-days: 7
