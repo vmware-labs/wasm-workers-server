@@ -70,7 +70,9 @@ jobs:
         cargo install cross
         echo "CARGO=cross" >> $GITHUB_ENV
     - name: Build
-      run: ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{matrix.platform}}
+      run: |
+        rustup component add rust-std-${{ matrix.arch }}-${{matrix.platform}}
+        ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{matrix.platform}}
     - name: Tarball
       run: |
         mkdir out
