@@ -86,6 +86,7 @@ jobs:
     - name: Build
       run: ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{ matrix.platform }}
     - name: Tarball
+      shell: bash
       run: |
         mkdir out
         cp {README.md,LICENSE} out
