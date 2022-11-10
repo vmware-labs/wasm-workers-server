@@ -1,8 +1,10 @@
 name: Rust release
 
 on:
-  releases:
-    types: [ published ]
+  push:
+    branches: [ main ]
+    tags:
+    - "[0-9]+.[0-9]+.[0-9]+"
   # TODO: For testing. Run this workflow only on a new release.
   pull_request:
     branches: [ main ]
