@@ -27,37 +27,44 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        build: [linux, windows, macos]
+        arch: [x86_64, aarch64]
         include:
-          - os: ubuntu-latest
+          - build: linux
             arch: x86_64
+            os: ubuntu-latest
             platform: unknown-linux-musl
             cross: false
             name: linux-musl
-          - os: ubuntu-latest
+          - build: linux
             arch: aarch64
+            os: ubuntu-latest
             platform: unknown-linux-musl
             cross: true
             name: linux-musl
-          - os: windows-latest
+          - build: windows
             arch: x86_64
+            os: windows-latest
             platform: pc-windows-msvc
             cross: false
             name: pc-windows
-          - os: ubuntu-latest
+          - build: windows
             arch: aarch64
+            os: ubuntu-latest
             platform: pc-windows-msvc
             cross: true
             name: pc-windows
-          - os: macos-latest
+          - build: macos
             arch: x86_64
+            os: macos-latest
             platform: apple-darwin
             cross: false
             name: macos-darwin
-          - os: ubuntu-latest
+          - build: macos
             arch: aarch64
+            os: macos-latest
             platform: apple-darwin
-            cross: true
+            cross: false
             name: macos-darwin
     runs-on: ${{ matrix.os }}
     env:
