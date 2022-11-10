@@ -29,6 +29,10 @@ jobs:
       matrix:
         build: [linux, windows, macos]
         arch: [x86_64, aarch64]
+        exclude:
+          # Exclude win arm64 for now
+          - build: windows
+            arch: aarch64
         include:
           - build: linux
             arch: x86_64
@@ -47,12 +51,6 @@ jobs:
             os: windows-latest
             platform: pc-windows-msvc
             cross: false
-            name: pc-windows
-          - build: windows
-            arch: aarch64
-            os: ubuntu-latest
-            platform: pc-windows-msvc
-            cross: true
             name: pc-windows
           - build: macos
             arch: x86_64
