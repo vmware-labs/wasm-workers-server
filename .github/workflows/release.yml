@@ -81,8 +81,8 @@ jobs:
     - name: Install deps
       if: ${{ matrix.build == 'linux' }}
       run: |
-        apt-get update
-        apt-get install musl-tools
+        sudo apt-get update
+        sudo apt-get install musl-tools
     - name: Build
       run: ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{ matrix.platform }}
     - name: Tarball
