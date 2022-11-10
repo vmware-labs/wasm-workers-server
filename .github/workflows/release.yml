@@ -79,7 +79,7 @@ jobs:
       if: matrix.cross == false
       run: rustup target add ${{ matrix.arch }}-${{ matrix.platform }}
     - name: Install deps
-      if: matrix.build == "linux"
+      if: matrix.build == linux
       run: |
         apt-get update
         apt-get install musl-tools
