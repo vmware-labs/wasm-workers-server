@@ -4,7 +4,7 @@ sidebar_position: 3
 
 # Running in a container
 
-For convenience we have published a docker image that contains Wasm Workers Server. It is available at `projects.registry.vmware.com/wasmlabs/containers/wasm-workers-server:latest`. Any container that runs it will get the `wws` binary, running and:
+For convenience we have published a container image that contains Wasm Workers Server. It is available at `projects.registry.vmware.com/wasmlabs/containers/wasm-workers-server:latest`. Any container that runs it will get the `wws` binary, running and:
 
  - looking for worker handlers in the `/app` folder
  - listening on `0.0.0.0:8080` inside the container
