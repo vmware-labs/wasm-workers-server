@@ -99,7 +99,7 @@ jobs:
           cp "target/${{ matrix.arch }}-${{ matrix.platform }}/release/wws" ./out
         fi
 
-        tar -C ./out czvf "wws-${{ matrix.name }}-${{ matrix.arch }}.tar.gz" .
+        tar czvf "wws-${{ matrix.name }}-${{ matrix.arch }}.tar.gz" -C ./out .
         echo "TARBALL=wws-${{ matrix.name }}-${{ matrix.arch }}.tar.gz" >> $GITHUB_ENV
     - name: Upload artifact
       uses: actions/upload-artifact@v3
