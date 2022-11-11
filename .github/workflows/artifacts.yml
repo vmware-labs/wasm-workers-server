@@ -1,13 +1,13 @@
-name: Rust release
+name: Build artifacts
 
 on:
   push:
     branches: [ main ]
     tags:
     - "[0-9]+.[0-9]+.[0-9]+"
-  # TODO: For tesgting. Run this workflow only on a new release.
-  pull_request:
-    branches: [ main ]
+  # TODO: uncomment for testing. This will run by default only when a new tag is created
+  # pull_request:
+  #   branches: [ main ]
 
 jobs:
   test:
