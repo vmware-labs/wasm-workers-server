@@ -40,7 +40,7 @@ jobs:
             arch: aarch64
             os: ubuntu-latest
             platform: unknown-linux-musl
-            cross: false
+            cross: true
             name: linux-musl
           - build: windows
             arch: x86_64
