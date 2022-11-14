@@ -6,6 +6,7 @@ mod data;
 mod router;
 mod runner;
 
+use actix_files::Files;
 use actix_web::{
     http::StatusCode,
     middleware,
@@ -168,6 +169,9 @@ async fn main() -> std::io::Result<()> {
                 data.write().unwrap().kv.create_store(&namespace);
             }
         }
+
+        // Serve static files from the static folder
+        app = app.service(Files::new("/", &args.path.join("public")));
 
         app
     })
