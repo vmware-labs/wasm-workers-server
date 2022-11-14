@@ -1,7 +1,12 @@
 [package]
 name = "wasm-workers-server"
+description = "Wasm Workers Server is a blazing-fast self-contained server that routes HTTP requests to workers in your filesystem. Everything run in a WebAssembly sandbox"
 version = "0.5.0"
 edition = "2021"
+license = "Apache-2.0"
+homepage = "https://workers.wasmlabs.dev/"
+documentation = "https://workers.wasmlabs.dev/docs/intro"
+repository = "https://github.com/vmware-labs/wasm-workers-server/"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
