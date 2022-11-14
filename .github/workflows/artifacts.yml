@@ -106,5 +106,3 @@ jobs:
       with:
         name: wws-${{ matrix.name }}-${{ matrix.arch }}.tar.gz
         path: ${{ env.TARBALL }}
-        # TODO: This is for testing
-        retention-days: 7
