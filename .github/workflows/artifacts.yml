@@ -1,0 +1,108 @@
+name: Build artifacts
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+    - "[0-9]+.[0-9]+.[0-9]+"
+  # TODO: uncomment for testing. This will run by default only when a new tag is created
+  # pull_request:
+  #   branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Caching
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - name: Test
+      run: cargo test
+  build:
+    strategy:
+      matrix:
+        build: [linux, windows, macos]
+        arch: [x86_64, aarch64]
+        include:
+          - build: linux
+            arch: x86_64
+            os: ubuntu-latest
+            platform: unknown-linux-musl
+            cross: false
+            name: linux-musl
+          - build: linux
+            arch: aarch64
+            os: ubuntu-latest
+            platform: unknown-linux-musl
+            cross: true
+            name: linux-musl
+          - build: windows
+            arch: x86_64
+            os: windows-latest
+            platform: pc-windows-msvc
+            cross: false
+            name: pc-windows
+          - build: windows
+            arch: aarch64
+            os: windows-latest
+            platform: pc-windows-msvc
+            cross: false
+            name: pc-windows
+          - build: macos
+            arch: x86_64
+            os: macos-latest
+            platform: apple-darwin
+            cross: false
+            name: macos-darwin
+          - build: macos
+            arch: aarch64
+            os: macos-latest
+            platform: apple-darwin
+            cross: false
+            name: macos-darwin
+    runs-on: ${{ matrix.os }}
+    env:
+      # We use cross for arm builds
+      CARGO: cargo
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install cross
+      if: matrix.cross == true
+      run: |
+        cargo install cross
+        echo "CARGO=cross" >> $GITHUB_ENV
+    - name: Install target
+      if: matrix.cross == false
+      run: rustup target add ${{ matrix.arch }}-${{ matrix.platform }}
+    - name: Install deps
+      if: ${{ matrix.build == 'linux' }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install musl-tools
+    - name: Build
+      run: ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{ matrix.platform }}
+    - name: Tarball
+      shell: bash
+      run: |
+        mkdir out
+        cp {README.md,LICENSE} out
+
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          cp "target/${{ matrix.arch }}-${{ matrix.platform }}/release/wws.exe" ./out
+        else
+          cp "target/${{ matrix.arch }}-${{ matrix.platform }}/release/wws" ./out
+        fi
+
+        tar czvf "wws-${{ matrix.name }}-${{ matrix.arch }}.tar.gz" -C ./out .
+        echo "TARBALL=wws-${{ matrix.name }}-${{ matrix.arch }}.tar.gz" >> $GITHUB_ENV
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: wws-${{ matrix.name }}-${{ matrix.arch }}.tar.gz
+        path: ${{ env.TARBALL }}
