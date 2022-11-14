@@ -22,5 +22,5 @@ docker run -v /path/to/handlers/on/host:/app -p 8080:8080 \
 
 ## Other usages
 
-Wasm Workers Server is stateless as far as the loaded handers are stateless (i.e. when they don't use the [Key / Value store](../features/key-value.md)). This makes the image very useful if you want to setup your own auto-scaling deployment.
+Wasm Workers Server is stateless as far as the loaded handers are stateless (i.e. when they don't use the [Key / Value store](./features/key-value.md)). This makes the image very useful if you want to setup your own auto-scaling deployment.
 
