@@ -1,11 +1,16 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+#[macro_use]
+extern crate lazy_static;
+
 mod config;
 mod data;
 mod router;
 mod runner;
 
+use actix_files::{Files, NamedFile};
+use actix_web::dev::{fn_service, ServiceRequest, ServiceResponse};
 use actix_web::{
     http::StatusCode,
     middleware,
@@ -15,8 +20,19 @@ use actix_web::{
 use clap::Parser;
 use data::kv::KV;
 use runner::WasmOutput;
+use std::io::Error;
+use std::path::Path;
 use std::path::PathBuf;
-use std::{collections::HashMap, sync::RwLock};
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+};
+
+// Provide a static root_path so it can be used in the default_handler to manage
+// static assets.
+lazy_static! {
+    static ref ROOT_PATH: Arc<RwLock<PathBuf>> = Arc::new(RwLock::new(PathBuf::new()));
+}
 
 // Arguments
 #[derive(Parser, Debug)]
@@ -42,6 +58,36 @@ struct Routes {
 
 struct DataConnectors {
     kv: KV,
+}
+
+/// Find a static HTML file in the `public` folder. This function is used
+/// when there's no direct file to be served. It will look for certain patterns
+/// like "public/{uri}/index.html" and "public/{uri}.html".
+///
+/// If no file is present, it will try to get a default "public/404.html"
+async fn find_static_html(uri_path: &str) -> Result<NamedFile, Error> {
+    // Avoid dots in the URI. If they are present, the extension
+    // was passed so the file should be properly rendered.
+    let clean_path = uri_path.replace(".", "");
+    let file;
+
+    let rw_path = ROOT_PATH.read().unwrap();
+    let base_path = rw_path.as_os_str();
+
+    // Possible paths
+    let index_folder_path = Path::new(base_path).join(format!("public{}/index.html", clean_path));
+    let html_ext_path = Path::new(base_path).join(format!("public{}.html", clean_path));
+    let public_404_path = Path::new(base_path).join("public").join("404.html");
+
+    if uri_path.ends_with("/") && index_folder_path.exists() {
+        file = NamedFile::open_async(index_folder_path).await;
+    } else if !uri_path.ends_with("/") && html_ext_path.exists() {
+        file = NamedFile::open_async(html_ext_path).await;
+    } else {
+        file = NamedFile::open_async(public_404_path).await;
+    }
+
+    file
 }
 
 async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
@@ -120,6 +166,9 @@ async fn debug(req: HttpRequest) -> impl Responder {
 async fn main() -> std::io::Result<()> {
     let args = Args::parse();
 
+    // Store the root path so it can be used later
+    *ROOT_PATH.write().expect("Cannot set the root path") = args.path.clone();
+
     std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();
 
@@ -168,6 +217,29 @@ async fn main() -> std::io::Result<()> {
                 data.write().unwrap().kv.create_store(&namespace);
             }
         }
+
+        // Serve static files from the static folder
+        app = app.service(
+            Files::new("/", &args.path.join("public"))
+                .index_file("index.html")
+                // This handler check if there's an HTML file in the public folder that
+                // can reply to the given request. For example, if someone request /about,
+                // this handler will look for a /public/about.html file.
+                .default_handler(fn_service(|req: ServiceRequest| async {
+                    let (req, _) = req.into_parts();
+
+                    match find_static_html(req.path()).await {
+                        Ok(existing_file) => {
+                            let res = existing_file.into_response(&req);
+                            Ok(ServiceResponse::new(req, res))
+                        }
+                        Err(_) => {
+                            let mut res = HttpResponse::NotFound();
+                            Ok(ServiceResponse::new(req, res.body("")))
+                        }
+                    }
+                })),
+        );
 
         app
     })
