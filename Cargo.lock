@@ -2220,6 +2220,7 @@ dependencies = [
  "clap 4.0.10",
  "env_logger",
  "glob",
+ "lazy_static",
  "serde",
  "serde_json",
  "toml",
