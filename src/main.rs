@@ -166,13 +166,8 @@ async fn debug(req: HttpRequest) -> impl Responder {
 async fn main() -> std::io::Result<()> {
     let args = Args::parse();
 
-    // Initialize root path so it can be used later in the default_handler
-    // for static assets. I have to do it in a clojure so the root_path
-    // reference is drop and the RwLock is released automatically.
-    {
-        let mut root_path = ROOT_PATH.write().unwrap();
-        *root_path = args.path.clone();
-    }
+    // Store the root path so it can be used later
+    *ROOT_PATH.write().expect("Cannot set the root path") = args.path.clone();
 
     std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();
