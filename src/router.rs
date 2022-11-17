@@ -9,7 +9,8 @@ use crate::config::Config;
 use crate::runner::Runner;
 use glob::glob;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::{Path, PathBuf, Component};
+use std::ffi::OsStr;
 
 /// An existing route in the project. It contains a reference to the handler, the URL path,
 /// the runner and configuration. Note that URL paths are calculated based on the file path.
@@ -65,26 +66,50 @@ impl Route {
     // Process the given path to return the proper route for the API.
     // It will transform paths like test/index.wasm into /test.
     fn retrieve_route(base_path: &Path, path: &Path) -> String {
-        // TODO: Improve this entire method
-        // @ref #13
-        if let Some(api_path) = path.to_str() {
-            let parsed_path: String = api_path
-                .to_string()
-                .replace(".wasm", "")
-                .replace(".js", "")
-                .replace(base_path.to_str().unwrap_or("./"), "");
-            let mut normalized = String::from("/") + &parsed_path.replace("index", "");
+        // Normalize both paths
+        let n_path = Self::normalize_path_to_url(path);
+        let n_base_path = Self::normalize_path_to_url(base_path);
 
-            // Remove trailing / to avoid 404 errors
-            if normalized.ends_with('/') && normalized.len() > 1 {
-                normalized.pop();
+        // Remove the base_path
+        match n_path.strip_prefix(n_base_path) {
+            Ok(worker_path) => {
+                if let Some(api_path) = worker_path.to_str() {
+                    String::from("/") + api_path
+                } else {
+                    // TODO: manage errors properly and skip the route
+                    // @see #13
+                    String::from("/unknown")
+                }
             }
-
-            normalized
-        } else {
-            // TODO: Manage better unexpected characters in paths
-            String::from(path.to_str().unwrap_or("/unknown"))
+            Err(_) => {
+                // TODO: manage errors properly and skip the route
+                // @see #13
+                String::from("/unknown")
+            }
         }
+    }
+
+    // Prepare a path to be used as an URL. This method performs 3 main actions:
+    //
+    // - Remove file extension
+    // - Keep only "normal" components. Others like "." or "./" are ignored
+    // - Remove "index" components
+    fn normalize_path_to_url(path: &Path) -> PathBuf {
+        let no_ext_path = path.with_extension("");
+        let comps = no_ext_path.components();
+        let clean_comps = comps.filter(|c|
+            match c {
+                Component::Normal(os_str) => os_str != &OsStr::new("index"),
+                _ => false
+            }
+        );
+        let mut normalized_path = PathBuf::new();
+
+        for c in clean_comps.into_iter() {
+            normalized_path = normalized_path.join(c.as_os_str());
+        }
+
+        normalized_path
     }
 }
 
