@@ -8,9 +8,9 @@
 use crate::config::Config;
 use crate::runner::Runner;
 use glob::glob;
-use std::fs;
-use std::path::{Path, PathBuf, Component};
 use std::ffi::OsStr;
+use std::fs;
+use std::path::{Component, Path, PathBuf};
 
 /// An existing route in the project. It contains a reference to the handler, the URL path,
 /// the runner and configuration. Note that URL paths are calculated based on the file path.
@@ -73,13 +73,13 @@ impl Route {
         // Remove the base_path
         match n_path.strip_prefix(&n_base_path) {
             Some(worker_path) => {
-                if worker_path.len() == 0 {
+                if worker_path.is_empty() {
                     // Index file at root
                     String::from("/")
                 } else {
                     worker_path.to_string()
                 }
-            },
+            }
             None => {
                 // TODO: manage errors properly and skip the route
                 // @see #13
@@ -96,20 +96,18 @@ impl Route {
     fn normalize_path_to_url(path: &Path) -> String {
         let no_ext_path = path.with_extension("");
         let comps = no_ext_path.components();
-        let clean_comps = comps.filter(|c|
-            match c {
-                Component::Normal(os_str) => os_str != &OsStr::new("index"),
-                _ => false
-            }
-        );
+        let clean_comps = comps.filter(|c| match c {
+            Component::Normal(os_str) => os_str != &OsStr::new("index"),
+            _ => false,
+        });
         let mut normalized_path = String::new();
 
-        for c in clean_comps.into_iter() {
+        for c in clean_comps {
             let os_str = c.as_os_str();
 
             if let Some(parsed_str) = os_str.to_str() {
                 // Force the separator to be / instead of \ in Windows
-                normalized_path.push_str("/");
+                normalized_path.push('/');
                 normalized_path.push_str(parsed_str);
             }
         }
@@ -203,14 +201,26 @@ mod tests {
             (".\\root", "root\\examples\\index.js", "/examples"),
             (".\\root", "root\\examples\\index.wasm", "/examples"),
             (".\\root", "root\\examples\\api\\index.js", "/examples/api"),
-            (".\\root", "root\\examples\\api\\index.wasm", "/examples/api"),
+            (
+                ".\\root",
+                "root\\examples\\api\\index.wasm",
+                "/examples/api",
+            ),
             (".\\root", "root\\index.js", "/"),
             (".\\root", "root\\index.wasm", "/"),
             // A backslash should not change anything
             (".\\root\\", "root\\examples\\index.js", "/examples"),
             (".\\root\\", "root\\examples\\index.wasm", "/examples"),
-            (".\\root\\", "root\\examples\\api\\index.js", "/examples/api"),
-            (".\\root\\", "root\\examples\\api\\index.wasm", "/examples/api"),
+            (
+                ".\\root\\",
+                "root\\examples\\api\\index.js",
+                "/examples/api",
+            ),
+            (
+                ".\\root\\",
+                "root\\examples\\api\\index.wasm",
+                "/examples/api",
+            ),
             (".\\root\\", "root\\index.js", "/"),
             (".\\root\\", "root\\index.wasm", "/"),
         ];
@@ -239,15 +249,31 @@ mod tests {
             // Now, with a different root
             ("./root", "root/examples/handler.js", "/examples/handler"),
             ("./root", "root/examples/handler.wasm", "/examples/handler"),
-            ("./root", "root/examples/api/handler.js", "/examples/api/handler"),
-            ("./root", "root/examples/api/handler.wasm", "/examples/api/handler"),
+            (
+                "./root",
+                "root/examples/api/handler.js",
+                "/examples/api/handler",
+            ),
+            (
+                "./root",
+                "root/examples/api/handler.wasm",
+                "/examples/api/handler",
+            ),
             ("./root", "root/handler.js", "/handler"),
             ("./root", "root/handler.wasm", "/handler"),
             // A backslash should not change anything
             ("./root/", "root/examples/handler.js", "/examples/handler"),
             ("./root/", "root/examples/handler.wasm", "/examples/handler"),
-            ("./root/", "root/examples/api/handler.js", "/examples/api/handler"),
-            ("./root/", "root/examples/api/handler.wasm", "/examples/api/handler"),
+            (
+                "./root/",
+                "root/examples/api/handler.js",
+                "/examples/api/handler",
+            ),
+            (
+                "./root/",
+                "root/examples/api/handler.wasm",
+                "/examples/api/handler",
+            ),
             ("./root/", "root/handler.js", "/handler"),
             ("./root/", "root/handler.wasm", "/handler"),
         ];
@@ -275,16 +301,44 @@ mod tests {
             (".", "handler.wasm", "/handler"),
             // Now, with a different root
             (".\\root", "root\\examples\\handler.js", "/examples/handler"),
-            (".\\root", "root\\examples\\handler.wasm", "/examples/handler"),
-            (".\\root", "root\\examples\\api\\handler.js", "/examples/api/handler"),
-            (".\\root", "root\\examples\\api\\handler.wasm", "/examples/api/handler"),
+            (
+                ".\\root",
+                "root\\examples\\handler.wasm",
+                "/examples/handler",
+            ),
+            (
+                ".\\root",
+                "root\\examples\\api\\handler.js",
+                "/examples/api/handler",
+            ),
+            (
+                ".\\root",
+                "root\\examples\\api\\handler.wasm",
+                "/examples/api/handler",
+            ),
             (".\\root", "root\\handler.js", "/handler"),
             (".\\root", "root\\handler.wasm", "/handler"),
             // A backslash should not change anything
-            (".\\root\\", "root\\examples\\handler.js", "/examples/handler"),
-            (".\\root\\", "root\\examples\\handler.wasm", "/examples/handler"),
-            (".\\root\\", "root\\examples\\api\\handler.js", "/examples/api/handler"),
-            (".\\root\\", "root\\examples\\api\\handler.wasm", "/examples/api/handler"),
+            (
+                ".\\root\\",
+                "root\\examples\\handler.js",
+                "/examples/handler",
+            ),
+            (
+                ".\\root\\",
+                "root\\examples\\handler.wasm",
+                "/examples/handler",
+            ),
+            (
+                ".\\root\\",
+                "root\\examples\\api\\handler.js",
+                "/examples/api/handler",
+            ),
+            (
+                ".\\root\\",
+                "root\\examples\\api\\handler.wasm",
+                "/examples/api/handler",
+            ),
             (".\\root\\", "root\\handler.js", "/handler"),
             (".\\root\\", "root\\handler.wasm", "/handler"),
         ];
