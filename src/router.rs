@@ -149,6 +149,7 @@ pub fn initialize_routes(base_path: &Path) -> Vec<Route> {
 mod tests {
     use super::*;
 
+    #[cfg(not(target_os = "windows"))]
     #[test]
     fn unix_route_index_path_retrieval() {
         let tests = [
@@ -185,6 +186,7 @@ mod tests {
         }
     }
 
+    #[cfg(target_os = "windows")]
     #[test]
     fn win_route_index_path_retrieval() {
         let tests = [
@@ -221,6 +223,7 @@ mod tests {
         }
     }
 
+    #[cfg(not(target_os = "windows"))]
     #[test]
     fn unix_route_path_retrieval() {
         let tests = [
@@ -257,6 +260,7 @@ mod tests {
         }
     }
 
+    #[cfg(target_os = "windows")]
     #[test]
     fn win_route_path_retrieval() {
         let tests = [
