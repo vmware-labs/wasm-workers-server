@@ -144,47 +144,151 @@ pub fn initialize_routes(base_path: &Path) -> Vec<Route> {
 mod tests {
     use super::*;
 
+    #[cfg(not(target_os = "windows"))]
     #[test]
     fn unix_route_index_path_retrieval() {
-        let check_route = |path: &str, expected_route: &str| {
+        let tests = [
+            // In a subfolder
+            (".", "examples/index.js", "/examples"),
+            (".", "examples/index.wasm", "/examples"),
+            // Multiple levels
+            (".", "examples/api/index.js", "/examples/api"),
+            (".", "examples/api/index.wasm", "/examples/api"),
+            // Root
+            (".", "index.js", "/"),
+            (".", "index.wasm", "/"),
+            // Now, with a different root
+            ("./root", "root/examples/index.js", "/examples"),
+            ("./root", "root/examples/index.wasm", "/examples"),
+            ("./root", "root/examples/api/index.js", "/examples/api"),
+            ("./root", "root/examples/api/index.wasm", "/examples/api"),
+            ("./root", "root/index.js", "/"),
+            ("./root", "root/index.wasm", "/"),
+            // A backslash should not change anything
+            ("./root/", "root/examples/index.js", "/examples"),
+            ("./root/", "root/examples/index.wasm", "/examples"),
+            ("./root/", "root/examples/api/index.js", "/examples/api"),
+            ("./root/", "root/examples/api/index.wasm", "/examples/api"),
+            ("./root/", "root/index.js", "/"),
+            ("./root/", "root/index.wasm", "/"),
+        ];
+
+        for t in tests {
             assert_eq!(
-                Route::retrieve_route(&Path::new("."), &PathBuf::from(path)),
-                String::from(expected_route),
+                Route::retrieve_route(&Path::new(t.0), &PathBuf::from(t.1)),
+                String::from(t.2),
             )
-        };
-
-        // In a subfolder
-        check_route("examples/index.js", "/examples");
-        check_route("examples/index.wasm", "/examples");
-
-        // Multiple levels
-        check_route("examples/api/index.js", "/examples/api");
-        check_route("examples/api/index.wasm", "/examples/api");
-
-        // Root
-        check_route("index.js", "/");
-        check_route("index.wasm", "/");
+        }
     }
 
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn win_route_index_path_retrieval() {
+        let tests = [
+            // In a subfolder
+            (".", "examples\\index.js", "/examples"),
+            (".", "examples\\index.wasm", "/examples"),
+            // Multiple levels
+            (".", "examples\\api\\index.js", "/examples/api"),
+            (".", "examples\\api\\index.wasm", "/examples/api"),
+            // Root
+            (".", "index.js", "/"),
+            (".", "index.wasm", "/"),
+            // Now, with a different root
+            (".\\root", "root\\examples\\index.js", "/examples"),
+            (".\\root", "root\\examples\\index.wasm", "/examples"),
+            (".\\root", "root\\examples\\api\\index.js", "/examples/api"),
+            (".\\root", "root\\examples\\api\\index.wasm", "/examples/api"),
+            (".\\root", "root\\index.js", "/"),
+            (".\\root", "root\\index.wasm", "/"),
+            // A backslash should not change anything
+            (".\\root\\", "root\\examples\\index.js", "/examples"),
+            (".\\root\\", "root\\examples\\index.wasm", "/examples"),
+            (".\\root\\", "root\\examples\\api\\index.js", "/examples/api"),
+            (".\\root\\", "root\\examples\\api\\index.wasm", "/examples/api"),
+            (".\\root\\", "root\\index.js", "/"),
+            (".\\root\\", "root\\index.wasm", "/"),
+        ];
+
+        for t in tests {
+            assert_eq!(
+                Route::retrieve_route(&Path::new(t.0), &PathBuf::from(t.1)),
+                String::from(t.2),
+            )
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
     #[test]
     fn unix_route_path_retrieval() {
-        let check_route = |path: &str, expected_route: &str| {
+        let tests = [
+            // In a subfolder
+            (".", "examples/handler.js", "/examples/handler"),
+            (".", "examples/handler.wasm", "/examples/handler"),
+            // Multiple levels
+            (".", "examples/api/handler.js", "/examples/api/handler"),
+            (".", "examples/api/handler.wasm", "/examples/api/handler"),
+            // Root
+            (".", "handler.js", "/handler"),
+            (".", "handler.wasm", "/handler"),
+            // Now, with a different root
+            ("./root", "root/examples/handler.js", "/examples/handler"),
+            ("./root", "root/examples/handler.wasm", "/examples/handler"),
+            ("./root", "root/examples/api/handler.js", "/examples/api/handler"),
+            ("./root", "root/examples/api/handler.wasm", "/examples/api/handler"),
+            ("./root", "root/handler.js", "/handler"),
+            ("./root", "root/handler.wasm", "/handler"),
+            // A backslash should not change anything
+            ("./root/", "root/examples/handler.js", "/examples/handler"),
+            ("./root/", "root/examples/handler.wasm", "/examples/handler"),
+            ("./root/", "root/examples/api/handler.js", "/examples/api/handler"),
+            ("./root/", "root/examples/api/handler.wasm", "/examples/api/handler"),
+            ("./root/", "root/handler.js", "/handler"),
+            ("./root/", "root/handler.wasm", "/handler"),
+        ];
+
+        for t in tests {
             assert_eq!(
-                Route::retrieve_route(&Path::new("."), &PathBuf::from(path)),
-                String::from(expected_route),
+                Route::retrieve_route(&Path::new(t.0), &PathBuf::from(t.1)),
+                String::from(t.2),
             )
-        };
+        }
+    }
 
-        // In a subfolder
-        check_route("examples/handler.js", "/examples/handler");
-        check_route("examples/handler.wasm", "/examples/handler");
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn win_route_path_retrieval() {
+        let tests = [
+            // In a subfolder
+            (".", "examples\\handler.js", "/examples/handler"),
+            (".", "examples\\handler.wasm", "/examples/handler"),
+            // Multiple levels
+            (".", "examples\\api\\handler.js", "/examples/api/handler"),
+            (".", "examples\\api\\handler.wasm", "/examples/api/handler"),
+            // Root
+            (".", "handler.js", "/handler"),
+            (".", "handler.wasm", "/handler"),
+            // Now, with a different root
+            (".\\root", "root\\examples\\handler.js", "/examples/handler"),
+            (".\\root", "root\\examples\\handler.wasm", "/examples/handler"),
+            (".\\root", "root\\examples\\api\\handler.js", "/examples/api/handler"),
+            (".\\root", "root\\examples\\api\\handler.wasm", "/examples/api/handler"),
+            (".\\root", "root\\handler.js", "/handler"),
+            (".\\root", "root\\handler.wasm", "/handler"),
+            // A backslash should not change anything
+            (".\\root\\", "root\\examples\\handler.js", "/examples/handler"),
+            (".\\root\\", "root\\examples\\handler.wasm", "/examples/handler"),
+            (".\\root\\", "root\\examples\\api\\handler.js", "/examples/api/handler"),
+            (".\\root\\", "root\\examples\\api\\handler.wasm", "/examples/api/handler"),
+            (".\\root\\", "root\\handler.js", "/handler"),
+            (".\\root\\", "root\\handler.wasm", "/handler"),
+        ];
 
-        // Multiple levels
-        check_route("examples/api/handler.js", "/examples/api/handler");
-        check_route("examples/api/handler.wasm", "/examples/api/handler");
-
-        // Root
-        check_route("handler.js", "/handler");
-        check_route("handler.wasm", "/handler");
+        for t in tests {
+            assert_eq!(
+                Route::retrieve_route(&Path::new(t.0), &PathBuf::from(t.1)),
+                String::from(t.2),
+            )
+        }
     }
 }
