@@ -71,17 +71,16 @@ impl Route {
         let n_base_path = Self::normalize_path_to_url(base_path);
 
         // Remove the base_path
-        match n_path.strip_prefix(n_base_path) {
-            Ok(worker_path) => {
-                if let Some(api_path) = worker_path.to_str() {
-                    String::from("/") + api_path
+        match n_path.strip_prefix(&n_base_path) {
+            Some(worker_path) => {
+                if worker_path.len() == 0 {
+                    // Index file at root
+                    String::from("/")
                 } else {
-                    // TODO: manage errors properly and skip the route
-                    // @see #13
-                    String::from("/unknown")
+                    worker_path.to_string()
                 }
-            }
-            Err(_) => {
+            },
+            None => {
                 // TODO: manage errors properly and skip the route
                 // @see #13
                 String::from("/unknown")
@@ -94,7 +93,7 @@ impl Route {
     // - Remove file extension
     // - Keep only "normal" components. Others like "." or "./" are ignored
     // - Remove "index" components
-    fn normalize_path_to_url(path: &Path) -> PathBuf {
+    fn normalize_path_to_url(path: &Path) -> String {
         let no_ext_path = path.with_extension("");
         let comps = no_ext_path.components();
         let clean_comps = comps.filter(|c|
@@ -103,10 +102,16 @@ impl Route {
                 _ => false
             }
         );
-        let mut normalized_path = PathBuf::new();
+        let mut normalized_path = String::new();
 
         for c in clean_comps.into_iter() {
-            normalized_path = normalized_path.join(c.as_os_str());
+            let os_str = c.as_os_str();
+
+            if let Some(parsed_str) = os_str.to_str() {
+                // Force the separator to be / instead of \ in Windows
+                normalized_path.push_str("/");
+                normalized_path.push_str(parsed_str);
+            }
         }
 
         normalized_path
@@ -144,7 +149,6 @@ pub fn initialize_routes(base_path: &Path) -> Vec<Route> {
 mod tests {
     use super::*;
 
-    #[cfg(not(target_os = "windows"))]
     #[test]
     fn unix_route_index_path_retrieval() {
         let tests = [
@@ -181,33 +185,32 @@ mod tests {
         }
     }
 
-    #[cfg(target_os = "windows")]
     #[test]
     fn win_route_index_path_retrieval() {
         let tests = [
             // In a subfolder
-            (".", "examples/index.js", "/examples"),
-            (".", "examples/index.wasm", "/examples"),
+            (".", "examples\\index.js", "/examples"),
+            (".", "examples\\index.wasm", "/examples"),
             // Multiple levels
-            (".", "examples/api/index.js", "/examples/api"),
-            (".", "examples/api/index.wasm", "/examples/api"),
+            (".", "examples\\api\\index.js", "/examples/api"),
+            (".", "examples\\api\\index.wasm", "/examples/api"),
             // Root
             (".", "index.js", "/"),
             (".", "index.wasm", "/"),
             // Now, with a different root
-            (".\\root", "root/examples/index.js", "/examples"),
-            (".\\root", "root/examples/index.wasm", "/examples"),
-            (".\\root", "root/examples/api/index.js", "/examples/api"),
-            (".\\root", "root/examples/api/index.wasm", "/examples/api"),
-            (".\\root", "root/index.js", "/"),
-            (".\\root", "root/index.wasm", "/"),
+            (".\\root", "root\\examples\\index.js", "/examples"),
+            (".\\root", "root\\examples\\index.wasm", "/examples"),
+            (".\\root", "root\\examples\\api\\index.js", "/examples/api"),
+            (".\\root", "root\\examples\\api\\index.wasm", "/examples/api"),
+            (".\\root", "root\\index.js", "/"),
+            (".\\root", "root\\index.wasm", "/"),
             // A backslash should not change anything
-            (".\\root\\", "root/examples/index.js", "/examples"),
-            (".\\root\\", "root/examples/index.wasm", "/examples"),
-            (".\\root\\", "root/examples/api/index.js", "/examples/api"),
-            (".\\root\\", "root/examples/api/index.wasm", "/examples/api"),
-            (".\\root\\", "root/index.js", "/"),
-            (".\\root\\", "root/index.wasm", "/"),
+            (".\\root\\", "root\\examples\\index.js", "/examples"),
+            (".\\root\\", "root\\examples\\index.wasm", "/examples"),
+            (".\\root\\", "root\\examples\\api\\index.js", "/examples/api"),
+            (".\\root\\", "root\\examples\\api\\index.wasm", "/examples/api"),
+            (".\\root\\", "root\\index.js", "/"),
+            (".\\root\\", "root\\index.wasm", "/"),
         ];
 
         for t in tests {
@@ -218,7 +221,6 @@ mod tests {
         }
     }
 
-    #[cfg(not(target_os = "windows"))]
     #[test]
     fn unix_route_path_retrieval() {
         let tests = [
@@ -255,7 +257,6 @@ mod tests {
         }
     }
 
-    #[cfg(target_os = "windows")]
     #[test]
     fn win_route_path_retrieval() {
         let tests = [
@@ -269,19 +270,19 @@ mod tests {
             (".", "handler.js", "/handler"),
             (".", "handler.wasm", "/handler"),
             // Now, with a different root
-            (".\\root", "root/examples/handler.js", "/examples/handler"),
-            (".\\root", "root/examples/handler.wasm", "/examples/handler"),
-            (".\\root", "root/examples/api/handler.js", "/examples/api/handler"),
-            (".\\root", "root/examples/api/handler.wasm", "/examples/api/handler"),
-            (".\\root", "root/handler.js", "/handler"),
-            (".\\root", "root/handler.wasm", "/handler"),
+            (".\\root", "root\\examples\\handler.js", "/examples/handler"),
+            (".\\root", "root\\examples\\handler.wasm", "/examples/handler"),
+            (".\\root", "root\\examples\\api\\handler.js", "/examples/api/handler"),
+            (".\\root", "root\\examples\\api\\handler.wasm", "/examples/api/handler"),
+            (".\\root", "root\\handler.js", "/handler"),
+            (".\\root", "root\\handler.wasm", "/handler"),
             // A backslash should not change anything
-            (".\\root\\", "root/examples/handler.js", "/examples/handler"),
-            (".\\root\\", "root/examples/handler.wasm", "/examples/handler"),
-            (".\\root\\", "root/examples/api/handler.js", "/examples/api/handler"),
-            (".\\root\\", "root/examples/api/handler.wasm", "/examples/api/handler"),
-            (".\\root\\", "root/handler.js", "/handler"),
-            (".\\root\\", "root/handler.wasm", "/handler"),
+            (".\\root\\", "root\\examples\\handler.js", "/examples/handler"),
+            (".\\root\\", "root\\examples\\handler.wasm", "/examples/handler"),
+            (".\\root\\", "root\\examples\\api\\handler.js", "/examples/api/handler"),
+            (".\\root\\", "root\\examples\\api\\handler.wasm", "/examples/api/handler"),
+            (".\\root\\", "root\\handler.js", "/handler"),
+            (".\\root\\", "root\\handler.wasm", "/handler"),
         ];
 
         for t in tests {
