@@ -186,28 +186,28 @@ mod tests {
     fn win_route_index_path_retrieval() {
         let tests = [
             // In a subfolder
-            (".", "examples\\index.js", "/examples"),
-            (".", "examples\\index.wasm", "/examples"),
+            (".", "examples/index.js", "/examples"),
+            (".", "examples/index.wasm", "/examples"),
             // Multiple levels
-            (".", "examples\\api\\index.js", "/examples/api"),
-            (".", "examples\\api\\index.wasm", "/examples/api"),
+            (".", "examples/api/index.js", "/examples/api"),
+            (".", "examples/api/index.wasm", "/examples/api"),
             // Root
             (".", "index.js", "/"),
             (".", "index.wasm", "/"),
             // Now, with a different root
-            (".\\root", "root\\examples\\index.js", "/examples"),
-            (".\\root", "root\\examples\\index.wasm", "/examples"),
-            (".\\root", "root\\examples\\api\\index.js", "/examples/api"),
-            (".\\root", "root\\examples\\api\\index.wasm", "/examples/api"),
-            (".\\root", "root\\index.js", "/"),
-            (".\\root", "root\\index.wasm", "/"),
+            (".\\root", "root/examples/index.js", "/examples"),
+            (".\\root", "root/examples/index.wasm", "/examples"),
+            (".\\root", "root/examples/api/index.js", "/examples/api"),
+            (".\\root", "root/examples/api/index.wasm", "/examples/api"),
+            (".\\root", "root/index.js", "/"),
+            (".\\root", "root/index.wasm", "/"),
             // A backslash should not change anything
-            (".\\root\\", "root\\examples\\index.js", "/examples"),
-            (".\\root\\", "root\\examples\\index.wasm", "/examples"),
-            (".\\root\\", "root\\examples\\api\\index.js", "/examples/api"),
-            (".\\root\\", "root\\examples\\api\\index.wasm", "/examples/api"),
-            (".\\root\\", "root\\index.js", "/"),
-            (".\\root\\", "root\\index.wasm", "/"),
+            (".\\root\\", "root/examples/index.js", "/examples"),
+            (".\\root\\", "root/examples/index.wasm", "/examples"),
+            (".\\root\\", "root/examples/api/index.js", "/examples/api"),
+            (".\\root\\", "root/examples/api/index.wasm", "/examples/api"),
+            (".\\root\\", "root/index.js", "/"),
+            (".\\root\\", "root/index.wasm", "/"),
         ];
 
         for t in tests {
@@ -260,28 +260,28 @@ mod tests {
     fn win_route_path_retrieval() {
         let tests = [
             // In a subfolder
-            (".", "examples\\handler.js", "/examples/handler"),
-            (".", "examples\\handler.wasm", "/examples/handler"),
+            (".", "examples/handler.js", "/examples/handler"),
+            (".", "examples/handler.wasm", "/examples/handler"),
             // Multiple levels
-            (".", "examples\\api\\handler.js", "/examples/api/handler"),
-            (".", "examples\\api\\handler.wasm", "/examples/api/handler"),
+            (".", "examples/api/handler.js", "/examples/api/handler"),
+            (".", "examples/api/handler.wasm", "/examples/api/handler"),
             // Root
             (".", "handler.js", "/handler"),
             (".", "handler.wasm", "/handler"),
             // Now, with a different root
-            (".\\root", "root\\examples\\handler.js", "/examples/handler"),
-            (".\\root", "root\\examples\\handler.wasm", "/examples/handler"),
-            (".\\root", "root\\examples\\api\\handler.js", "/examples/api/handler"),
-            (".\\root", "root\\examples\\api\\handler.wasm", "/examples/api/handler"),
-            (".\\root", "root\\handler.js", "/handler"),
-            (".\\root", "root\\handler.wasm", "/handler"),
+            (".\\root", "root/examples/handler.js", "/examples/handler"),
+            (".\\root", "root/examples/handler.wasm", "/examples/handler"),
+            (".\\root", "root/examples/api/handler.js", "/examples/api/handler"),
+            (".\\root", "root/examples/api/handler.wasm", "/examples/api/handler"),
+            (".\\root", "root/handler.js", "/handler"),
+            (".\\root", "root/handler.wasm", "/handler"),
             // A backslash should not change anything
-            (".\\root\\", "root\\examples\\handler.js", "/examples/handler"),
-            (".\\root\\", "root\\examples\\handler.wasm", "/examples/handler"),
-            (".\\root\\", "root\\examples\\api\\handler.js", "/examples/api/handler"),
-            (".\\root\\", "root\\examples\\api\\handler.wasm", "/examples/api/handler"),
-            (".\\root\\", "root\\handler.js", "/handler"),
-            (".\\root\\", "root\\handler.wasm", "/handler"),
+            (".\\root\\", "root/examples/handler.js", "/examples/handler"),
+            (".\\root\\", "root/examples/handler.wasm", "/examples/handler"),
+            (".\\root\\", "root/examples/api/handler.js", "/examples/api/handler"),
+            (".\\root\\", "root/examples/api/handler.wasm", "/examples/api/handler"),
+            (".\\root\\", "root/handler.js", "/handler"),
+            (".\\root\\", "root/handler.wasm", "/handler"),
         ];
 
         for t in tests {
