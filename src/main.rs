@@ -21,17 +21,14 @@ use clap::Parser;
 use data::kv::KV;
 use runner::WasmOutput;
 use std::io::Error;
-use std::path::Path;
 use std::path::PathBuf;
-use std::{
-    collections::HashMap,
-    sync::{Arc, RwLock},
-};
+use std::{collections::HashMap, sync::RwLock};
 
 // Provide a static root_path so it can be used in the default_handler to manage
 // static assets.
 lazy_static! {
-    static ref ROOT_PATH: Arc<RwLock<PathBuf>> = Arc::new(RwLock::new(PathBuf::new()));
+    static ref ARGS: Args = Args::parse();
+    static ref ROOT_PATH: PathBuf = ARGS.path.clone();
 }
 
 // Arguments
@@ -71,13 +68,10 @@ async fn find_static_html(uri_path: &str) -> Result<NamedFile, Error> {
     let clean_path = uri_path.replace(".", "");
     let file;
 
-    let rw_path = ROOT_PATH.read().unwrap();
-    let base_path = rw_path.as_os_str();
-
     // Possible paths
-    let index_folder_path = Path::new(base_path).join(format!("public{}/index.html", clean_path));
-    let html_ext_path = Path::new(base_path).join(format!("public{}.html", clean_path));
-    let public_404_path = Path::new(base_path).join("public").join("404.html");
+    let index_folder_path = ROOT_PATH.join(format!("public{}/index.html", clean_path));
+    let html_ext_path = ROOT_PATH.join(format!("public{}.html", clean_path));
+    let public_404_path = ROOT_PATH.join("public").join("404.html");
 
     if uri_path.ends_with("/") && index_folder_path.exists() {
         file = NamedFile::open_async(index_folder_path).await;
@@ -164,10 +158,7 @@ async fn debug(req: HttpRequest) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let args = Args::parse();
-
-    // Store the root path so it can be used later
-    *ROOT_PATH.write().expect("Cannot set the root path") = args.path.clone();
+    let args = &*ARGS;
 
     std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();
