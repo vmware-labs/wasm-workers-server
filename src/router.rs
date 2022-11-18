@@ -94,25 +94,19 @@ impl Route {
     // - Keep only "normal" components. Others like "." or "./" are ignored
     // - Remove "index" components
     fn normalize_path_to_url(path: &Path) -> String {
-        let no_ext_path = path.with_extension("");
-        let comps = no_ext_path.components();
-        let clean_comps = comps.filter(|c| match c {
-            Component::Normal(os_str) => os_str != &OsStr::new("index"),
-            _ => false,
-        });
-        let mut normalized_path = String::new();
-
-        for c in clean_comps {
-            let os_str = c.as_os_str();
-
-            if let Some(parsed_str) = os_str.to_str() {
-                // Force the separator to be / instead of \ in Windows
-                normalized_path.push('/');
-                normalized_path.push_str(parsed_str);
-            }
-        }
-
-        normalized_path
+        path.with_extension("")
+            .components()
+            .filter_map(|c| match c {
+                Component::Normal(os_str) if os_str != OsStr::new("index") => {
+                    if let Some(parsed_str) = os_str.to_str() {
+                        Some(String::from("/") + parsed_str)
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            })
+            .collect()
     }
 }
 

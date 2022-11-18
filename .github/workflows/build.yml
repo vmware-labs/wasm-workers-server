@@ -11,7 +11,11 @@ env:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    stretegy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
     - name: Caching
@@ -23,23 +27,11 @@ jobs:
           target
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Format
+      if: ${{ matrix.os == 'ubuntu-latest' }}
       run: cargo fmt
     - name: Clippy
+      if: ${{ matrix.os == 'ubuntu-latest' }}
       run: cargo clippy
-    - name: Test
-      run: cargo test
-  win-test:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Caching
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Test
       run: cargo test
   build:
