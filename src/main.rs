@@ -65,7 +65,7 @@ struct DataConnectors {
 async fn find_static_html(uri_path: &str) -> Result<NamedFile, Error> {
     // Avoid dots in the URI. If they are present, the extension
     // was passed so the file should be properly rendered.
-    let clean_path = uri_path.replace(".", "");
+    let clean_path = uri_path.replace('.', "");
     let file;
 
     // Possible paths
@@ -73,9 +73,9 @@ async fn find_static_html(uri_path: &str) -> Result<NamedFile, Error> {
     let html_ext_path = ROOT_PATH.join(format!("public{}.html", clean_path));
     let public_404_path = ROOT_PATH.join("public").join("404.html");
 
-    if uri_path.ends_with("/") && index_folder_path.exists() {
+    if uri_path.ends_with('/') && index_folder_path.exists() {
         file = NamedFile::open_async(index_folder_path).await;
-    } else if !uri_path.ends_with("/") && html_ext_path.exists() {
+    } else if !uri_path.ends_with('/') && html_ext_path.exists() {
         file = NamedFile::open_async(html_ext_path).await;
     } else {
         file = NamedFile::open_async(public_404_path).await;
