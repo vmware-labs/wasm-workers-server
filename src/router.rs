@@ -129,7 +129,7 @@ pub fn initialize_routes(base_path: &Path, prefix: &str) -> Vec<Route> {
     for entry in glob_items {
         match entry {
             Ok(filepath) => {
-                routes.push(Route::new(base_path, filepath, &prefix));
+                routes.push(Route::new(base_path, filepath, prefix));
             }
             Err(e) => println!("Could not read the file {:?}", e),
         }
@@ -150,9 +150,9 @@ pub fn initialize_routes(base_path: &Path, prefix: &str) -> Vec<Route> {
 /// path. However, the check is pretty simple, so we will consider
 /// it.
 pub fn format_prefix(source: Option<String>) -> String {
-    let mut normalized_prefix = source.unwrap_or_else(|| String::new());
+    let mut normalized_prefix = source.unwrap_or_default();
     // Ensure the prefix doesn't include any \ character
-    normalized_prefix = normalized_prefix.replace("\\", "/");
+    normalized_prefix = normalized_prefix.replace('\\', "/");
 
     if !normalized_prefix.is_empty() {
         if !normalized_prefix.starts_with('/') {
