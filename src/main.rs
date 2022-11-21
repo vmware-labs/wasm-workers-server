@@ -46,6 +46,10 @@ struct Args {
     /// Folder to read WebAssembly modules from
     #[clap(value_parser, default_value = ".")]
     path: PathBuf,
+
+    /// Prepend the given path to all URLs
+    #[clap(long)]
+    prefix: Option<String>,
 }
 
 // Common structures
@@ -163,9 +167,12 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();
 
+    // Initialize the prefix
+    let prefix = router::format_prefix(args.prefix.to_owned());
+
     println!("⚙️  Loading routes from: {}", &args.path.display());
     let routes = Data::new(Routes {
-        routes: router::initialize_routes(&args.path),
+        routes: router::initialize_routes(&args.path, &prefix),
     });
 
     let data = Data::new(RwLock::new(DataConnectors { kv: KV::new() }));
@@ -210,8 +217,13 @@ async fn main() -> std::io::Result<()> {
         }
 
         // Serve static files from the static folder
+        let mut static_prefix = prefix.clone();
+        if static_prefix.is_empty() {
+            static_prefix = String::from("/");
+        }
+
         app = app.service(
-            Files::new("/", &args.path.join("public"))
+            Files::new(&static_prefix, &args.path.join("public"))
                 .index_file("index.html")
                 // This handler check if there's an HTML file in the public folder that
                 // can reply to the given request. For example, if someone request /about,
