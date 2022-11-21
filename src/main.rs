@@ -48,8 +48,8 @@ struct Args {
     path: PathBuf,
 
     /// Prepend the given path to all URLs
-    #[clap(long)]
-    prefix: Option<String>,
+    #[clap(long, default_value = "")]
+    prefix: String,
 }
 
 // Common structures
@@ -168,7 +168,7 @@ async fn main() -> std::io::Result<()> {
     env_logger::init();
 
     // Initialize the prefix
-    let prefix = router::format_prefix(args.prefix.to_owned());
+    let prefix = router::format_prefix(&args.prefix);
 
     println!("⚙️  Loading routes from: {}", &args.path.display());
     let routes = Data::new(Routes {

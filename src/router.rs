@@ -149,8 +149,8 @@ pub fn initialize_routes(base_path: &Path, prefix: &str) -> Vec<Route> {
 /// \app. This shouldn't be considered as "prefix" must be an URI
 /// path. However, the check is pretty simple, so we will consider
 /// it.
-pub fn format_prefix(source: Option<String>) -> String {
-    let mut normalized_prefix = source.unwrap_or_default();
+pub fn format_prefix(source: &str) -> String {
+    let mut normalized_prefix = source.to_string();
     // Ensure the prefix doesn't include any \ character
     normalized_prefix = normalized_prefix.replace('\\', "/");
 
@@ -376,26 +376,25 @@ mod tests {
     }
 
     #[test]
-    fn format_optional_prefix() {
+    fn format_provided_prefix() {
         let tests = [
             // Unix approach
-            (Some(String::from("")), ""),
-            (Some(String::from("/app")), "/app"),
-            (Some(String::from("app")), "/app"),
-            (Some(String::from("app/")), "/app"),
-            (Some(String::from("/app/")), "/app"),
-            (Some(String::from("/app/test/")), "/app/test"),
-            (Some(String::from("/app/test")), "/app/test"),
-            (Some(String::from("app/test/")), "/app/test"),
+            ("", ""),
+            ("/app", "/app"),
+            ("app", "/app"),
+            ("app/", "/app"),
+            ("/app/", "/app"),
+            ("/app/test/", "/app/test"),
+            ("/app/test", "/app/test"),
+            ("app/test/", "/app/test"),
             // Windows approach
-            (Some(String::from("\\app")), "/app"),
-            (Some(String::from("app")), "/app"),
-            (Some(String::from("app\\")), "/app"),
-            (Some(String::from("\\app\\")), "/app"),
-            (Some(String::from("\\app\\test\\")), "/app/test"),
-            (Some(String::from("\\app\\test")), "/app/test"),
-            (Some(String::from("app\\test\\")), "/app/test"),
-            (None, ""),
+            ("\\app", "/app"),
+            ("app", "/app"),
+            ("app\\", "/app"),
+            ("\\app\\", "/app"),
+            ("\\app\\test\\", "/app/test"),
+            ("\\app\\test", "/app/test"),
+            ("app\\test\\", "/app/test"),
         ];
 
         for t in tests {
