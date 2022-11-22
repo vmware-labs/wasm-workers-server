@@ -128,14 +128,24 @@ pub fn initialize_routes(base_path: &Path, prefix: &str) -> Vec<Route> {
 
     for entry in glob_items {
         match entry {
-            Ok(filepath) => {
+            // Avoid loading static assets
+            Ok(filepath) if !is_in_public_folder(&filepath) => {
                 routes.push(Route::new(base_path, filepath, prefix));
             }
             Err(e) => println!("Could not read the file {:?}", e),
+            _ => {}
         }
     }
 
     routes
+}
+
+/// Checks if the given filepath is inside the "public" folder
+fn is_in_public_folder(path: &Path) -> bool {
+    path.components().any(|c| match c {
+        Component::Normal(os_str) => os_str == OsStr::new("public"),
+        _ => false,
+    })
 }
 
 /// Defines a prefix in the context of the application.
@@ -374,6 +384,42 @@ mod tests {
                 Route::retrieve_route(&Path::new(t.0), &PathBuf::from(t.1), ""),
                 String::from(t.2),
             )
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    #[test]
+    fn unix_is_in_public_folder() {
+        let tests = [
+            ("public/index.js", true),
+            ("examples/public/index.js", true),
+            ("examples/public/other.js", true),
+            ("public.js", false),
+            ("examples/public.js", false),
+            ("./examples/public.js", false),
+            ("./examples/index.js", false),
+        ];
+
+        for t in tests {
+            assert_eq!(is_in_public_folder(&Path::new(t.0)), t.1)
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn win_is_in_public_folder() {
+        let tests = [
+            ("public\\index.js", true),
+            ("examples\\public\\index.js", true),
+            ("examples\\public\\other.js", true),
+            ("public.js", false),
+            ("examples\\public.js", false),
+            (".\\examples\\public.js", false),
+            (".\\examples\\index.js", false),
+        ];
+
+        for t in tests {
+            assert_eq!(is_in_public_folder(&Path::new(t.0)), t.1)
         }
     }
 
