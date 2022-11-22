@@ -422,7 +422,7 @@ mod tests {
             assert_eq!(is_in_public_folder(&Path::new(t.0)), t.1)
         }
     }
-    
+
     #[test]
     fn format_provided_prefix() {
         let tests = [
