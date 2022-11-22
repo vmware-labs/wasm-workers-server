@@ -15,10 +15,10 @@ name = "wws"
 path = "src/main.rs"
 
 [dependencies]
-wasmtime = "2.0.2"
-wasmtime-wasi = "2.0.2"
+wasmtime = "3.0.0"
+wasmtime-wasi = "3.0.0"
 anyhow = "1.0.66"
-wasi-common = "2.0.2"
+wasi-common = "3.0.0"
 actix-web = "4"
 actix-files = "0.6.2"
 lazy_static = "1.4.0"
