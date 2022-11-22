@@ -154,7 +154,9 @@ pub fn format_prefix(source: &str) -> String {
     // Ensure the prefix doesn't include any \ character
     normalized_prefix = normalized_prefix.replace('\\', "/");
 
-    if !normalized_prefix.is_empty() {
+    if normalized_prefix.is_empty() {
+        normalized_prefix
+    } else {
         if !normalized_prefix.starts_with('/') {
             normalized_prefix = String::from('/') + &normalized_prefix;
         }
@@ -162,9 +164,9 @@ pub fn format_prefix(source: &str) -> String {
         if normalized_prefix.ends_with('/') {
             normalized_prefix.pop();
         }
-    }
 
-    normalized_prefix
+        normalized_prefix
+    }
 }
 
 #[cfg(test)]
@@ -202,7 +204,7 @@ mod tests {
 
         for t in tests {
             assert_eq!(
-                Route::retrieve_route(&Path::new(t.0), &PathBuf::from(t.1), ""),
+                Route::retrieve_route(Path::new(t.0), &PathBuf::from(t.1), ""),
                 String::from(t.2),
             )
         }
@@ -304,7 +306,7 @@ mod tests {
 
         for t in tests {
             assert_eq!(
-                Route::retrieve_route(&Path::new(t.0), &PathBuf::from(t.1), ""),
+                Route::retrieve_route(Path::new(t.0), &PathBuf::from(t.1), ""),
                 String::from(t.2),
             )
         }
