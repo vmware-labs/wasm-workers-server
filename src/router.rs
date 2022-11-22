@@ -39,7 +39,7 @@ impl Route {
     /// proper URL path based on the filename.
     ///
     /// This method also initializes the Runner and loads the Config if available.
-    fn new(base_path: &Path, filepath: PathBuf) -> Self {
+    fn new(base_path: &Path, filepath: PathBuf, prefix: &str) -> Self {
         let runner = Runner::new(&filepath).unwrap();
         // Load configuration
         let mut config_path = filepath.clone();
@@ -56,7 +56,7 @@ impl Route {
         }
 
         Self {
-            path: Self::retrieve_route(base_path, &filepath),
+            path: Self::retrieve_route(base_path, &filepath, prefix),
             handler: filepath,
             runner,
             config,
@@ -65,7 +65,7 @@ impl Route {
 
     // Process the given path to return the proper route for the API.
     // It will transform paths like test/index.wasm into /test.
-    fn retrieve_route(base_path: &Path, path: &Path) -> String {
+    fn retrieve_route(base_path: &Path, path: &Path, prefix: &str) -> String {
         // Normalize both paths
         let n_path = Self::normalize_path_to_url(path);
         let n_base_path = Self::normalize_path_to_url(base_path);
@@ -73,12 +73,13 @@ impl Route {
         // Remove the base_path
         match n_path.strip_prefix(&n_base_path) {
             Some(worker_path) => {
-                if worker_path.is_empty() {
-                    // Index file at root
-                    String::from("/")
-                } else {
-                    worker_path.to_string()
-                }
+                String::from(prefix)
+                    + (if worker_path.is_empty() {
+                        // Index file at root
+                        "/"
+                    } else {
+                        worker_path
+                    })
             }
             None => {
                 // TODO: manage errors properly and skip the route
@@ -93,7 +94,7 @@ impl Route {
     // - Remove file extension
     // - Keep only "normal" components. Others like "." or "./" are ignored
     // - Remove "index" components
-    fn normalize_path_to_url(path: &Path) -> String {
+    pub fn normalize_path_to_url(path: &Path) -> String {
         path.with_extension("")
             .components()
             .filter_map(|c| match c {
@@ -113,7 +114,7 @@ impl Route {
 /// Initialize the list of routes from the given folder. This method will look for
 /// all `**/*.wasm` files and will create the associated routes. This routing approach
 /// is pretty popular in web development and static sites.
-pub fn initialize_routes(base_path: &Path) -> Vec<Route> {
+pub fn initialize_routes(base_path: &Path, prefix: &str) -> Vec<Route> {
     let mut routes = Vec::new();
     let path = Path::new(&base_path);
 
@@ -128,13 +129,44 @@ pub fn initialize_routes(base_path: &Path) -> Vec<Route> {
     for entry in glob_items {
         match entry {
             Ok(filepath) => {
-                routes.push(Route::new(base_path, filepath));
+                routes.push(Route::new(base_path, filepath, prefix));
             }
             Err(e) => println!("Could not read the file {:?}", e),
         }
     }
 
     routes
+}
+
+/// Defines a prefix in the context of the application.
+/// This prefix will be used for the static assets and the
+/// handlers.
+///
+/// A prefix must have the format: /X. This method receives
+/// the optional prefix and returns a proper String.
+///
+/// To be flexible, the method will manage "windows" paths too:
+/// \app. This shouldn't be considered as "prefix" must be an URI
+/// path. However, the check is pretty simple, so we will consider
+/// it.
+pub fn format_prefix(source: &str) -> String {
+    let mut normalized_prefix = source.to_string();
+    // Ensure the prefix doesn't include any \ character
+    normalized_prefix = normalized_prefix.replace('\\', "/");
+
+    if normalized_prefix.is_empty() {
+        normalized_prefix
+    } else {
+        if !normalized_prefix.starts_with('/') {
+            normalized_prefix = String::from('/') + &normalized_prefix;
+        }
+
+        if normalized_prefix.ends_with('/') {
+            normalized_prefix.pop();
+        }
+
+        normalized_prefix
+    }
 }
 
 #[cfg(test)]
@@ -172,7 +204,7 @@ mod tests {
 
         for t in tests {
             assert_eq!(
-                Route::retrieve_route(&Path::new(t.0), &PathBuf::from(t.1)),
+                Route::retrieve_route(Path::new(t.0), &PathBuf::from(t.1), ""),
                 String::from(t.2),
             )
         }
@@ -221,7 +253,7 @@ mod tests {
 
         for t in tests {
             assert_eq!(
-                Route::retrieve_route(&Path::new(t.0), &PathBuf::from(t.1)),
+                Route::retrieve_route(&Path::new(t.0), &PathBuf::from(t.1), ""),
                 String::from(t.2),
             )
         }
@@ -274,7 +306,7 @@ mod tests {
 
         for t in tests {
             assert_eq!(
-                Route::retrieve_route(&Path::new(t.0), &PathBuf::from(t.1)),
+                Route::retrieve_route(Path::new(t.0), &PathBuf::from(t.1), ""),
                 String::from(t.2),
             )
         }
@@ -339,9 +371,36 @@ mod tests {
 
         for t in tests {
             assert_eq!(
-                Route::retrieve_route(&Path::new(t.0), &PathBuf::from(t.1)),
+                Route::retrieve_route(&Path::new(t.0), &PathBuf::from(t.1), ""),
                 String::from(t.2),
             )
+        }
+    }
+
+    #[test]
+    fn format_provided_prefix() {
+        let tests = [
+            // Unix approach
+            ("", ""),
+            ("/app", "/app"),
+            ("app", "/app"),
+            ("app/", "/app"),
+            ("/app/", "/app"),
+            ("/app/test/", "/app/test"),
+            ("/app/test", "/app/test"),
+            ("app/test/", "/app/test"),
+            // Windows approach
+            ("\\app", "/app"),
+            ("app", "/app"),
+            ("app\\", "/app"),
+            ("\\app\\", "/app"),
+            ("\\app\\test\\", "/app/test"),
+            ("\\app\\test", "/app/test"),
+            ("app\\test\\", "/app/test"),
+        ];
+
+        for t in tests {
+            assert_eq!(format_prefix(t.0), String::from(t.1))
         }
     }
 }
