@@ -1,4 +1,5 @@
 use anyhow::Result;
+use std::env;
 use wasm_workers_rs::{
     handler,
     http::{self, HeaderValue, Request, Response},
@@ -6,6 +7,8 @@ use wasm_workers_rs::{
 
 #[handler]
 fn handler(req: Request<String>) -> Result<Response<String>> {
+    let message = env::var("MESSAGE").unwrap_or_else(|_| String::from("Missing title"));
+
     // Applied changes here to use the Response method. This requires changes
     // on signature and how it returns the data.
     let response = format!(
@@ -27,7 +30,7 @@ fn handler(req: Request<String>) -> Result<Response<String>> {
 </head>
 <body>
     <main>
-        <h1>Hello from Wasm Workers Server</h1>
+        <h1>{}</h1>
         <pre><code>Replying to {}
 Method: {}
 User Agent: {}
@@ -37,6 +40,7 @@ Payload: {}</code></pre>
         </p>
     </main>
 </body>",
+        message,
         req.uri(),
         req.method().as_str(),
         req.headers()

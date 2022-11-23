@@ -1,0 +1,5 @@
+name = "envs"
+version = "1"
+
+[vars]
+MESSAGE = "Hello from Wasm Workers Server!"

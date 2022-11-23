@@ -101,10 +101,17 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
         if route.path == req.path() {
             let body_str = String::from_utf8(body.to_vec()).unwrap_or_else(|_| String::from(""));
 
-            // Init KV
-            let kv_namespace = match &route.config {
-                Some(config) => config.data_kv_namespace(),
-                None => None,
+            // Init from configuration
+            let empty_hash = HashMap::new();
+            let mut vars = &empty_hash;
+            let mut kv_namespace = None;
+
+            match &route.config {
+                Some(config) => {
+                    kv_namespace = config.data_kv_namespace();
+                    vars = &config.vars;
+                }
+                None => {}
             };
 
             let store = match &kv_namespace {
@@ -119,7 +126,7 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
 
             let handler_result = route
                 .runner
-                .run(&runner::build_wasm_input(&req, body_str, store))
+                .run(&runner::build_wasm_input(&req, body_str, store), vars)
                 .unwrap_or(WasmOutput {
                     body: String::from("<p>There was an error running this function</p>"),
                     headers: HashMap::from([("content-type".to_string(), "text/html".to_string())]),

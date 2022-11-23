@@ -140,7 +140,7 @@ impl Runner {
     /// from the WasmInput serialization. It initializes a new WASI context with
     /// the required pipes. Then, it sends the data and read the output from the wasm
     /// run.
-    pub fn run(&self, input: &str) -> Result<WasmOutput> {
+    pub fn run(&self, input: &str, vars: &HashMap<String, String>) -> Result<WasmOutput> {
         let stdin = match self.runner_type {
             RunnerHandlerType::Wasm => ReadPipe::from(input),
             RunnerHandlerType::JavaScript => {
@@ -159,11 +159,16 @@ impl Runner {
         let mut linker = Linker::new(&self.engine);
         wasmtime_wasi::add_to_linker(&mut linker, |s| s)?;
 
+        // Configure environment variables
+        let tuple_vars: Vec<(String, String)> =
+            vars.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
+
         // WASI context
         let wasi = WasiCtxBuilder::new()
             .stdin(Box::new(stdin))
             .stdout(Box::new(stdout.clone()))
             .stderr(Box::new(stderr))
+            .envs(&tuple_vars)?
             .inherit_args()?
             .build();
         let mut store = Store::new(&self.engine, wasi);
