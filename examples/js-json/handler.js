@@ -24,8 +24,8 @@ const reply = (request) => {
   // Body response
   const body = JSON.stringify({
     success: true,
-    message: "Hello from Wasm!"
-  });
+    message: MESSAGE
+  }, null, 2);
 
   // Build a new response
   let response = new Response(body, {

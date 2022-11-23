@@ -205,7 +205,7 @@ To add a KV store to your worker, follow these steps:
 
 1. Create a `worker-kv.toml` file with the following content. Note the name of the TOML file must match the name of the handler. In this case we have `worker-kv.wasm` and `worker-kv.toml` in the same folder (`target/wasm32-wasi/release`):
 
-    ```toml title="./target/wasm32-wasi/release/worker-kv.toml"
+    ```toml title="target/wasm32-wasi/release/worker-kv.toml"
     name = "workerkv"
     version = "1"
 
@@ -228,6 +228,46 @@ To add a KV store to your worker, follow these steps:
     ```
 
 1. Finally, open <http://127.0.0.1:8080/worker-kv> in your browser.
+
+## Read environment variables
+
+Environment variables are configured [via the related TOML configuration file](../features/environment-variables.md). These variables are directly injected as global constants in your worker. To read them, just use the same name you configured in your TOML file:
+
+```toml title="envs.toml"
+name = "envs"
+version = "1"
+
+[vars]
+MESSAGE = "Hello 👋! This message comes from an environment variable"
+```
+
+Now, you can read the `MESSAGE` variable using the [`std::env` Rust library](https://doc.rust-lang.org/std/env/fn.var.html):
+
+```rust title="src/main.rs"
+use anyhow::Result;
+use std::env;
+use wasm_workers_rs::{
+    handler,
+    http::{self, Request, Response},
+};
+
+#[handler]
+fn handler(req: Request<String>) -> Result<Response<String>> {
+    // Read the environment variable using the std::env::var method
+    let message = env::var("MESSAGE").unwrap_or_else(|_| String::from("Missing message"));
+
+    let response = format!(
+        "The message is: {}",
+        message,
+    );
+
+    Ok(http::Response::builder()
+        .status(200)
+        .body(response.into())?)
+}
+```
+
+If you prefer, you can configure the environment variable value dynamically by following [these instructions](../features/environment-variables.md#inject-existing-environment-variables).
 
 ## Other examples
 

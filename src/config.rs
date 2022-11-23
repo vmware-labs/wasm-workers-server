@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::data::kv::KVConfigData;
-use serde::Deserialize;
-use std::fs;
+use serde::{Deserialize, Deserializer};
+use std::collections::HashMap;
 use std::path::PathBuf;
+use std::{env, fs};
 use toml::from_slice;
 
 /// Handlers configuration. These files are optional when no configuration change is required.
@@ -16,6 +17,9 @@ pub struct Config {
     pub version: String,
     /// Optional data configuration
     pub data: Option<ConfigData>,
+    /// Optional environment configuration
+    #[serde(deserialize_with = "read_environment_variables")]
+    pub vars: HashMap<String, String>,
 }
 
 /// Configure a data plugin for the handler
@@ -64,5 +68,41 @@ impl Config {
     /// Returns the data Key/Value namespace if available
     pub fn data_kv_namespace(&self) -> Option<String> {
         Some(self.data_kv_config()?.namespace.clone())
+    }
+}
+
+/// Deserialize the HashMap of variables. By default, this
+/// function won't modify the K or the V of the HashMap. If
+/// V starts with $, its value will be read from the server
+/// environment variables
+fn read_environment_variables<'de, D>(deserializer: D) -> Result<HashMap<String, String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let result: Result<Option<HashMap<String, String>>, D::Error> =
+        Deserialize::deserialize(deserializer);
+
+    match result {
+        Ok(value) => match value {
+            Some(mut options) => {
+                for (_, value) in options.iter_mut() {
+                    // Read the value from the environment variables if available.
+                    // If not, it will default to an empty string
+                    if value.starts_with('$') && !value.contains(' ') {
+                        // Remove the $
+                        value.remove(0);
+
+                        match env::var(&value) {
+                            Ok(env_value) => *value = env_value,
+                            Err(_) => *value = String::new(),
+                        }
+                    }
+                }
+
+                Ok(options)
+            }
+            None => Ok(HashMap::new()),
+        },
+        Err(err) => Err(err),
     }
 }

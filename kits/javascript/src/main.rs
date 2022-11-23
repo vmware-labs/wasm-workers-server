@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use quickjs_wasm_rs::{json, Context};
-use std::io::{self, stdin, stdout, Read, Write};
+use std::{
+    env,
+    io::{self, stdin, stdout, Read, Write},
+};
 
 // JS polyfill
 static POLYFILL: &str = include_str!("./glue.js");
@@ -22,6 +25,12 @@ fn main() {
 
     stdin().read_to_string(&mut source).unwrap();
     let chunks: Vec<&str> = source.split(SEPARATOR).collect();
+
+    // Inject global variables
+    for (key, val) in env::vars() {
+        let escaped_val = val.replace('"', "\\\"");
+        contents.push_str(&format!("const {} = \"{}\";", key, escaped_val));
+    }
 
     contents.push_str(&chunks.first().unwrap());
 

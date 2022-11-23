@@ -121,6 +121,47 @@ To add a KV store to your worker, follow these steps:
 
 1. Finally, open <http://127.0.0.1:8080/counter> in your browser.
 
+## Read environment variables
+
+Environment variables are configured [via the related TOML configuration file](../features/environment-variables.md). These variables are directly injected as global constants in your worker. To read them, just use the same name you configured in your TOML file:
+
+```toml title="./envs.toml"
+name = "envs"
+version = "1"
+
+[vars]
+MESSAGE = "Hello 👋! This message comes from an environment variable"
+```
+
+Now, you can use the `MESSAGE` constant directly:
+
+```javascript title="./envs.js"
+const reply = (request) => {
+  // Body response
+  const body = JSON.stringify({
+    success: true,
+    // Here you can read the constant directly
+    message: MESSAGE
+  }, null, 2);
+
+  // Build a new response
+  let response = new Response(body, {
+    headers: {
+      "content-type": "application/json;charset=UTF-8"
+    }
+  });
+
+  return response;
+}
+
+// Subscribe to the Fetch event
+addEventListener("fetch", event => {
+  return event.respondWith(reply(event.request));
+});
+```
+
+If you prefer, you can configure the environment variable value dynamically by following [these instructions](../features/environment-variables.md#inject-existing-environment-variables).
+
 ## Other examples
 
 * [Basic](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/js-basic/handler.js)
