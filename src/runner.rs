@@ -159,17 +159,18 @@ impl Runner {
         let mut linker = Linker::new(&self.engine);
         wasmtime_wasi::add_to_linker(&mut linker, |s| s)?;
 
+        // Configure environment variables
+        let tuple_vars: Vec<(String, String)> =
+            vars.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
+
         // WASI context
-        let mut wasi = WasiCtxBuilder::new()
+        let wasi = WasiCtxBuilder::new()
             .stdin(Box::new(stdin))
             .stdout(Box::new(stdout.clone()))
             .stderr(Box::new(stderr))
+            .envs(&tuple_vars)?
             .inherit_args()?
             .build();
-        // Configure environment variables
-        for (key, value) in vars {
-            wasi.push_env(key, value)?;
-        }
         let mut store = Store::new(&self.engine, wasi);
 
         linker.module(&mut store, "", &self.module)?;
