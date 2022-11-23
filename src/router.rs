@@ -98,13 +98,9 @@ impl Route {
         path.with_extension("")
             .components()
             .filter_map(|c| match c {
-                Component::Normal(os_str) if os_str != OsStr::new("index") => {
-                    if let Some(parsed_str) = os_str.to_str() {
-                        Some(String::from("/") + parsed_str)
-                    } else {
-                        None
-                    }
-                }
+                Component::Normal(os_str) if os_str != OsStr::new("index") => os_str
+                    .to_str()
+                    .map(|parsed_str| String::from("/") + parsed_str),
                 _ => None,
             })
             .collect()
@@ -401,7 +397,7 @@ mod tests {
         ];
 
         for t in tests {
-            assert_eq!(is_in_public_folder(&Path::new(t.0)), t.1)
+            assert_eq!(is_in_public_folder(Path::new(t.0)), t.1)
         }
     }
 

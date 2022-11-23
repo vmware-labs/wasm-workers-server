@@ -25,7 +25,7 @@ jobs:
     - name: Format
       run: cargo fmt --check
     - name: Clippy
-      run: cargo clippy
+      run: cargo clippy -- -D warnings
   test:
     strategy:
       fail-fast: false
