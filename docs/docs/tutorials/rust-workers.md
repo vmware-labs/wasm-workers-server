@@ -231,7 +231,7 @@ To add a KV store to your worker, follow these steps:
 
 ## Read environment variables
 
-Environment variables are configured [via the related TOML configuration file](../features/environment-variables.md). These variables are directly injected as global constants in your worker. To read them, just use the same name you configured in your TOML file:
+Environment variables are configured [via the related TOML configuration file](../features/environment-variables.md). These variables are accessible via `std::env` in your worker. To read them, just use the same name you configured in your TOML file:
 
 ```toml title="envs.toml"
 name = "envs"
