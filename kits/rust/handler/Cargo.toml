@@ -2,6 +2,10 @@
 name = "handler"
 version = "0.1.0"
 edition = "2021"
+license = "Apache-2.0"
+homepage = "https://workers.wasmlabs.dev/"
+documentation = "https://workers.wasmlabs.dev/docs/intro"
+repository = "https://github.com/vmware-labs/wasm-workers-server/"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
