@@ -3,6 +3,7 @@
 
 use actix_web::{http::header::HeaderMap, HttpRequest};
 use anyhow::Result;
+use base64::decode;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -47,16 +48,51 @@ impl WasmInput {
 
 /// JSON output from a wasm module. This information is passed via STDOUT / WASI
 /// from the module.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct WasmOutput {
-    /// Response body
-    pub body: String,
     /// Response headers
     pub headers: HashMap<String, String>,
     /// Response HTTP status
     pub status: u16,
     /// New state of the K/V store if available
     pub kv: HashMap<String, String>,
+    /// Response body data
+    data: String,
+    /// Internal value to indicate if the body is base64 encoded
+    #[serde(default = "default_base64_encoding")]
+    base64: bool,
+}
+
+fn default_base64_encoding() -> bool {
+    false
+}
+
+impl WasmOutput {
+    /// Initializes a new WasmOutput object
+    pub fn new(
+        body: &str,
+        headers: HashMap<String, String>,
+        status: u16,
+        kv: HashMap<String, String>,
+    ) -> Self {
+        Self {
+            data: String::from(body),
+            base64: false,
+            headers,
+            status,
+            kv,
+        }
+    }
+
+    /// Return the content body as bytes. It will automatically
+    /// decode the data if the base64 flag is enabled.
+    pub fn body(&self) -> Result<Vec<u8>> {
+        if self.base64 {
+            Ok(decode(&self.data)?)
+        } else {
+            Ok(self.data.clone().into_bytes())
+        }
+    }
 }
 
 /// Builds the JSON string to pass to the Wasm module using WASI STDIO strategy.

@@ -2232,6 +2232,7 @@ name = "wasm-workers-rs"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "base64",
  "handler",
  "http",
  "serde",
@@ -2245,6 +2246,7 @@ dependencies = [
  "actix-files",
  "actix-web",
  "anyhow",
+ "base64",
  "clap 4.0.26",
  "env_logger",
  "glob",

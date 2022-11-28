@@ -27,6 +27,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.85"
 glob = "0.3.0"
 toml = "0.5.9"
+base64 = "0.13.1"
 clap = { version = "4.0.10", features = ["derive"] }
 
 [workspace]
@@ -37,6 +38,7 @@ members = [
 ]
 # Exclude examples
 exclude = [
+  "examples/pdf-create",
   "examples/rust-basic",
   "examples/rust-kv"
 ]

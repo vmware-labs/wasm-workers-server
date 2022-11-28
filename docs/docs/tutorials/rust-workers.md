@@ -9,7 +9,7 @@ Then, they are loaded by Wasm Workers Server and start processing requests.
 
 ## Your first worker
 
-Every worker receives a [Request<String\>](https://docs.rs/http/0.2.8/http/request/struct.Request.html) struct and returns a [Response<String\>](https://docs.rs/http/0.2.8/http/response/struct.Response.html). These structs come from the widely known [`http` crate](https://docs.rs/http/). Then, we create a handler macro to connect your worker with `wws`.
+Every worker receives a [Request<String\>](https://docs.rs/http/0.2.8/http/request/struct.Request.html) struct and returns a [Response<Content\>](https://docs.rs/http/0.2.8/http/response/struct.Response.html). These structs come from the widely known [`http` crate](https://docs.rs/http/) and the `Content` struct is defined in our rust kit. It allows you returning different types. Finally, the `handler` macro connects your worker with `wws`.
 
 In this example, the worker will get a request and print all the related information.
 
@@ -39,10 +39,11 @@ In this example, the worker will get a request and print all the related informa
     use wasm_workers_rs::{
         handler,
         http::{self, Request, Response},
+        Content,
     };
 
     #[handler]
-    fn reply(req: Request<String>) -> Result<Response<String>> {
+    fn reply(req: Request<String>) -> Result<Response<Content>> {
         Ok(http::Response::builder()
             .status(200)
             .header("x-generated-by", "wasm-workers-server")
@@ -145,10 +146,11 @@ To add a KV store to your worker, follow these steps:
     use wasm_workers_rs::{
         handler,
         http::{self, Request, Response},
+        Content,
     };
 
     #[handler(cache)]
-    fn handler(_req: Request<String>, cache: &mut Cache) -> Result<Response<String>> {
+    fn handler(_req: Request<String>, cache: &mut Cache) -> Result<Response<Content>> {
         Ok(http::Response::builder()
             .status(200)
             .header("x-generated-by", "wasm-workers-server")
@@ -161,13 +163,13 @@ To add a KV store to your worker, follow these steps:
     ```rust title="src/main.rs"
     use anyhow::Result;
     use wasm_workers_rs::{
-        cache::Cache,
         handler,
         http::{self, Request, Response},
+        Cache, Content,
     };
 
     #[handler(cache)]
-    fn handler(_req: Request<String>, cache: &mut Cache) -> Result<Response<String>> {
+    fn handler(_req: Request<String>, cache: &mut Cache) -> Result<Response<Content>> {
         // Applied changes here to use the Response method. This requires changes
         // on signature and how it returns the data.
         let count = cache.get("counter");
@@ -249,10 +251,11 @@ use std::env;
 use wasm_workers_rs::{
     handler,
     http::{self, Request, Response},
+    Content,
 };
 
 #[handler]
-fn handler(req: Request<String>) -> Result<Response<String>> {
+fn handler(req: Request<String>) -> Result<Response<Content>> {
     // Read the environment variable using the std::env::var method
     let message = env::var("MESSAGE").unwrap_or_else(|_| String::from("Missing message"));
 

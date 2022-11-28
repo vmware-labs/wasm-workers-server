@@ -1,0 +1,9 @@
+[package]
+name = "pdf-create"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.63"
+wasm-workers-rs = { path = "../../kits/rust" }
+printpdf = "0.5.3"

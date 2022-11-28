@@ -36,9 +36,9 @@ impl KV {
 
     /// Replaces the content of an existing store. If the store doesn't exist,
     /// this method won't apply any change
-    pub fn replace_store(&mut self, namespace: &str, state: HashMap<String, String>) {
+    pub fn replace_store(&mut self, namespace: &str, state: &HashMap<String, String>) {
         if let Some(store) = self.find_mut_store(namespace) {
-            store.replace(state);
+            store.replace(state.clone());
         }
     }
 
