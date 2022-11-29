@@ -2,12 +2,11 @@ use anyhow::Result;
 use printpdf::*;
 use std::io::BufWriter;
 use wasm_workers_rs::{
-    handler,
     http::{self, Request, Response},
-    Content,
+    worker, Content,
 };
 
-#[handler]
+#[worker]
 fn handler(req: Request<String>) -> Result<Response<Content>> {
     let mut buf = BufWriter::new(Vec::new());
 

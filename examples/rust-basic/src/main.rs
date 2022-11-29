@@ -1,12 +1,11 @@
 use anyhow::Result;
 use std::env;
 use wasm_workers_rs::{
-    handler,
     http::{self, HeaderValue, Request, Response},
-    Content,
+    worker, Content,
 };
 
-#[handler]
+#[worker]
 fn handler(req: Request<String>) -> Result<Response<Content>> {
     let message = env::var("MESSAGE").unwrap_or_else(|_| String::from("Missing title"));
 

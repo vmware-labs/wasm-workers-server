@@ -1,6 +1,6 @@
 # Wasm Workers Server
 
-Wasm Workers Server (`wws`) is an HTTP server that runs applications with WebAssembly. These applications are composed by multiple modules, called "handlers" or "functions". Each of these modules is in charge of replying to a specific HTTP path in your application.
+Wasm Workers Server (`wws`) is an HTTP server that runs applications with WebAssembly. These applications are composed by multiple modules, called "workers" or "handlers". Each of these modules is in charge of replying to a specific HTTP path in your application.
 
 The server loads the existing Wasm modules and compatible languages in the current path. The filenames and folders determine the final routes that will be served. This is called "filesystem routing" and is a popular technique. Successful frameworks such as [NextJS](https://nextjs.org/) and [Eleventy](https://www.11ty.dev/) work in this way.
 
@@ -14,9 +14,9 @@ $ wws .
 ⚙️  Loading routes from: .
 🗺  Detected routes:
     - http://127.0.0.1:8080/
-      => index.wasm (handler: default)
+      => index.wasm (name: default)
     - http://127.0.0.1:8080/api/hello
-      => api/hello.js (handler: default)
+      => api/hello.js (name: default)
 🚀 Start serving requests at http://127.0.0.1:8080
 ```
 
@@ -58,7 +58,7 @@ The server will start immediately:
 ⚙️  Loading routes from: .
 🗺  Detected routes:
     - http://127.0.0.1:8080/
-      => index.js (handler: default)
+      => index.js (name: default)
 🚀 Start serving requests at http://127.0.0.1:8080
 ```
 
@@ -77,10 +77,10 @@ curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/inst
 
 If you don't want to install anything locally you can just run `wws` from the `projects.registry.vmware.com/wasmlabs/containers/wasm-workers-server:latest` container image. All you need to do is:
 
- - map a local folder with handlers to `/app` within the container
- - expose port `8080` from the container
+ - Map a local folder with workers to `/app` within the container
+ - Expose port `8080` from the container
 
-Here is how to quickly run a container with an ad-hoc handler from the /tmp/wws-app folder:
+Here is how to quickly run a container with an ad-hoc worker from the /tmp/wws-app folder:
 
 ```bash
 mkdir /tmp/wws-app 2>/dev/null;
@@ -89,7 +89,7 @@ docker run --rm -v /tmp/wws-app:/app -p 8080:8080 projects.registry.vmware.com/w
 ```
 ## Language Support
 
-Wasm Workers Server focuses on simplicity. We want you to run handlers (written in different languages) safely in WebAssembly. For interpreted languages, we add different interpreters:
+Wasm Workers Server focuses on simplicity. We want you to run workers (written in different languages) safely in WebAssembly. For interpreted languages, we add different interpreters:
 
 | Language | Wasm module | Interpreter |
 | --- | --- | --- |
@@ -99,11 +99,11 @@ Wasm Workers Server focuses on simplicity. We want you to run handlers (written 
 
 We will include more interpreters in the future.
 
-### JavaScript handlers
+### JavaScript Workers
 
-The integrated interpreter is based on [QuickJS](https://bellard.org/quickjs/) (compiled with the [quickjs-wasm-rs](https://crates.io/crates/quickjs-wasm-rs) crate). The compatible handlers follow the Web Workers API approach. However, not all the Web Workers API is available in these handlers. These are some of the missing features:
+The integrated interpreter is based on [QuickJS](https://bellard.org/quickjs/) (compiled with the [quickjs-wasm-rs](https://crates.io/crates/quickjs-wasm-rs) crate). The compatible workers follow the Web Workers API approach. However, not all the Web Workers API is available in these workers. These are some of the missing features:
 
-- No modules available. Handlers must be a single file
+- No modules available. Workers must be a single file
 - Fetch API
 - Async / Await
 
@@ -126,9 +126,9 @@ After installing the different prerequisites, you can run the development enviro
 $ cargo run -- --help
 ```
 
-This command will run the server and look for `.wasm` and compatible modules (like `.js`) in the folder you pass via arguments. Check the [examples](./examples/) folder to get more information about creating Wasm handlers.
+This command will run the server and look for `.wasm` and compatible modules (like `.js`) in the folder you pass via arguments. Check the [examples](./examples/) folder to get more information about creating Wasm workers.
 
 ### Documentation
 
 * `src`: includes the source code for the Wasm Workers Server project
-* `examples`: folder to generate different example handlers. Check the README file inside to get more information about how to build those
+* `examples`: folder to generate different example workers. Check the README file inside to get more information about how to build those

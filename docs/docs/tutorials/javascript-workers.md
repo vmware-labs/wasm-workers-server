@@ -65,7 +65,7 @@ In this example, the worker will get a request and print all the related informa
     ⚙️ Loading routes from: .
     🗺 Detected routes:
     - http://127.0.0.1:8080/
-    => index.js (handler: default)
+    => index.js (name: default)
     🚀 Start serving requests at http://127.0.0.1:8080
     ```
 
@@ -96,7 +96,7 @@ To add a KV store to your worker, follow these steps:
     });
     ```
 
-1. Create a `counter.toml` file with the following content. Note the name of the TOML file must match the name of the handler. In this case we have `counter.js` and `counter.toml` in the same folder:
+1. Create a `counter.toml` file with the following content. Note the name of the TOML file must match the name of the worker. In this case we have `counter.js` and `counter.toml` in the same folder:
 
     ```toml title="./counter.toml"
     name = "counter"
@@ -115,7 +115,7 @@ To add a KV store to your worker, follow these steps:
     ⚙️ Loading routes from: .
     🗺 Detected routes:
     - http://127.0.0.1:8080/counter
-    => counter.js (handler: default)
+    => counter.js (name: default)
     🚀 Start serving requests at http://127.0.0.1:8080
     ```
 

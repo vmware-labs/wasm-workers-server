@@ -24,7 +24,7 @@ use std::io::Error;
 use std::path::PathBuf;
 use std::{collections::HashMap, sync::RwLock};
 
-// Provide a static root_path so it can be used in the default_handler to manage
+// Provide a static root_path so it can be used in the default_worker to manage
 // static assets.
 lazy_static! {
     static ref ARGS: Args = Args::parse();
@@ -201,7 +201,7 @@ async fn main() -> std::io::Result<()> {
         };
 
         println!(
-            "    - http://{}:{}{}\n      => {} (handler: {})",
+            "    - http://{}:{}{}\n      => {} (name: {})",
             &args.hostname,
             args.port,
             route.path,

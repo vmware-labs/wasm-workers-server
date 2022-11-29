@@ -146,7 +146,7 @@ fn is_in_public_folder(path: &Path) -> bool {
 
 /// Defines a prefix in the context of the application.
 /// This prefix will be used for the static assets and the
-/// handlers.
+/// workers.
 ///
 /// A prefix must have the format: /X. This method receives
 /// the optional prefix and returns a proper String.

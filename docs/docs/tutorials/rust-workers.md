@@ -9,7 +9,7 @@ Then, they are loaded by Wasm Workers Server and start processing requests.
 
 ## Your first worker
 
-Every worker receives a [Request<String\>](https://docs.rs/http/0.2.8/http/request/struct.Request.html) struct and returns a [Response<Content\>](https://docs.rs/http/0.2.8/http/response/struct.Response.html). These structs come from the widely known [`http` crate](https://docs.rs/http/) and the `Content` struct is defined in our rust kit. It allows you returning different types. Finally, the `handler` macro connects your worker with `wws`.
+Every worker receives a [Request<String\>](https://docs.rs/http/0.2.8/http/request/struct.Request.html) struct and returns a [Response<Content\>](https://docs.rs/http/0.2.8/http/response/struct.Response.html). These structs come from the widely known [`http` crate](https://docs.rs/http/) and the `Content` struct is defined in our rust kit. It allows you returning different types. Finally, the `worker` macro connects your worker with `wws`.
 
 In this example, the worker will get a request and print all the related information.
 
@@ -32,17 +32,17 @@ In this example, the worker will get a request and print all the related informa
     wasm-workers-rs = { git = "https://github.com/vmware-labs/wasm-workers-server/" }
     ```
 
-1. Add the `reply` function to the `src/main.rs` file. You will need to import the required resources from the `wasm-workers-rs` crate and use the `handler` macro:
+1. Add the `reply` function to the `src/main.rs` file. You will need to import the required resources from the `wasm-workers-rs` crate and use the `worker` macro:
 
     ```rust title="src/main.rs"
     use anyhow::Result;
     use wasm_workers_rs::{
-        handler,
+        worker,
         http::{self, Request, Response},
         Content,
     };
 
-    #[handler]
+    #[worker]
     fn reply(req: Request<String>) -> Result<Response<Content>> {
         Ok(http::Response::builder()
             .status(200)
@@ -56,11 +56,11 @@ In this example, the worker will get a request and print all the related informa
     ```rust title="src/main.rs"
     use anyhow::Result;
     use wasm_workers_rs::{
-        handler,
+        worker,
         http::{self, HeaderValue, Request, Response},
     };
 
-    #[handler]
+    #[worker]
     fn reply(req: Request<String>) -> Result<Response<String>> {
         // Applied changes here to use the Response method. This requires changes
         // on signature and how it returns the data.
@@ -108,7 +108,7 @@ In this example, the worker will get a request and print all the related informa
     ⚙️ Loading routes from: .
     🗺 Detected routes:
     - http://127.0.0.1:8080/worker
-    => worker.wasm (handler: default)
+    => worker.wasm (name: default)
     🚀 Start serving requests at http://127.0.0.1:8080
     ```
 
@@ -139,17 +139,17 @@ To add a KV store to your worker, follow these steps:
     wasm-workers-rs = { git = "https://github.com/vmware-labs/wasm-workers-server/" }
     ```
 
-1. Add the `reply` function to the `src/main.rs` file. You will need to import the required resources from the `wasm-workers-rs` crate and use the `handler` macro. In this case, we will add a new attribute to the `handler` macro called `cache` and update the function signature:
+1. Add the `reply` function to the `src/main.rs` file. You will need to import the required resources from the `wasm-workers-rs` crate and use the `worker` macro. In this case, we will add a new attribute to the `worker` macro called `cache` and update the function signature:
 
     ```rust title="src/main.rs"
     use anyhow::Result;
     use wasm_workers_rs::{
-        handler,
+        worker,
         http::{self, Request, Response},
         Content,
     };
 
-    #[handler(cache)]
+    #[worker(cache)]
     fn handler(_req: Request<String>, cache: &mut Cache) -> Result<Response<Content>> {
         Ok(http::Response::builder()
             .status(200)
@@ -163,12 +163,12 @@ To add a KV store to your worker, follow these steps:
     ```rust title="src/main.rs"
     use anyhow::Result;
     use wasm_workers_rs::{
-        handler,
+        worker,
         http::{self, Request, Response},
         Cache, Content,
     };
 
-    #[handler(cache)]
+    #[worker(cache)]
     fn handler(_req: Request<String>, cache: &mut Cache) -> Result<Response<Content>> {
         // Applied changes here to use the Response method. This requires changes
         // on signature and how it returns the data.
@@ -205,7 +205,7 @@ To add a KV store to your worker, follow these steps:
       cargo build --release --target wasm32-wasi
     ```
 
-1. Create a `worker-kv.toml` file with the following content. Note the name of the TOML file must match the name of the handler. In this case we have `worker-kv.wasm` and `worker-kv.toml` in the same folder (`target/wasm32-wasi/release`):
+1. Create a `worker-kv.toml` file with the following content. Note the name of the TOML file must match the name of the worker. In this case we have `worker-kv.wasm` and `worker-kv.toml` in the same folder (`target/wasm32-wasi/release`):
 
     ```toml title="target/wasm32-wasi/release/worker-kv.toml"
     name = "workerkv"
@@ -225,7 +225,7 @@ To add a KV store to your worker, follow these steps:
     ⚙️ Loading routes from: .
     🗺 Detected routes:
     - http://127.0.0.1:8080/worker-kv
-    => worker-kv.wasm (handler: default)
+    => worker-kv.wasm (name: default)
     🚀 Start serving requests at http://127.0.0.1:8080
     ```
 
@@ -249,12 +249,12 @@ Now, you can read the `MESSAGE` variable using the [`std::env` Rust library](htt
 use anyhow::Result;
 use std::env;
 use wasm_workers_rs::{
-    handler,
+    worker,
     http::{self, Request, Response},
     Content,
 };
 
-#[handler]
+#[worker]
 fn handler(req: Request<String>) -> Result<Response<Content>> {
     // Read the environment variable using the std::env::var method
     let message = env::var("MESSAGE").unwrap_or_else(|_| String::from("Missing message"));

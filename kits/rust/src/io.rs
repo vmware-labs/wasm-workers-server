@@ -46,7 +46,7 @@ impl Input {
     }
 }
 
-/// Represents the JSON output that the handler must return
+/// Represents the JSON output that the worker must return
 /// back to the main project
 #[derive(Serialize, Deserialize)]
 pub struct Output {

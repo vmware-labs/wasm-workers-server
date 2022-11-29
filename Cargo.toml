@@ -33,7 +33,7 @@ clap = { version = "4.0.10", features = ["derive"] }
 [workspace]
 members = [
   "kits/rust",
-  "kits/rust/handler",
+  "kits/rust/worker",
   "kits/javascript"
 ]
 # Exclude examples

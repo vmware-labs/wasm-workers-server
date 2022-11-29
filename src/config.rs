@@ -8,10 +8,10 @@ use std::path::PathBuf;
 use std::{env, fs};
 use toml::from_slice;
 
-/// Handlers configuration. These files are optional when no configuration change is required.
+/// Workers configuration. These files are optional when no configuration change is required.
 #[derive(Deserialize, Clone)]
 pub struct Config {
-    /// Handler name. For logging purposes
+    /// Worker name. For logging purposes
     pub name: Option<String>,
     /// Mandatory version of the file
     pub version: String,
@@ -22,16 +22,16 @@ pub struct Config {
     pub vars: HashMap<String, String>,
 }
 
-/// Configure a data plugin for the handler
+/// Configure a data plugin for the worker
 #[derive(Deserialize, Clone)]
 pub struct ConfigData {
-    /// Creates a Key/Value store associated to the given handler
+    /// Creates a Key/Value store associated to the given worker
     pub kv: Option<KVConfigData>,
 }
 
 impl Config {
     /// Try to read the configuration from a TOML file. The path contains the local path
-    /// to the handler configuration. The file should use the same name as the handler,
+    /// to the worker configuration. The file should use the same name as the worker,
     /// with the .toml extension
     ///
     /// # Examples

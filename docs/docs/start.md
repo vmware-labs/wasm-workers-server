@@ -44,7 +44,7 @@ wws .
 ⚙️  Loading routes from: ./examples
 🗺  Detected routes:
     - http://127.0.0.1:8080/
-      => index.js (handler: default)
+      => index.js (name: default)
 🚀 Start serving requests at http://127.0.0.1:8080
 ```
 
@@ -52,9 +52,9 @@ Now, open your browser at <http://127.0.0.1:8080>.
 
 ## Next Steps
 
-Now you got the taste of Wasm Workers, it's time to create your first handler:
+Now you got the taste of Wasm Workers, it's time to create your first worker:
 
-* [Create your first JavaScript handler](./tutorials/javascript-workers.md)
-* [Create your first Rust handler](./tutorials/rust-workers.md)
+* [Create your first JavaScript worker](./tutorials/javascript-workers.md)
+* [Create your first Rust worker](./tutorials/rust-workers.md)
 
 And if you are curious, here you have a guide about [how it works](./how-it-works.md).
