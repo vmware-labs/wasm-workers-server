@@ -11,17 +11,16 @@ pub fn expand_macro(attr: TokenStream, item: TokenStream) -> TokenStream {
     let handler_fn = parse_macro_input!(item as syn::ItemFn);
     let handler_fn_name = &handler_fn.sig.ident;
     let args = parse_macro_input!(attr as Args);
-    let func_call;
 
-    if args.has_cache() {
-        func_call = quote! {
+    let func_call = if args.has_cache() {
+        quote! {
             #handler_fn_name(input.to_http_request(), &mut cache)
         }
     } else {
-        func_call = quote! {
+        quote! {
             #handler_fn_name(input.to_http_request())
         }
-    }
+    };
 
     let main_fn = quote! {
         use wasm_workers_rs::io::{Input, Output};
@@ -33,7 +32,8 @@ pub fn expand_macro(attr: TokenStream, item: TokenStream) -> TokenStream {
                 "There was an error running the handler",
                 500,
                 None,
-                None
+                None,
+                false
             ).to_json().unwrap();
 
             if let Ok(input) = input {

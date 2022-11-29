@@ -128,7 +128,7 @@ const requestToHandler = input => {
   handlerFunction(event);
 
   return {
-    body: event.response.body,
+    data: event.response.body,
     headers: event.response.headers.headers,
     status: event.response.status,
     kv: Cache.state

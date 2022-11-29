@@ -1,6 +1,7 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::Content;
 use anyhow::Result;
 use http::Response;
 use serde::{Deserialize, Serialize};
@@ -22,7 +23,7 @@ pub struct Input {
 impl Input {
     /// Build the object from a JSON input
     pub fn new(reader: Stdin) -> Result<Self> {
-        serde_json::from_reader::<Stdin, Input>(reader).map_err(|e| anyhow::Error::new(e))
+        serde_json::from_reader::<Stdin, Input>(reader).map_err(anyhow::Error::new)
     }
 
     /// Convers the current object to a valid http::Request
@@ -49,30 +50,33 @@ impl Input {
 /// back to the main project
 #[derive(Serialize, Deserialize)]
 pub struct Output {
-    body: String,
+    data: String,
     headers: HashMap<String, String>,
     status: u16,
     kv: HashMap<String, String>,
+    base64: bool,
 }
 
 impl Output {
     /// Build the struct from Scratch
     pub fn new(
-        body: &str,
+        data: &str,
         status: u16,
         headers: Option<HashMap<String, String>>,
         kv: Option<HashMap<String, String>>,
+        base64: bool,
     ) -> Self {
         Self {
-            body: body.to_string(),
-            status: status,
-            headers: headers.unwrap_or_else(|| HashMap::new()),
-            kv: kv.unwrap_or_else(|| HashMap::new()),
+            data: data.to_string(),
+            status,
+            headers: headers.unwrap_or_default(),
+            kv: kv.unwrap_or_default(),
+            base64,
         }
     }
 
     /// Build the struct from a http::Response object
-    pub fn from_response(response: Response<String>, cache: HashMap<String, String>) -> Self {
+    pub fn from_response(response: Response<Content>, cache: HashMap<String, String>) -> Self {
         let mut headers = HashMap::new();
 
         for (key, value) in response.headers().iter() {
@@ -85,17 +89,26 @@ impl Output {
         // Note: added status here because `into_body` takes ownership of the
         // response
         let status = response.status().as_u16();
+        let content = response.into_body();
+        let body;
+        let base64;
 
-        Self::new(
-            response.into_body().as_str(),
-            status,
-            Some(headers),
-            Some(cache.clone()),
-        )
+        match content {
+            Content::Base64(data) => {
+                body = data;
+                base64 = true;
+            }
+            Content::Text(data) => {
+                body = data;
+                base64 = false;
+            }
+        }
+
+        Self::new(&body, status, Some(headers), Some(cache), base64)
     }
 
     /// Convert it to JSON
     pub fn to_json(&self) -> Result<String> {
-        serde_json::to_string(&self).map_err(|e| anyhow::Error::new(e))
+        serde_json::to_string(&self).map_err(anyhow::Error::new)
     }
 }

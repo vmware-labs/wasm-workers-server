@@ -3,10 +3,11 @@ use std::env;
 use wasm_workers_rs::{
     handler,
     http::{self, HeaderValue, Request, Response},
+    Content,
 };
 
 #[handler]
-fn handler(req: Request<String>) -> Result<Response<String>> {
+fn handler(req: Request<String>) -> Result<Response<Content>> {
     let message = env::var("MESSAGE").unwrap_or_else(|_| String::from("Missing title"));
 
     // Applied changes here to use the Response method. This requires changes

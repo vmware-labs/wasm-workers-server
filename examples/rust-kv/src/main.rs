@@ -1,12 +1,12 @@
 use anyhow::Result;
 use wasm_workers_rs::{
-    cache::Cache,
     handler,
     http::{self, Request, Response},
+    Cache, Content,
 };
 
 #[handler(cache)]
-fn handler(_req: Request<String>, cache: &mut Cache) -> Result<Response<String>> {
+fn handler(_req: Request<String>, cache: &mut Cache) -> Result<Response<Content>> {
     // Applied changes here to use the Response method. This requires changes
     // on signature and how it returns the data.
     let count = cache.get("counter");

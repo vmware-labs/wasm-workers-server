@@ -127,11 +127,13 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
             let handler_result = route
                 .runner
                 .run(&runner::build_wasm_input(&req, body_str, store), vars)
-                .unwrap_or(WasmOutput {
-                    body: String::from("<p>There was an error running this function</p>"),
-                    headers: HashMap::from([("content-type".to_string(), "text/html".to_string())]),
-                    status: StatusCode::SERVICE_UNAVAILABLE.as_u16(),
-                    kv: HashMap::new(),
+                .unwrap_or_else(|_| {
+                    WasmOutput::new(
+                        "<p>There was an error running this function</p>",
+                        HashMap::from([("content-type".to_string(), "text/html".to_string())]),
+                        StatusCode::SERVICE_UNAVAILABLE.as_u16(),
+                        HashMap::new(),
+                    )
                 });
 
             let mut builder = HttpResponse::build(
@@ -152,10 +154,15 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
                     .write()
                     .unwrap()
                     .kv
-                    .replace_store(&kv_namespace.unwrap(), handler_result.kv)
+                    .replace_store(&kv_namespace.unwrap(), &handler_result.kv)
             }
 
-            result = builder.body(String::from(&handler_result.body))
+            result = match handler_result.body() {
+                Ok(res) => builder.body(res),
+                Err(_) => {
+                    HttpResponse::ServiceUnavailable().body("There was an error running the worker")
+                }
+            }
         }
     }
 
