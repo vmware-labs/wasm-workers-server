@@ -17,7 +17,7 @@ const FeatureList = [
     emoji: "⚙️",
     description: (
       <>
-        Create handlers in different languages thanks to WebAssembly.
+        Create workers in different languages thanks to WebAssembly.
       </>
     ),
   },
@@ -32,7 +32,7 @@ const FeatureList = [
   },
 ];
 
-function Feature({emoji, title, description}) {
+function Feature({ emoji, title, description }) {
   return (
     <div className={clsx('col col--4')}>
       <div className="text--center">

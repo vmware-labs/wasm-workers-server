@@ -119,7 +119,7 @@ pub fn build_headers_hash(headers: &HeaderMap) -> HashMap<String, String> {
 }
 
 #[derive(Clone)]
-pub enum RunnerHandlerType {
+pub enum RunnerWorkerType {
     Wasm,
     JavaScript,
 }
@@ -131,7 +131,7 @@ pub struct Runner {
     /// Engine that runs the actual Wasm module
     engine: Engine,
     /// The type of the required runner
-    runner_type: RunnerHandlerType,
+    runner_type: RunnerWorkerType,
     /// Preloaded Module
     module: Module,
     /// Source code if required
@@ -146,7 +146,7 @@ impl Runner {
             let module = Module::from_binary(&engine, JS_ENGINE_WASM)?;
 
             (
-                RunnerHandlerType::JavaScript,
+                RunnerWorkerType::JavaScript,
                 module,
                 fs::read_to_string(path)
                     .unwrap_or_else(|_| panic!("Error reading {}", path.display())),
@@ -154,7 +154,7 @@ impl Runner {
         } else {
             let module = Module::from_file(&engine, path)?;
 
-            (RunnerHandlerType::Wasm, module, String::new())
+            (RunnerWorkerType::Wasm, module, String::new())
         };
 
         Ok(Self {
@@ -178,8 +178,8 @@ impl Runner {
     /// run.
     pub fn run(&self, input: &str, vars: &HashMap<String, String>) -> Result<WasmOutput> {
         let stdin = match self.runner_type {
-            RunnerHandlerType::Wasm => ReadPipe::from(input),
-            RunnerHandlerType::JavaScript => {
+            RunnerWorkerType::Wasm => ReadPipe::from(input),
+            RunnerWorkerType::JavaScript => {
                 let mut contents = String::new();
                 contents.push_str(&self.source);
                 // Separator

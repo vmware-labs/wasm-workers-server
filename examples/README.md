@@ -4,10 +4,10 @@ This folder includes different handlers. All of them are based on other projects
 
 ## Build
 
-### JavaScript handlers
+### JavaScript workers
 
-Wasm Workers Server includes a `QuickJS` interpreter. JavaScript handlers are automatically compatible and you don't need to compile them to WebAssembly, although they will run in it.
+Wasm Workers Server includes a `QuickJS` interpreter. JavaScript workers are automatically compatible and you don't need to compile them to WebAssembly, although they will run in it.
 
-### Rust handlers
+### Rust workers
 
-For Rust handlers, you need to use our `wasm-workers-server-kit` crate. This folder contains several examples of its usage.
+For Rust workers, you need to use our `wasm-workers-server-kit` crate. This folder contains several examples of its usage.

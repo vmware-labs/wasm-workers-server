@@ -7,6 +7,6 @@ pub use cache::Cache;
 pub use content::Content;
 pub mod io;
 
-pub use handler::handler;
+pub use worker::worker;
 // Re-export http
 pub use http;

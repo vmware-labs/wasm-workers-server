@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use syn::parse::{Parse, ParseStream, Result};
 use syn::{punctuated::Punctuated, Ident, Token};
 
-/// Parse valid arguments for the handler
+/// Parse valid arguments for the worker
 pub struct Args {
     idents: HashSet<Ident>,
 }

@@ -1040,19 +1040,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "handler"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "http",
- "quote",
- "serde",
- "serde_json",
- "syn",
- "wasi",
-]
-
-[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2233,10 +2220,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "base64",
- "handler",
  "http",
  "serde",
  "serde_json",
+ "worker",
 ]
 
 [[package]]
@@ -2715,6 +2702,19 @@ dependencies = [
  "log",
  "thiserror",
  "wast 35.0.2",
+]
+
+[[package]]
+name = "worker"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "http",
+ "quote",
+ "serde",
+ "serde_json",
+ "syn",
+ "wasi",
 ]
 
 [[package]]

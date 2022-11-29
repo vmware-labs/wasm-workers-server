@@ -4,15 +4,15 @@
 use serde::Deserialize;
 use std::collections::HashMap;
 
-/// The Key/Value store configuration. This information is read from handlers TOML files.
+/// The Key/Value store configuration. This information is read from workers TOML files.
 #[derive(Deserialize, Clone)]
 pub struct KVConfigData {
-    /// The namespace the handler will access in the global Key / Value store
+    /// The namespace the worker will access in the global Key / Value store
     pub namespace: String,
 }
 
 /// An in-memory Key/Value store. It contains multiple namespaces which has their
-/// own K/V store inside. This is used to scope the data handlers can access
+/// own K/V store inside. This is used to scope the data workers can access
 pub struct KV {
     /// The available K/V stores
     pub stores: HashMap<String, KVStore>,
