@@ -29,11 +29,11 @@ jobs:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build and push
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          file: image/Dockerfile
-          # TODO: First check the compilation and then
-          push: false
-          platforms: linux/amd64,linux/arm64
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:preview
+      uses: docker/build-push-action@v3
+      with:
+        context: .
+        file: image/Dockerfile
+        # TODO: First check the compilation and then
+        push: false
+        platforms: linux/amd64,linux/arm64
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:preview
