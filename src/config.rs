@@ -18,7 +18,7 @@ pub struct Config {
     /// Optional data configuration
     pub data: Option<ConfigData>,
     /// Optional environment configuration
-    #[serde(deserialize_with = "read_environment_variables")]
+    #[serde(deserialize_with = "read_environment_variables", default)]
     pub vars: HashMap<String, String>,
 }
 
