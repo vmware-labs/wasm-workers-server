@@ -1,0 +1,39 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "main" ]
+  # TODO: uncomment for testing. This will run by default only when a new commit is push to main
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+  REGISTRY: ghcr.io
+  IMAGE_NAME: vmware-labs/wws
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Repository clone
+      uses: actions/checkout@v3
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: image/Dockerfile
+          # TODO: First check the compilation and then
+          push: false
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:preview
