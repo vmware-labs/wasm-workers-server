@@ -90,7 +90,7 @@ impl WasmOutput {
         if self.base64 {
             Ok(decode(&self.data)?)
         } else {
-            Ok(self.data.clone().into_bytes())
+            Ok(self.data.as_bytes().into())
         }
     }
 }
