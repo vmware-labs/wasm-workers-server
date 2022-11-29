@@ -10,12 +10,6 @@ use base64::encode;
 /// limitation, Content is able to encode them as base64. Then,
 /// wws will ensure to decode them before sending the bytes to the
 /// client.
-
-// pub struct Content {
-//     pub data: String,
-//     pub base64: bool,
-// }
-
 pub enum Content {
     Text(String),
     Base64(String),

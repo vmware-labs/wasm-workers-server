@@ -25,7 +25,7 @@ fn handler(req: Request<String>) -> Result<Response<Content>> {
         &font,
     );
 
-    doc.save(&mut buf).unwrap();
+    doc.save(&mut buf)?;
 
     let bytes = buf.into_inner()?;
 
