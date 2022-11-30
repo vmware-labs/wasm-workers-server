@@ -15,6 +15,7 @@ RUN echo "Running on ${BUILDPLATFORM}, building for ${TARGETPLATFORM}"
 
 # Switch to nightly to avoid memory issues when pulling Crates.io
 # https://github.com/rust-lang/cargo/issues/10781
+RUN apt-get update && apt-get install -y musl
 RUN set -eux; \
     ls -l .; \
     case "${TARGETPLATFORM}" in \
