@@ -76,16 +76,16 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: wws-x86_64
-        path: binaries
+        path: binaries/x86_64
     - name: Download wws-aarch64
       uses: actions/download-artifact@v3
       with:
         name: wws-aarch64
-        path: binaries
+        path: binaries/aarch64
     - name: Move binaries and rename
       run: |
-        mv binaries/wws-x86_64 wws-amd64
-        mv binaries/wws-aarch64 wws-arm64
+        mv binaries/x86_64/wws wws-amd64
+        mv binaries/aarch64/wws wws-arm64
     - name: Build and push
       uses: docker/build-push-action@v3
       with:
