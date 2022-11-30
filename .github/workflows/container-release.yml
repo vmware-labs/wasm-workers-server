@@ -6,9 +6,6 @@ on:
   push:
     tags:
     - "v[0-9]+.[0-9]+.[0-9]+"
-  # TODO: uncomment for testing. This will run by default only when a new commit is push to main
-  # pull_request:
-  #   branches: [ "main" ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -30,7 +27,8 @@ jobs:
             cross: true
             platform: unknown-linux-musl
     env:
-      # We use cross for arm builds
+      # This variable can be overriden with `cross` for builds that
+      # requires it. By default, we will compile everything using cargo.
       CARGO: cargo
     steps:
     - uses: actions/checkout@v3
