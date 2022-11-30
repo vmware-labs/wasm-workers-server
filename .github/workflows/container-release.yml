@@ -1,10 +1,11 @@
 # Copyright 2022 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
-name: Container Build Preview
+name: Container Build Release
 
 on:
   push:
-    branches: [ "main" ]
+    tags:
+    - "v[0-9]+.[0-9]+.[0-9]+"
   # TODO: uncomment for testing. This will run by default only when a new commit is push to main
   # pull_request:
   #   branches: [ "main" ]
@@ -93,4 +94,4 @@ jobs:
         file: image/Prebuilt.dockerfile
         push: true
         platforms: linux/amd64,linux/arm64
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:preview
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
