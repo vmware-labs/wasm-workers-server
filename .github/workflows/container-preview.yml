@@ -47,12 +47,12 @@ jobs:
         sudo apt-get update
         sudo apt-get install musl-tools
     - name: Build
-      run: ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{ matrix.platform }}
+      run: ${{env.CARGO}} build --release --target=${{ matrix.arch }}-${{ matrix.platform }}
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
-        name: target/${{ matrix.arch }}-${{ matrix.platform }}/release/wws
-        path: wws-${{ matrix.arch }}
+        name: wws-${{ matrix.arch }}
+        path: target/${{ matrix.arch }}-${{ matrix.platform }}/release/wws
 
   build-container-image:
     name: Build Container Image
