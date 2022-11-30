@@ -2,6 +2,10 @@
 # is mainly used to build the preview / release container images in
 # GitHub actions
 
+# Dtermine the targets
+ARG TARGETPLATFORM
+ARG TARGETARCH
+
 # Build the final image
 FROM --platform=$TARGETPLATFORM scratch
 LABEL org.opencontainers.image.source=https://github.com/vmware-labs/wasm-workers-server
