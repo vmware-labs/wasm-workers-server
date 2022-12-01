@@ -152,19 +152,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
-name = "handler"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "http",
- "quote",
- "serde",
- "serde_json",
- "syn",
- "wasi",
-]
-
-[[package]]
 name = "http"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -579,14 +566,14 @@ checksum = "1c38c045535d93ec4f0b4defec448e4291638ee608530863b1e2ba115d4fff7f"
 
 [[package]]
 name = "wasm-workers-rs"
-version = "0.1.0"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "base64",
- "handler",
  "http",
  "serde",
  "serde_json",
+ "worker",
 ]
 
 [[package]]
@@ -616,3 +603,16 @@ name = "winapi-x86_64-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
+
+[[package]]
+name = "worker"
+version = "0.6.0"
+dependencies = [
+ "anyhow",
+ "http",
+ "quote",
+ "serde",
+ "serde_json",
+ "syn",
+ "wasi",
+]

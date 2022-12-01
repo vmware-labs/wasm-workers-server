@@ -40,6 +40,7 @@ Arguments:
 Options:
       --host <HOSTNAME>  Hostname to initiate the server [default: 127.0.0.1]
   -p, --port <PORT>      Port to initiate the server [default: 8080]
+      --prefix <PREFIX>  Prepend the given path to all URLs [default: ]
   -h, --help             Print help information
   -V, --version          Print version information
 ```
@@ -75,17 +76,17 @@ curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/inst
 
 ### Running in a container
 
-If you don't want to install anything locally you can just run `wws` from the `projects.registry.vmware.com/wasmlabs/containers/wasm-workers-server:latest` container image. All you need to do is:
+If you don't want to install anything locally you can just run `wws` from the `ghcr.io/vmware-labs/wws:latest` container image. All you need to do is:
 
  - Map a local folder with workers to `/app` within the container
  - Expose port `8080` from the container
 
-Here is how to quickly run a container with an ad-hoc worker from the /tmp/wws-app folder:
+Here is how to quickly run a container with an ad-hoc worker from the `/tmp/wws-app` folder:
 
 ```bash
 mkdir /tmp/wws-app 2>/dev/null;
 echo 'addEventListener("fetch", (e) => { return e.respondWith(new Response("Hello from WWS\n"));});' > /tmp/wws-app/index.js;
-docker run --rm -v /tmp/wws-app:/app -p 8080:8080 projects.registry.vmware.com/wasmlabs/containers/wasm-workers-server:latest
+docker run --rm -v /tmp/wws-app:/app -p 8080:8080 ghcr.io/vmware-labs/wws:latest
 ```
 ## Language Support
 

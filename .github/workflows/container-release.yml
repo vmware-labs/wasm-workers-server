@@ -92,4 +92,4 @@ jobs:
         file: image/Prebuilt.dockerfile
         push: true
         platforms: linux/amd64,linux/arm64
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
