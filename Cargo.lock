@@ -2238,6 +2238,7 @@ dependencies = [
  "env_logger",
  "glob",
  "lazy_static",
+ "regex",
  "serde",
  "serde_json",
  "toml",

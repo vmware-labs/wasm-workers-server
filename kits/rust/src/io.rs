@@ -18,6 +18,8 @@ pub struct Input {
     headers: HashMap<String, String>,
     body: String,
     kv: HashMap<String, String>,
+    #[serde(default)]
+    params: HashMap<String, String>,
 }
 
 impl Input {
@@ -43,6 +45,11 @@ impl Input {
     /// Retrieve the Key/Value data
     pub fn cache_data(&self) -> HashMap<String, String> {
         self.kv.clone()
+    }
+
+    /// Retrieve the paramaters
+    pub fn params(&self) -> &HashMap<String, String> {
+        &self.params
     }
 }
 

@@ -19,6 +19,7 @@ use actix_web::{
 };
 use clap::Parser;
 use data::kv::KV;
+use router::Routes;
 use runner::WasmOutput;
 use std::io::Error;
 use std::path::PathBuf;
@@ -52,11 +53,6 @@ struct Args {
     prefix: String,
 }
 
-// Common structures
-struct Routes {
-    routes: Vec<router::Route>,
-}
-
 struct DataConnectors {
     kv: KV,
 }
@@ -88,6 +84,23 @@ async fn find_static_html(uri_path: &str) -> Result<NamedFile, Error> {
     file
 }
 
+/// Process an HTTP request by passing it to the right Runner. The Runner
+/// will prepare the WASI environment and call the Wasm module with the data.
+///
+/// Note that here we have to select the runner by checking the path. This
+/// responsibility is duplicated as Actix already maps paths to handlers.
+/// However, there are several reasons why this is reasonable in this project:
+///
+/// - We fully control collisions when a request can be served by a parametrized
+///   route. Actix will reply with the first handler that matches. However, users
+///   cannot set the handlers manually, so we want to ensure a consistent behavior
+/// - To map an actix path with a runner, we need to create factory service. Note
+///   that Actix will create an instance per thread (worker), so Runners cannot be
+///   shared. This will require multiple instances of the same Wasm module, so
+///   the resource consumption will be increased.
+///
+/// For these reasons, we are selecting the right handler at this point and not
+/// allowing Actix to select it for us.
 async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
     let routes = req.app_data::<Data<Routes>>().unwrap();
     let data_connectors = req
@@ -95,73 +108,68 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
         .unwrap()
         .clone();
     // We will improve error handling
-    let mut result: HttpResponse = HttpResponse::ServiceUnavailable().body("Error");
+    let mut result: HttpResponse =
+        HttpResponse::NotFound().body("Any worker can manage the given URL");
 
-    for route in routes.routes.iter() {
-        if route.path == req.path() {
-            let body_str = String::from_utf8(body.to_vec()).unwrap_or_else(|_| String::from(""));
+    // First, we need to identify the best suited route
+    let selected_route = router::retrieve_best_route(routes, req.path());
 
-            // Init from configuration
-            let empty_hash = HashMap::new();
-            let mut vars = &empty_hash;
-            let mut kv_namespace = None;
+    if let Some(route) = selected_route {
+        let body_str = String::from_utf8(body.to_vec()).unwrap_or_else(|_| String::from(""));
 
-            match &route.config {
-                Some(config) => {
-                    kv_namespace = config.data_kv_namespace();
-                    vars = &config.vars;
-                }
-                None => {}
-            };
+        // Init from configuration
+        let empty_hash = HashMap::new();
+        let mut vars = &empty_hash;
+        let mut kv_namespace = None;
 
-            let store = match &kv_namespace {
-                Some(namespace) => {
-                    let connector = data_connectors.read().unwrap();
-                    let kv_store = connector.kv.find_store(namespace);
-
-                    kv_store.map(|store| store.clone())
-                }
-                None => None,
-            };
-
-            let handler_result = route
-                .runner
-                .run(&runner::build_wasm_input(&req, body_str, store), vars)
-                .unwrap_or_else(|_| {
-                    WasmOutput::new(
-                        "<p>There was an error running this function</p>",
-                        HashMap::from([("content-type".to_string(), "text/html".to_string())]),
-                        StatusCode::SERVICE_UNAVAILABLE.as_u16(),
-                        HashMap::new(),
-                    )
-                });
-
-            let mut builder = HttpResponse::build(
-                StatusCode::from_u16(handler_result.status).unwrap_or(StatusCode::OK),
-            );
-            // Default content type
-            builder.insert_header(("Content-Type", "text/html"));
-
-            for (key, val) in handler_result.headers.iter() {
-                // Note that QuickJS is replacing the "-" character
-                // with "_" on property keys. Here, we rollback it
-                builder.insert_header((key.replace('_', "-").as_str(), val.as_str()));
+        match &route.config {
+            Some(config) => {
+                kv_namespace = config.data_kv_namespace();
+                vars = &config.vars;
             }
+            None => {}
+        };
 
-            // Write to the state if required
-            if kv_namespace.is_some() {
-                data_connectors
-                    .write()
-                    .unwrap()
-                    .kv
-                    .replace_store(&kv_namespace.unwrap(), &handler_result.kv)
+        let store = match &kv_namespace {
+            Some(namespace) => {
+                let connector = data_connectors.read().unwrap();
+                let kv_store = connector.kv.find_store(namespace);
+
+                kv_store.map(|store| store.clone())
             }
+            None => None,
+        };
 
-            result = match handler_result.body() {
-                Ok(res) => builder.body(res),
-                Err(_) => {
-                    HttpResponse::ServiceUnavailable().body("There was an error running the worker")
-                }
+        let handler_result = route
+            .runner
+            .run(&req, body_str, store, vars)
+            .unwrap_or_else(|_| WasmOutput::failed());
+
+        let mut builder = HttpResponse::build(
+            StatusCode::from_u16(handler_result.status).unwrap_or(StatusCode::OK),
+        );
+        // Default content type
+        builder.insert_header(("Content-Type", "text/html"));
+
+        for (key, val) in handler_result.headers.iter() {
+            // Note that QuickJS is replacing the "-" character
+            // with "_" on property keys. Here, we rollback it
+            builder.insert_header((key.replace('_', "-").as_str(), val.as_str()));
+        }
+
+        // Write to the state if required
+        if kv_namespace.is_some() {
+            data_connectors
+                .write()
+                .unwrap()
+                .kv
+                .replace_store(&kv_namespace.unwrap(), &handler_result.kv)
+        }
+
+        result = match handler_result.body() {
+            Ok(res) => builder.body(res),
+            Err(_) => {
+                HttpResponse::ServiceUnavailable().body("There was an error running the worker")
             }
         }
     }
@@ -222,7 +230,7 @@ async fn main() -> std::io::Result<()> {
 
         // Append routes to the current service
         for route in routes.routes.iter() {
-            app = app.service(web::resource(&route.path).to(wasm_handler));
+            app = app.service(web::resource(&route.actix_path()).to(wasm_handler));
 
             // Configure KV
             if let Some(namespace) = route.config.as_ref().and_then(|c| c.data_kv_namespace()) {

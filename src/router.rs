@@ -8,9 +8,20 @@
 use crate::config::Config;
 use crate::runner::Runner;
 use glob::glob;
+use lazy_static::lazy_static;
+use regex::Regex;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
+
+lazy_static! {
+    static ref PARAMETER_REGEX: Regex = Regex::new(r"\[\w+\]").unwrap();
+}
+
+/// Contains all registered routes
+pub struct Routes {
+    pub routes: Vec<Route>,
+}
 
 /// An existing route in the project. It contains a reference to the handler, the URL path,
 /// the runner and configuration. Note that URL paths are calculated based on the file path.
@@ -105,6 +116,60 @@ impl Route {
             })
             .collect()
     }
+
+    /// Check if the given path can be managed by this path. This was introduced
+    /// to support parameters in the URLs. Note that this method returns an integer,
+    /// which means the priority for this route.
+    ///
+    /// Note that a /a/b route may be served by:
+    /// - /a/b.js
+    /// - /a/[id].js
+    /// - /[id]/b.wasm
+    /// - /[id]/[other].wasm
+    ///
+    /// We need to establish a priority. The lower of the returned number,
+    /// the more priority it has. This number is calculated based on the number of used
+    /// parameters, as fixed routes has more priority than parameted ones.
+    ///
+    /// To avoid collisions like `[id]/b.wasm` vs `/a/[id].js`. Every depth level will
+    /// add an extra +1 to the score. So, in case of `[id]/b.wasm` vs `/a/[id].js`,
+    /// the /a/b path will be managed by `[id]/b.wasm`
+    ///
+    /// In case it cannot manage it, it will return -1
+    pub fn can_manage_path(&self, url_path: &str) -> i32 {
+        let mut score: i32 = 0;
+        let mut split_path = self.path.split('/').peekable();
+
+        for (depth, portion) in url_path.split('/').enumerate() {
+            match split_path.next() {
+                Some(el) if el == portion => continue,
+                Some(el) if PARAMETER_REGEX.is_match(el) => {
+                    score += depth as i32;
+                    continue;
+                }
+                _ => return -1,
+            }
+        }
+
+        // I should check the other iterator to confirm is empty
+        if split_path.peek().is_none() {
+            score
+        } else {
+            // The split path iterator still have some entries.
+            -1
+        }
+    }
+
+    /// Returns the given path with the actix format. For dynamic routing
+    /// we are using `[]` in the filenames. However, actix expects a `{}`
+    /// format for parameters.
+    pub fn actix_path(&self) -> String {
+        // Replace [] with {} for making the path compatible with
+        let mut formatted = self.path.replace('[', "{");
+        formatted = formatted.replace(']', "}");
+
+        formatted
+    }
 }
 
 /// Initialize the list of routes from the given folder. This method will look for
@@ -144,6 +209,24 @@ fn is_in_public_folder(path: &Path) -> bool {
     })
 }
 
+/// Based on a set of routes and a given path, it provides the best
+/// match based on the parametrized URL score. See the [`Route::can_manage_path`]
+/// method to understand how to calculate the score.
+pub fn retrieve_best_route<'a>(routes: &'a Routes, path: &str) -> Option<&'a Route> {
+    let mut best_score = -1;
+
+    routes.routes.iter().reduce(|acc, item| {
+        let route_score = item.can_manage_path(path);
+
+        if route_score != -1 && (best_score == -1 || best_score > route_score) {
+            best_score = route_score;
+            item
+        } else {
+            acc
+        }
+    })
+}
+
 /// Defines a prefix in the context of the application.
 /// This prefix will be used for the static assets and the
 /// workers.
@@ -178,6 +261,38 @@ pub fn format_prefix(source: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn can_manage_path_scores() {
+        let build_route = |file: &str| -> Route {
+            Route::new(
+                Path::new("./tests/data"),
+                PathBuf::from(format!("./tests/data{}", file)),
+                "",
+            )
+        };
+
+        // Route initializes the Wasm module. We create these
+        // variables to avoid loading the same Wasm module multiple times
+        let param_route = build_route("/[id].js");
+        let fixed_route = build_route("/fixed.js");
+        let param_folder_route = build_route("/[id]/fixed.js");
+        let param_sub_route = build_route("/sub/[id].js");
+
+        let tests = [
+            (&param_route, "/a", 1),
+            (&fixed_route, "/fixed", 0),
+            (&fixed_route, "/a", -1),
+            (&param_folder_route, "/a", -1),
+            (&param_folder_route, "/a/fixed", 1),
+            (&param_sub_route, "/a/b", -1),
+            (&param_sub_route, "/sub/b", 2),
+        ];
+
+        for t in tests {
+            assert_eq!(t.0.can_manage_path(t.1), t.2);
+        }
+    }
 
     #[cfg(not(target_os = "windows"))]
     #[test]
