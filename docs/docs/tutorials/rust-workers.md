@@ -150,7 +150,7 @@ To add a KV store to your worker, follow these steps:
     };
 
     #[worker(cache)]
-    fn handler(_req: Request<String>, cache: &mut Cache) -> Result<Response<Content>> {
+    fn reply(_req: Request<String>, cache: &mut Cache) -> Result<Response<Content>> {
         Ok(http::Response::builder()
             .status(200)
             .header("x-generated-by", "wasm-workers-server")
@@ -169,7 +169,7 @@ To add a KV store to your worker, follow these steps:
     };
 
     #[worker(cache)]
-    fn handler(_req: Request<String>, cache: &mut Cache) -> Result<Response<Content>> {
+    fn reply(_req: Request<String>, cache: &mut Cache) -> Result<Response<Content>> {
         // Applied changes here to use the Response method. This requires changes
         // on signature and how it returns the data.
         let count = cache.get("counter");
@@ -230,6 +230,47 @@ To add a KV store to your worker, follow these steps:
     ```
 
 1. Finally, open <http://127.0.0.1:8080/worker-kv> in your browser.
+
+## Dynamic routes
+
+You can define [dynamic routes by adding route parameters to your worker files](../features/dynamic-routes.md) (like `[id].wasm`). To read them in Rust, follow these steps:
+
+1. Add the `params` configuration parameter to the `worker` macro and update the method signature to receive the values:
+
+    ```rust title="src/main.rs"
+    use anyhow::Result;
+    use wasm_workers_rs::{
+        worker,
+        http::{self, Request, Response},
+        Content,
+    };
+
+    #[worker(params)]
+    fn reply(req: Request<String>, params: HashMap<String, String>) -> Result<Response<Content>> {
+        // ...
+    }
+    ```
+
+1. Then, you can read the values from the `params` argument:
+
+    ```rust title="src/main.rs"
+    use anyhow::Result;
+    use wasm_workers_rs::{
+        worker,
+        http::{self, Request, Response},
+        Content,
+    };
+
+    #[worker(params)]
+    fn reply(req: Request<String>, params: HashMap<String, String>) -> Result<Response<Content>> {
+        let id = params.get("id").unwrap_or_else(|_| String::from("none"));
+
+        Ok(http::Response::builder()
+            .status(200)
+            .header("x-generated-by", "wasm-workers-server")
+            .body(format!("Hey! The parameter is: {}", id).into())?)
+    }
+    ```
 
 ## Read environment variables
 
