@@ -44,4 +44,4 @@ The `about.html` file will be served as `/about`.
 
 ## Index file in public
 
-An `index.html` can be added to the `public` folder and it will be mounted in `/`. Note that static files have a higher priority, so if there's an `/index.js` and `/public/index.html` files, the `/` route will be served by the latter.
+An `index.html` can be added to the `public` folder and it will be mounted in `/`. Note that static files have a lower priority, so if there's an `/index.js` and `/public/index.html` files, the `/` route will be served by the former.
