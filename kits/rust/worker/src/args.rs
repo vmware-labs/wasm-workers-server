@@ -12,9 +12,11 @@ pub struct Args {
 
 impl Args {
     pub fn has_cache(&self) -> bool {
-        self.idents
-            .iter()
-            .any(|i| i.to_string() == String::from("cache"))
+        self.idents.iter().any(|i| *i == "cache")
+    }
+
+    pub fn has_params(&self) -> bool {
+        self.idents.iter().any(|i| *i == "params")
     }
 }
 

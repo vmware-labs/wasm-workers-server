@@ -8,9 +8,33 @@
 use crate::config::Config;
 use crate::runner::Runner;
 use glob::glob;
+use lazy_static::lazy_static;
+use regex::Regex;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
+
+lazy_static! {
+    static ref PARAMETER_REGEX: Regex = Regex::new(r"\[\w+\]").unwrap();
+    static ref DYNAMIC_ROUTE_REGEX: Regex = Regex::new(r".*\[\w+\].*").unwrap();
+}
+
+/// Identify if a route can manage a certain URL and generates
+/// a score in that case. This is required by dynamic routes as
+/// different files can manage the same route. For example:
+/// `/test` may be managed by `test.js` and `[id].js`. Regarding
+/// the score, routes with a lower value will have a higher priority.
+#[derive(PartialEq, Eq, Debug)]
+pub enum RouteAffinity {
+    CannotManage,
+    // Score
+    CanManage(i32),
+}
+
+/// Contains all registered routes
+pub struct Routes {
+    pub routes: Vec<Route>,
+}
 
 /// An existing route in the project. It contains a reference to the handler, the URL path,
 /// the runner and configuration. Note that URL paths are calculated based on the file path.
@@ -105,6 +129,65 @@ impl Route {
             })
             .collect()
     }
+
+    /// Check if the given path can be managed by this worker. This was introduced
+    /// to support parameters in the URLs. Note that this method returns an integer,
+    /// which means the priority for this route.
+    ///
+    /// Note that a /a/b route may be served by:
+    /// - /a/b.js
+    /// - /a/[id].js
+    /// - /[id]/b.wasm
+    /// - /[id]/[other].wasm
+    ///
+    /// We need to establish a priority. The lower of the returned number,
+    /// the more priority it has. This number is calculated based on the number of used
+    /// parameters, as fixed routes has more priority than parameted ones.
+    ///
+    /// To avoid collisions like `[id]/b.wasm` vs `/a/[id].js`. Every depth level will
+    /// add an extra +1 to the score. So, in case of `[id]/b.wasm` vs `/a/[id].js`,
+    /// the /a/b path will be managed by `[id]/b.wasm`
+    ///
+    /// In case it cannot manage it, it will return -1
+    pub fn affinity(&self, url_path: &str) -> RouteAffinity {
+        let mut score: i32 = 0;
+        let mut split_path = self.path.split('/').peekable();
+
+        for (depth, portion) in url_path.split('/').enumerate() {
+            match split_path.next() {
+                Some(el) if el == portion => continue,
+                Some(el) if PARAMETER_REGEX.is_match(el) => {
+                    score += depth as i32;
+                    continue;
+                }
+                _ => return RouteAffinity::CannotManage,
+            }
+        }
+
+        // I should check the other iterator to confirm is empty
+        if split_path.peek().is_none() {
+            RouteAffinity::CanManage(score)
+        } else {
+            // The split path iterator still have some entries.
+            RouteAffinity::CannotManage
+        }
+    }
+
+    /// Returns the given path with the actix format. For dynamic routing
+    /// we are using `[]` in the filenames. However, actix expects a `{}`
+    /// format for parameters.
+    pub fn actix_path(&self) -> String {
+        // Replace [] with {} for making the path compatible with
+        let mut formatted = self.path.replace('[', "{");
+        formatted = formatted.replace(']', "}");
+
+        formatted
+    }
+
+    /// Check if the current route is dynamic
+    pub fn is_dynamic(&self) -> bool {
+        DYNAMIC_ROUTE_REGEX.is_match(&self.path)
+    }
 }
 
 /// Initialize the list of routes from the given folder. This method will look for
@@ -144,6 +227,26 @@ fn is_in_public_folder(path: &Path) -> bool {
     })
 }
 
+/// Based on a set of routes and a given path, it provides the best
+/// match based on the parametrized URL score. See the [`Route::can_manage_path`]
+/// method to understand how to calculate the score.
+pub fn retrieve_best_route<'a>(routes: &'a Routes, path: &str) -> Option<&'a Route> {
+    // Keep it to avoid calculating the score twice when iterating
+    // to look for the best route
+    let mut best_score = -1;
+
+    routes
+        .routes
+        .iter()
+        .fold(None, |acc, item| match item.affinity(path) {
+            RouteAffinity::CanManage(score) if best_score == -1 || score < best_score => {
+                best_score = score;
+                Some(item)
+            }
+            _ => acc,
+        })
+}
+
 /// Defines a prefix in the context of the application.
 /// This prefix will be used for the static assets and the
 /// workers.
@@ -178,6 +281,91 @@ pub fn format_prefix(source: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn route_path_affinity() {
+        let build_route = |file: &str| -> Route {
+            Route::new(
+                Path::new("./tests/data/params"),
+                PathBuf::from(format!("./tests/data/params{}", file)),
+                "",
+            )
+        };
+
+        // Route initializes the Wasm module. We create these
+        // variables to avoid loading the same Wasm module multiple times
+        let param_route = build_route("/[id].wasm");
+        let fixed_route = build_route("/fixed.wasm");
+        let param_folder_route = build_route("/[id]/fixed.wasm");
+        let param_sub_route = build_route("/sub/[id].wasm");
+
+        let tests = [
+            (&param_route, "/a", RouteAffinity::CanManage(1)),
+            (&fixed_route, "/fixed", RouteAffinity::CanManage(0)),
+            (&fixed_route, "/a", RouteAffinity::CannotManage),
+            (&param_folder_route, "/a", RouteAffinity::CannotManage),
+            (&param_folder_route, "/a/fixed", RouteAffinity::CanManage(1)),
+            (&param_sub_route, "/a/b", RouteAffinity::CannotManage),
+            (&param_sub_route, "/sub/b", RouteAffinity::CanManage(2)),
+        ];
+
+        for t in tests {
+            assert_eq!(t.0.affinity(t.1), t.2);
+        }
+    }
+
+    #[test]
+    fn best_route_by_affinity() {
+        let build_route = |file: &str| -> Route {
+            Route::new(
+                Path::new("./tests/data/params"),
+                PathBuf::from(format!("./tests/data/params{}", file)),
+                "",
+            )
+        };
+
+        // Route initializes the Wasm module. We create these
+        // variables to avoid loading the same Wasm module multiple times
+        let param_route = build_route("/[id].wasm");
+        let fixed_route = build_route("/fixed.wasm");
+        let param_folder_route = build_route("/[id]/fixed.wasm");
+        let param_sub_route = build_route("/sub/[id].wasm");
+
+        // I'm gonna use this values for comparison as `routes` consumes
+        // the Route elements.
+        let param_path = param_route.path.clone();
+        let fixed_path = fixed_route.path.clone();
+        let param_folder_path = param_folder_route.path.clone();
+        let param_sub_path = param_sub_route.path.clone();
+
+        let routes = Routes {
+            routes: vec![
+                param_route,
+                fixed_route,
+                param_folder_route,
+                param_sub_route,
+            ],
+        };
+
+        let tests = [
+            ("/a", Some(param_path)),
+            ("/fixed", Some(fixed_path)),
+            ("/a/fixed", Some(param_folder_path)),
+            ("/sub/b", Some(param_sub_path)),
+            ("/donot/exist", None),
+        ];
+
+        for t in tests {
+            let route = retrieve_best_route(&routes, t.0);
+
+            if let Some(path) = t.1 {
+                assert!(route.is_some());
+                assert_eq!(route.unwrap().path, path);
+            } else {
+                assert!(route.is_none());
+            }
+        }
+    }
 
     #[cfg(not(target_os = "windows"))]
     #[test]

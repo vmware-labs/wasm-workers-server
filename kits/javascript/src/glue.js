@@ -43,6 +43,7 @@ class Request {
     this.method = input.method;
     this.headers = new Headers(input.headers || {});
     this.body = input.body;
+    this.params = input.params || {};
   }
 
   text() {

@@ -121,6 +121,25 @@ To add a KV store to your worker, follow these steps:
 
 1. Finally, open <http://127.0.0.1:8080/counter> in your browser.
 
+## Dynamic routes
+
+You can define [dynamic routes by adding route parameters to your worker files](../features/dynamic-routes.md) (like `[id].js`). To read them in JavaScript, access to the `req.params` object:
+
+```js
+/**
+ * Builds a reply to the given request
+ */
+const reply = (req) => {
+  // Build a new response
+  return new Response(`Hey! I got this parameter: ${req.params.id}`);
+}
+
+// Subscribe to the Fetch event
+addEventListener("fetch", event => {
+  return event.respondWith(reply(event.request));
+});
+```
+
 ## Read environment variables
 
 Environment variables are configured [via the related TOML configuration file](../features/environment-variables.md). These variables are directly injected as global constants in your worker. To read them, just use the same name you configured in your TOML file:

@@ -12,15 +12,15 @@ pub fn expand_macro(attr: TokenStream, item: TokenStream) -> TokenStream {
     let handler_fn_name = &handler_fn.sig.ident;
     let args = parse_macro_input!(attr as Args);
 
-    let func_call = if args.has_cache() {
-        quote! {
-            #handler_fn_name(input.to_http_request(), &mut cache)
-        }
-    } else {
-        quote! {
-            #handler_fn_name(input.to_http_request())
-        }
-    };
+    let mut call_arguments = vec![quote! { input.to_http_request() }];
+
+    if args.has_params() {
+        call_arguments.push(quote! { params });
+    }
+
+    if args.has_cache() {
+        call_arguments.push(quote! { &mut cache });
+    }
 
     let main_fn = quote! {
         use wasm_workers_rs::io::{Input, Output};
@@ -38,8 +38,9 @@ pub fn expand_macro(attr: TokenStream, item: TokenStream) -> TokenStream {
 
             if let Ok(input) = input {
                 let mut cache = input.cache_data();
+                let params = input.params();
 
-                if let Ok(response) = #func_call {
+                if let Ok(response) = #handler_fn_name(#(#call_arguments),*) {
                     match Output::from_response(response, cache).to_json() {
                         Ok(res) => println!("{}", res),
                         Err(_) => println!("{}", error)

@@ -1,7 +1,7 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use actix_web::{http::header::HeaderMap, HttpRequest};
+use actix_web::{http::header::HeaderMap, http::StatusCode, HttpRequest};
 use anyhow::Result;
 use base64::decode;
 use serde::{Deserialize, Serialize};
@@ -30,18 +30,27 @@ pub struct WasmInput {
     body: String,
     /// Key / Value store content if available
     kv: HashMap<String, String>,
+    /// The list of parameters in the URL
+    params: HashMap<String, String>,
 }
 
 impl WasmInput {
     /// Generates a new struct to pass the data to wasm module. It's based on the
     /// HttpRequest, body and the Key / Value store (if available)
     pub fn new(request: &HttpRequest, body: String, kv: Option<HashMap<String, String>>) -> Self {
+        let mut params = HashMap::new();
+
+        for (k, v) in request.match_info().iter() {
+            params.insert(k.to_string(), v.to_string());
+        }
+
         Self {
             url: request.uri().to_string(),
             method: String::from(request.method().as_str()),
             headers: build_headers_hash(request.headers()),
             body,
             kv: kv.unwrap_or_default(),
+            params,
         }
     }
 }
@@ -84,6 +93,18 @@ impl WasmOutput {
         }
     }
 
+    /// Build a default WasmOutput for a failed run. It will
+    /// return a generic error message and the proper 503
+    /// status code
+    pub fn failed() -> Self {
+        Self::new(
+            "<p>There was an error running this function</p>",
+            HashMap::from([("content-type".to_string(), "text/html".to_string())]),
+            StatusCode::SERVICE_UNAVAILABLE.as_u16(),
+            HashMap::new(),
+        )
+    }
+
     /// Return the content body as bytes. It will automatically
     /// decode the data if the base64 flag is enabled.
     pub fn body(&self) -> Result<Vec<u8>> {
@@ -93,15 +114,6 @@ impl WasmOutput {
             Ok(self.data.as_bytes().into())
         }
     }
-}
-
-/// Builds the JSON string to pass to the Wasm module using WASI STDIO strategy.
-pub fn build_wasm_input(
-    request: &HttpRequest,
-    body: String,
-    kv: Option<HashMap<String, String>>,
-) -> String {
-    serde_json::to_string(&WasmInput::new(request, body, kv)).unwrap()
 }
 
 /// Create HashMap from a HeadersMap
@@ -176,7 +188,14 @@ impl Runner {
     /// from the WasmInput serialization. It initializes a new WASI context with
     /// the required pipes. Then, it sends the data and read the output from the wasm
     /// run.
-    pub fn run(&self, input: &str, vars: &HashMap<String, String>) -> Result<WasmOutput> {
+    pub fn run(
+        &self,
+        request: &HttpRequest,
+        body: String,
+        kv: Option<HashMap<String, String>>,
+        vars: &HashMap<String, String>,
+    ) -> Result<WasmOutput> {
+        let input = serde_json::to_string(&WasmInput::new(request, body, kv)).unwrap();
         let stdin = match self.runner_type {
             RunnerWorkerType::Wasm => ReadPipe::from(input),
             RunnerWorkerType::JavaScript => {
@@ -184,7 +203,7 @@ impl Runner {
                 contents.push_str(&self.source);
                 // Separator
                 contents.push_str("[[[input]]]");
-                contents.push_str(input);
+                contents.push_str(&input);
 
                 ReadPipe::from(contents)
             }

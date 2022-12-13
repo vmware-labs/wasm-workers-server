@@ -19,8 +19,9 @@ use actix_web::{
 };
 use clap::Parser;
 use data::kv::KV;
+use router::Routes;
 use runner::WasmOutput;
-use std::io::Error;
+use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
 use std::{collections::HashMap, sync::RwLock};
 
@@ -52,13 +53,20 @@ struct Args {
     prefix: String,
 }
 
-// Common structures
-struct Routes {
-    routes: Vec<router::Route>,
-}
-
 struct DataConnectors {
     kv: KV,
+}
+
+/// This method tries to render a custom 404 error file from the static
+/// folder. If not, it will render an empty 404
+async fn not_found_html(req: &HttpRequest) -> HttpResponse {
+    let public_404_path = ROOT_PATH.join("public").join("404.html");
+
+    if let Ok(file) = NamedFile::open_async(public_404_path).await {
+        file.into_response(req)
+    } else {
+        HttpResponse::NotFound().body("")
+    }
 }
 
 /// Find a static HTML file in the `public` folder. This function is used
@@ -67,27 +75,41 @@ struct DataConnectors {
 ///
 /// If no file is present, it will try to get a default "public/404.html"
 async fn find_static_html(uri_path: &str) -> Result<NamedFile, Error> {
-    // Avoid dots in the URI. If they are present, the extension
-    // was passed so the file should be properly rendered.
-    let clean_path = uri_path.replace('.', "");
-    let file;
+    // File path. This is required for the wasm_handler as dynamic routes may capture static files
+    let file_path = ROOT_PATH.join(format!("public{}", uri_path));
+    // A.k.a pretty urls. We may access /about and this matches to /about/index.html
+    let index_folder_path = ROOT_PATH.join(format!("public{}/index.html", uri_path));
+    // Same as before, but the file is located at ./about.html
+    let html_ext_path = ROOT_PATH.join(format!("public{}.html", uri_path));
 
-    // Possible paths
-    let index_folder_path = ROOT_PATH.join(format!("public{}/index.html", clean_path));
-    let html_ext_path = ROOT_PATH.join(format!("public{}.html", clean_path));
-    let public_404_path = ROOT_PATH.join("public").join("404.html");
-
-    if uri_path.ends_with('/') && index_folder_path.exists() {
-        file = NamedFile::open_async(index_folder_path).await;
+    if file_path.exists() {
+        NamedFile::open_async(file_path).await
+    } else if uri_path.ends_with('/') && index_folder_path.exists() {
+        NamedFile::open_async(index_folder_path).await
     } else if !uri_path.ends_with('/') && html_ext_path.exists() {
-        file = NamedFile::open_async(html_ext_path).await;
+        NamedFile::open_async(html_ext_path).await
     } else {
-        file = NamedFile::open_async(public_404_path).await;
+        Err(Error::new(ErrorKind::NotFound, "The file is not present"))
     }
-
-    file
 }
 
+/// Process an HTTP request by passing it to the right Runner. The Runner
+/// will prepare the WASI environment and call the Wasm module with the data.
+///
+/// Note that here we have to select the runner by checking the path. This
+/// responsibility is duplicated as Actix already maps paths to handlers.
+/// However, there are several reasons why this is reasonable in this project:
+///
+/// - We fully control collisions when a request can be served by a parametrized
+///   route. Actix will reply with the first handler that matches. However, users
+///   cannot set the handlers manually, so we want to ensure a consistent behavior
+/// - To map an actix path with a runner, we need to create factory service. Note
+///   that Actix will create an instance per thread (worker), so Runners cannot be
+///   shared. This will require multiple instances of the same Wasm module, so
+///   the resource consumption will be increased.
+///
+/// For these reasons, we are selecting the right handler at this point and not
+/// allowing Actix to select it for us.
 async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
     let routes = req.app_data::<Data<Routes>>().unwrap();
     let data_connectors = req
@@ -95,75 +117,81 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
         .unwrap()
         .clone();
     // We will improve error handling
-    let mut result: HttpResponse = HttpResponse::ServiceUnavailable().body("Error");
+    let result: HttpResponse;
 
-    for route in routes.routes.iter() {
-        if route.path == req.path() {
-            let body_str = String::from_utf8(body.to_vec()).unwrap_or_else(|_| String::from(""));
+    // First, we need to identify the best suited route
+    let selected_route = router::retrieve_best_route(routes, req.path());
 
-            // Init from configuration
-            let empty_hash = HashMap::new();
-            let mut vars = &empty_hash;
-            let mut kv_namespace = None;
-
-            match &route.config {
-                Some(config) => {
-                    kv_namespace = config.data_kv_namespace();
-                    vars = &config.vars;
-                }
-                None => {}
-            };
-
-            let store = match &kv_namespace {
-                Some(namespace) => {
-                    let connector = data_connectors.read().unwrap();
-                    let kv_store = connector.kv.find_store(namespace);
-
-                    kv_store.map(|store| store.clone())
-                }
-                None => None,
-            };
-
-            let handler_result = route
-                .runner
-                .run(&runner::build_wasm_input(&req, body_str, store), vars)
-                .unwrap_or_else(|_| {
-                    WasmOutput::new(
-                        "<p>There was an error running this function</p>",
-                        HashMap::from([("content-type".to_string(), "text/html".to_string())]),
-                        StatusCode::SERVICE_UNAVAILABLE.as_u16(),
-                        HashMap::new(),
-                    )
-                });
-
-            let mut builder = HttpResponse::build(
-                StatusCode::from_u16(handler_result.status).unwrap_or(StatusCode::OK),
-            );
-            // Default content type
-            builder.insert_header(("Content-Type", "text/html"));
-
-            for (key, val) in handler_result.headers.iter() {
-                // Note that QuickJS is replacing the "-" character
-                // with "_" on property keys. Here, we rollback it
-                builder.insert_header((key.replace('_', "-").as_str(), val.as_str()));
-            }
-
-            // Write to the state if required
-            if kv_namespace.is_some() {
-                data_connectors
-                    .write()
-                    .unwrap()
-                    .kv
-                    .replace_store(&kv_namespace.unwrap(), &handler_result.kv)
-            }
-
-            result = match handler_result.body() {
-                Ok(res) => builder.body(res),
-                Err(_) => {
-                    HttpResponse::ServiceUnavailable().body("There was an error running the worker")
-                }
+    if let Some(route) = selected_route {
+        // First, check if there's an existing static file. Static assets have more priority
+        // than dynamic routes. However, I cannot set the static assets as the first service
+        // as it's captures everything.
+        if route.is_dynamic() {
+            if let Ok(existing_file) = find_static_html(req.path()).await {
+                return existing_file.into_response(&req);
             }
         }
+
+        // Let's continue
+        let body_str = String::from_utf8(body.to_vec()).unwrap_or_else(|_| String::from(""));
+
+        // Init from configuration
+        let empty_hash = HashMap::new();
+        let mut vars = &empty_hash;
+        let mut kv_namespace = None;
+
+        match &route.config {
+            Some(config) => {
+                kv_namespace = config.data_kv_namespace();
+                vars = &config.vars;
+            }
+            None => {}
+        };
+
+        let store = match &kv_namespace {
+            Some(namespace) => {
+                let connector = data_connectors.read().unwrap();
+                let kv_store = connector.kv.find_store(namespace);
+
+                kv_store.map(|store| store.clone())
+            }
+            None => None,
+        };
+
+        let handler_result = route
+            .runner
+            .run(&req, body_str, store, vars)
+            .unwrap_or_else(|_| WasmOutput::failed());
+
+        let mut builder = HttpResponse::build(
+            StatusCode::from_u16(handler_result.status).unwrap_or(StatusCode::OK),
+        );
+        // Default content type
+        builder.insert_header(("Content-Type", "text/html"));
+
+        for (key, val) in handler_result.headers.iter() {
+            // Note that QuickJS is replacing the "-" character
+            // with "_" on property keys. Here, we rollback it
+            builder.insert_header((key.replace('_', "-").as_str(), val.as_str()));
+        }
+
+        // Write to the state if required
+        if kv_namespace.is_some() {
+            data_connectors
+                .write()
+                .unwrap()
+                .kv
+                .replace_store(&kv_namespace.unwrap(), &handler_result.kv)
+        }
+
+        result = match handler_result.body() {
+            Ok(res) => builder.body(res),
+            Err(_) => {
+                HttpResponse::ServiceUnavailable().body("There was an error running the worker")
+            }
+        }
+    } else {
+        result = not_found_html(&req).await;
     }
 
     result
@@ -222,7 +250,7 @@ async fn main() -> std::io::Result<()> {
 
         // Append routes to the current service
         for route in routes.routes.iter() {
-            app = app.service(web::resource(&route.path).to(wasm_handler));
+            app = app.service(web::resource(&route.actix_path()).to(wasm_handler));
 
             // Configure KV
             if let Some(namespace) = route.config.as_ref().and_then(|c| c.data_kv_namespace()) {
@@ -251,8 +279,8 @@ async fn main() -> std::io::Result<()> {
                             Ok(ServiceResponse::new(req, res))
                         }
                         Err(_) => {
-                            let mut res = HttpResponse::NotFound();
-                            Ok(ServiceResponse::new(req, res.body("")))
+                            let res = not_found_html(&req).await;
+                            Ok(ServiceResponse::new(req, res))
                         }
                     }
                 })),
