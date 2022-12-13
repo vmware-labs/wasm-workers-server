@@ -4,7 +4,14 @@ sidebar_position: 3
 
 # Dynamic routes
 
-Defining static routes may not be enough for some applications. You may need a worker to process URLs that includes identifiers that may change. **To create a worker associated with a dynamic route, include the route parameter in brackets when setting the worker filename**. For example, the worker `[id].js` will be able to reply to `/abc` or `/test` routes.
+Defining static routes may not be enough for some applications. You may need a worker to process URLs that includes identifiers. **To create a worker associated with a dynamic route, include the route parameter in brackets when setting the worker filename**.
+
+For example, imagine you want a worker that replies to the following URLs:
+
+- `/show/1`
+- `/show/2`
+
+With dynamic routes, you can create a worker with the `show/[id].js` filename. This worker will reply to any `/show/X` route automatically.
 
 After defining the route paremeters, the worker receives a special argument called `params`. It includes the value of all defined parameters. Note that the name of the parameter will be defined by the text between the brackets.
 
