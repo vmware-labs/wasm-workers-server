@@ -10,4 +10,9 @@ rust-kv:
 	cargo build --target wasm32-wasi --release && \
 	mv target/wasm32-wasi/release/rust-kv.wasm ./kv.wasm
 
+rust-params:
+	cd rust-params && \
+	cargo build --target wasm32-wasi --release && \
+	mv target/wasm32-wasi/release/rust-params.wasm "./[id].wasm"
+
 all: rust-basic rust-kv

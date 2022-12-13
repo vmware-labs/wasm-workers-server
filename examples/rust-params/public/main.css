@@ -1,0 +1,28 @@
+body {
+    max-width: 1000px;
+}
+
+main {
+    margin: 5rem 0;
+}
+
+h1,
+p {
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 2rem;
+}
+
+pre {
+    font-size: .9rem;
+}
+
+pre>code {
+    padding: 2rem;
+}
+
+p {
+    margin-top: 2rem;
+}

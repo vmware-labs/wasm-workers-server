@@ -21,7 +21,7 @@ use clap::Parser;
 use data::kv::KV;
 use router::Routes;
 use runner::WasmOutput;
-use std::io::Error;
+use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
 use std::{collections::HashMap, sync::RwLock};
 
@@ -57,31 +57,40 @@ struct DataConnectors {
     kv: KV,
 }
 
+/// This method tries to render a custom 404 error file from the static
+/// folder. If not, it will render an empty 404
+async fn not_found_html(req: &HttpRequest) -> HttpResponse {
+    let public_404_path = ROOT_PATH.join("public").join("404.html");
+
+    if let Ok(file) = NamedFile::open_async(public_404_path).await {
+        file.into_response(req)
+    } else {
+        HttpResponse::NotFound().body("")
+    }
+}
+
 /// Find a static HTML file in the `public` folder. This function is used
 /// when there's no direct file to be served. It will look for certain patterns
 /// like "public/{uri}/index.html" and "public/{uri}.html".
 ///
 /// If no file is present, it will try to get a default "public/404.html"
 async fn find_static_html(uri_path: &str) -> Result<NamedFile, Error> {
-    // Avoid dots in the URI. If they are present, the extension
-    // was passed so the file should be properly rendered.
-    let clean_path = uri_path.replace('.', "");
-    let file;
+    // File path. This is required for the wasm_handler as dynamic routes may capture static files
+    let file_path = ROOT_PATH.join(format!("public{}", uri_path));
+    // A.k.a pretty urls. We may access /about and this matches to /about/index.html
+    let index_folder_path = ROOT_PATH.join(format!("public{}/index.html", uri_path));
+    // Same as before, but the file is located at ./about.html
+    let html_ext_path = ROOT_PATH.join(format!("public{}.html", uri_path));
 
-    // Possible paths
-    let index_folder_path = ROOT_PATH.join(format!("public{}/index.html", clean_path));
-    let html_ext_path = ROOT_PATH.join(format!("public{}.html", clean_path));
-    let public_404_path = ROOT_PATH.join("public").join("404.html");
-
-    if uri_path.ends_with('/') && index_folder_path.exists() {
-        file = NamedFile::open_async(index_folder_path).await;
+    if file_path.exists() {
+        NamedFile::open_async(file_path).await
+    } else if uri_path.ends_with('/') && index_folder_path.exists() {
+        NamedFile::open_async(index_folder_path).await
     } else if !uri_path.ends_with('/') && html_ext_path.exists() {
-        file = NamedFile::open_async(html_ext_path).await;
+        NamedFile::open_async(html_ext_path).await
     } else {
-        file = NamedFile::open_async(public_404_path).await;
+        Err(Error::new(ErrorKind::NotFound, "The file is not present"))
     }
-
-    file
 }
 
 /// Process an HTTP request by passing it to the right Runner. The Runner
@@ -108,13 +117,22 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
         .unwrap()
         .clone();
     // We will improve error handling
-    let mut result: HttpResponse =
-        HttpResponse::NotFound().body("Any worker can manage the given URL");
+    let result: HttpResponse;
 
     // First, we need to identify the best suited route
     let selected_route = router::retrieve_best_route(routes, req.path());
 
     if let Some(route) = selected_route {
+        // First, check if there's an existing static file. Static assets have more priority
+        // than dynamic routes. However, I cannot set the static assets as the first service
+        // as it's captures everything.
+        if route.is_dynamic() {
+            if let Ok(existing_file) = find_static_html(req.path()).await {
+                return existing_file.into_response(&req);
+            }
+        }
+
+        // Let's continue
         let body_str = String::from_utf8(body.to_vec()).unwrap_or_else(|_| String::from(""));
 
         // Init from configuration
@@ -172,6 +190,8 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
                 HttpResponse::ServiceUnavailable().body("There was an error running the worker")
             }
         }
+    } else {
+        result = not_found_html(&req).await;
     }
 
     result
@@ -259,8 +279,8 @@ async fn main() -> std::io::Result<()> {
                             Ok(ServiceResponse::new(req, res))
                         }
                         Err(_) => {
-                            let mut res = HttpResponse::NotFound();
-                            Ok(ServiceResponse::new(req, res.body("")))
+                            let res = not_found_html(&req).await;
+                            Ok(ServiceResponse::new(req, res))
                         }
                     }
                 })),

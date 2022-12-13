@@ -16,6 +16,7 @@ use std::path::{Component, Path, PathBuf};
 
 lazy_static! {
     static ref PARAMETER_REGEX: Regex = Regex::new(r"\[\w+\]").unwrap();
+    static ref DYNAMIC_ROUTE_REGEX: Regex = Regex::new(r".*\[\w+\].*").unwrap();
 }
 
 /// Contains all registered routes
@@ -169,6 +170,11 @@ impl Route {
         formatted = formatted.replace(']', "}");
 
         formatted
+    }
+
+    /// Check if the current route is dynamic
+    pub fn is_dynamic(&self) -> bool {
+        DYNAMIC_ROUTE_REGEX.is_match(&self.path)
     }
 }
 

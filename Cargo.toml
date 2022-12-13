@@ -41,5 +41,6 @@ members = [
 exclude = [
   "examples/pdf-create",
   "examples/rust-basic",
-  "examples/rust-kv"
+  "examples/rust-kv",
+  "examples/rust-params"
 ]
