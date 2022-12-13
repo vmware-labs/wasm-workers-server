@@ -264,7 +264,7 @@ You can define [dynamic routes by adding route parameters to your worker files](
     #[worker(params)]
     fn reply(req: Request<String>, params: &HashMap<String, String>) -> Result<Response<Content>> {
         let missing_param = String::from("none");
-        let id = params.get("id").unwrap_or_else(|_| &missing_param);
+        let id = params.get("id").unwrap_or_else(|| &missing_param);
 
         Ok(http::Response::builder()
             .status(200)

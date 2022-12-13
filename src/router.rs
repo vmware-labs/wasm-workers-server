@@ -130,7 +130,7 @@ impl Route {
             .collect()
     }
 
-    /// Check if the given path can be managed by this path. This was introduced
+    /// Check if the given path can be managed by this worker. This was introduced
     /// to support parameters in the URLs. Note that this method returns an integer,
     /// which means the priority for this route.
     ///

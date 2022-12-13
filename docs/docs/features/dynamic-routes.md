@@ -15,7 +15,7 @@ With dynamic routes, you can create a worker with the `show/[id].js` filename. T
 
 After defining the route paremeters, the worker receives a special argument called `params`. It includes the value of all defined parameters. Note that the name of the parameter will be defined by the text between the brackets.
 
-Check these guides to understand how read parameters in the different supported languages:
+Check these guides to understand how to read parameters in the different supported languages:
 
 * [Dynamic routes in JavaScript](../tutorials/javascript-workers.md#dynamic-routes)
 * [Dynamic routes in Rust](../tutorials/rust-workers.md#dynamic-routes)
