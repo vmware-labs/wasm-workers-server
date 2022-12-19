@@ -6,7 +6,7 @@ extern crate lazy_static;
 
 mod config;
 mod data;
-mod router;
+mod routing;
 mod runner;
 
 use actix_files::{Files, NamedFile};
@@ -19,7 +19,7 @@ use actix_web::{
 };
 use clap::Parser;
 use data::kv::KV;
-use router::Routes;
+use routing::router;
 use runner::WasmOutput;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
@@ -111,7 +111,7 @@ async fn find_static_html(uri_path: &str) -> Result<NamedFile, Error> {
 /// For these reasons, we are selecting the right handler at this point and not
 /// allowing Actix to select it for us.
 async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
-    let routes = req.app_data::<Data<Routes>>().unwrap();
+    let routes = req.app_data::<Data<router::Routes>>().unwrap();
     let data_connectors = req
         .app_data::<Data<RwLock<DataConnectors>>>()
         .unwrap()
@@ -198,7 +198,7 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
 }
 
 async fn debug(req: HttpRequest) -> impl Responder {
-    let value = req.app_data::<Data<Routes>>().unwrap();
+    let value = req.app_data::<Data<router::Routes>>().unwrap();
     HttpResponse::Ok().body(format!("Routes: {}", value.routes.len()))
 }
 
@@ -213,7 +213,7 @@ async fn main() -> std::io::Result<()> {
     let prefix = router::format_prefix(&args.prefix);
 
     println!("⚙️  Loading routes from: {}", &args.path.display());
-    let routes = Data::new(Routes {
+    let routes = Data::new(router::Routes {
         routes: router::initialize_routes(&args.path, &prefix),
     });
 

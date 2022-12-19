@@ -7,12 +7,12 @@
 //
 use crate::config::Config;
 use crate::runner::Runner;
-use glob::glob;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
+use wax::Glob;
 
 lazy_static! {
     static ref PARAMETER_REGEX: Regex = Regex::new(r"\[\w+\]").unwrap();
@@ -193,23 +193,18 @@ impl Route {
 /// Initialize the list of routes from the given folder. This method will look for
 /// all `**/*.wasm` files and will create the associated routes. This routing approach
 /// is pretty popular in web development and static sites.
-pub fn initialize_routes(base_path: &Path, prefix: &str) -> Vec<Route> {
+pub fn initialize_routes(path: &Path, prefix: &str) -> Vec<Route> {
     let mut routes = Vec::new();
-    let path = Path::new(&base_path);
 
     // Items to iterate over
-    let glob_items = glob(path.join("**/*.wasm").as_os_str().to_str().unwrap())
-        .expect("Failed to read the current directory")
-        .chain(
-            glob(path.join("**/*.js").as_os_str().to_str().unwrap())
-                .expect("Failed to read the current directory"),
-        );
+    let glob =
+        Glob::new("**/*.{wasm,js}").expect("Failed to read the files in the current directory");
 
-    for entry in glob_items {
+    for entry in glob.walk(path) {
         match entry {
             // Avoid loading static assets
-            Ok(filepath) if !is_in_public_folder(&filepath) => {
-                routes.push(Route::new(base_path, filepath, prefix));
+            Ok(filepath) if !is_in_public_folder(filepath.path()) => {
+                routes.push(Route::new(path, filepath.into_path(), prefix));
             }
             Err(e) => println!("Could not read the file {:?}", e),
             _ => {}
