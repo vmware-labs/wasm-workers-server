@@ -6,7 +6,7 @@ extern crate lazy_static;
 
 mod config;
 mod data;
-mod routing;
+mod router;
 mod runner;
 
 use actix_files::{Files, NamedFile};
@@ -19,7 +19,7 @@ use actix_web::{
 };
 use clap::Parser;
 use data::kv::KV;
-use routing::router;
+use router::Routes;
 use runner::WasmOutput;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
@@ -111,7 +111,7 @@ async fn find_static_html(uri_path: &str) -> Result<NamedFile, Error> {
 /// For these reasons, we are selecting the right handler at this point and not
 /// allowing Actix to select it for us.
 async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
-    let routes = req.app_data::<Data<router::Routes>>().unwrap();
+    let routes = req.app_data::<Data<Routes>>().unwrap();
     let data_connectors = req
         .app_data::<Data<RwLock<DataConnectors>>>()
         .unwrap()
@@ -120,7 +120,7 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
     let result: HttpResponse;
 
     // First, we need to identify the best suited route
-    let selected_route = router::retrieve_best_route(routes, req.path());
+    let selected_route = routes.retrieve_best_route(req.path());
 
     if let Some(route) = selected_route {
         // First, check if there's an existing static file. Static assets have more priority
@@ -198,7 +198,7 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
 }
 
 async fn debug(req: HttpRequest) -> impl Responder {
-    let value = req.app_data::<Data<router::Routes>>().unwrap();
+    let value = req.app_data::<Data<Routes>>().unwrap();
     HttpResponse::Ok().body(format!("Routes: {}", value.routes.len()))
 }
 
@@ -209,13 +209,9 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();
 
-    // Initialize the prefix
-    let prefix = router::format_prefix(&args.prefix);
-
+    // Initialize the routes
     println!("⚙️  Loading routes from: {}", &args.path.display());
-    let routes = Data::new(router::Routes {
-        routes: router::initialize_routes(&args.path, &prefix),
-    });
+    let routes = Data::new(Routes::new(&args.path, &args.prefix));
 
     let data = Data::new(RwLock::new(DataConnectors { kv: KV::new() }));
 
@@ -259,7 +255,7 @@ async fn main() -> std::io::Result<()> {
         }
 
         // Serve static files from the static folder
-        let mut static_prefix = prefix.clone();
+        let mut static_prefix = routes.prefix.clone();
         if static_prefix.is_empty() {
             static_prefix = String::from("/");
         }
