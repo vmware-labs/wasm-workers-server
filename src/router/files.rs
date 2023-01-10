@@ -41,7 +41,7 @@ impl Files {
     /// Checks if the given filepath is inside the "public" folder.
     /// It will return an early false if the project doesn't have
     /// a public folder.
-    pub fn is_in_public_folder(&self, path: &Path) -> bool {
+    fn is_in_public_folder(&self, path: &Path) -> bool {
         if !self.has_public {
             return false;
         }
