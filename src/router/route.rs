@@ -109,7 +109,7 @@ impl Route {
     // - Remove file extension
     // - Keep only "normal" components. Others like "." or "./" are ignored
     // - Remove "index" components
-    pub fn normalize_path_to_url(path: &Path) -> String {
+    fn normalize_path_to_url(path: &Path) -> String {
         path.with_extension("")
             .components()
             .filter_map(|c| match c {
