@@ -1,18 +1,14 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-//
-// Declare the different routes for the project
-// based on the files in the given folder
-//
-use crate::config::Config;
-use crate::runner::Runner;
+use crate::{config::Config, runner::Runner};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::ffi::OsStr;
-use std::fs;
-use std::path::{Component, Path, PathBuf};
-use wax::Glob;
+use std::{
+    ffi::OsStr,
+    fs,
+    path::{Component, Path, PathBuf},
+};
 
 lazy_static! {
     static ref PARAMETER_REGEX: Regex = Regex::new(r"\[\w+\]").unwrap();
@@ -29,11 +25,6 @@ pub enum RouteAffinity {
     CannotManage,
     // Score
     CanManage(i32),
-}
-
-/// Contains all registered routes
-pub struct Routes {
-    pub routes: Vec<Route>,
 }
 
 /// An existing route in the project. It contains a reference to the handler, the URL path,
@@ -63,7 +54,7 @@ impl Route {
     /// proper URL path based on the filename.
     ///
     /// This method also initializes the Runner and loads the Config if available.
-    fn new(base_path: &Path, filepath: PathBuf, prefix: &str) -> Self {
+    pub fn new(base_path: &Path, filepath: PathBuf, prefix: &str) -> Self {
         let runner = Runner::new(&filepath).unwrap();
         // Load configuration
         let mut config_path = filepath.clone();
@@ -190,177 +181,9 @@ impl Route {
     }
 }
 
-/// Initialize the list of routes from the given folder. This method will look for
-/// all `**/*.wasm` files and will create the associated routes. This routing approach
-/// is pretty popular in web development and static sites.
-pub fn initialize_routes(path: &Path, prefix: &str) -> Vec<Route> {
-    let mut routes = Vec::new();
-
-    // Items to iterate over
-    let glob =
-        Glob::new("**/*.{wasm,js}").expect("Failed to read the files in the current directory");
-
-    for entry in glob.walk(path) {
-        match entry {
-            // Avoid loading static assets
-            Ok(filepath) if !is_in_public_folder(filepath.path()) => {
-                routes.push(Route::new(path, filepath.into_path(), prefix));
-            }
-            Err(e) => println!("Could not read the file {:?}", e),
-            _ => {}
-        }
-    }
-
-    routes
-}
-
-/// Checks if the given filepath is inside the "public" folder
-fn is_in_public_folder(path: &Path) -> bool {
-    path.components().any(|c| match c {
-        Component::Normal(os_str) => os_str == OsStr::new("public"),
-        _ => false,
-    })
-}
-
-/// Based on a set of routes and a given path, it provides the best
-/// match based on the parametrized URL score. See the [`Route::can_manage_path`]
-/// method to understand how to calculate the score.
-pub fn retrieve_best_route<'a>(routes: &'a Routes, path: &str) -> Option<&'a Route> {
-    // Keep it to avoid calculating the score twice when iterating
-    // to look for the best route
-    let mut best_score = -1;
-
-    routes
-        .routes
-        .iter()
-        .fold(None, |acc, item| match item.affinity(path) {
-            RouteAffinity::CanManage(score) if best_score == -1 || score < best_score => {
-                best_score = score;
-                Some(item)
-            }
-            _ => acc,
-        })
-}
-
-/// Defines a prefix in the context of the application.
-/// This prefix will be used for the static assets and the
-/// workers.
-///
-/// A prefix must have the format: /X. This method receives
-/// the optional prefix and returns a proper String.
-///
-/// To be flexible, the method will manage "windows" paths too:
-/// \app. This shouldn't be considered as "prefix" must be an URI
-/// path. However, the check is pretty simple, so we will consider
-/// it.
-pub fn format_prefix(source: &str) -> String {
-    let mut normalized_prefix = source.to_string();
-    // Ensure the prefix doesn't include any \ character
-    normalized_prefix = normalized_prefix.replace('\\', "/");
-
-    if normalized_prefix.is_empty() {
-        normalized_prefix
-    } else {
-        if !normalized_prefix.starts_with('/') {
-            normalized_prefix = String::from('/') + &normalized_prefix;
-        }
-
-        if normalized_prefix.ends_with('/') {
-            normalized_prefix.pop();
-        }
-
-        normalized_prefix
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn route_path_affinity() {
-        let build_route = |file: &str| -> Route {
-            Route::new(
-                Path::new("./tests/data/params"),
-                PathBuf::from(format!("./tests/data/params{}", file)),
-                "",
-            )
-        };
-
-        // Route initializes the Wasm module. We create these
-        // variables to avoid loading the same Wasm module multiple times
-        let param_route = build_route("/[id].wasm");
-        let fixed_route = build_route("/fixed.wasm");
-        let param_folder_route = build_route("/[id]/fixed.wasm");
-        let param_sub_route = build_route("/sub/[id].wasm");
-
-        let tests = [
-            (&param_route, "/a", RouteAffinity::CanManage(1)),
-            (&fixed_route, "/fixed", RouteAffinity::CanManage(0)),
-            (&fixed_route, "/a", RouteAffinity::CannotManage),
-            (&param_folder_route, "/a", RouteAffinity::CannotManage),
-            (&param_folder_route, "/a/fixed", RouteAffinity::CanManage(1)),
-            (&param_sub_route, "/a/b", RouteAffinity::CannotManage),
-            (&param_sub_route, "/sub/b", RouteAffinity::CanManage(2)),
-        ];
-
-        for t in tests {
-            assert_eq!(t.0.affinity(t.1), t.2);
-        }
-    }
-
-    #[test]
-    fn best_route_by_affinity() {
-        let build_route = |file: &str| -> Route {
-            Route::new(
-                Path::new("./tests/data/params"),
-                PathBuf::from(format!("./tests/data/params{}", file)),
-                "",
-            )
-        };
-
-        // Route initializes the Wasm module. We create these
-        // variables to avoid loading the same Wasm module multiple times
-        let param_route = build_route("/[id].wasm");
-        let fixed_route = build_route("/fixed.wasm");
-        let param_folder_route = build_route("/[id]/fixed.wasm");
-        let param_sub_route = build_route("/sub/[id].wasm");
-
-        // I'm gonna use this values for comparison as `routes` consumes
-        // the Route elements.
-        let param_path = param_route.path.clone();
-        let fixed_path = fixed_route.path.clone();
-        let param_folder_path = param_folder_route.path.clone();
-        let param_sub_path = param_sub_route.path.clone();
-
-        let routes = Routes {
-            routes: vec![
-                param_route,
-                fixed_route,
-                param_folder_route,
-                param_sub_route,
-            ],
-        };
-
-        let tests = [
-            ("/a", Some(param_path)),
-            ("/fixed", Some(fixed_path)),
-            ("/a/fixed", Some(param_folder_path)),
-            ("/sub/b", Some(param_sub_path)),
-            ("/donot/exist", None),
-        ];
-
-        for t in tests {
-            let route = retrieve_best_route(&routes, t.0);
-
-            if let Some(path) = t.1 {
-                assert!(route.is_some());
-                assert_eq!(route.unwrap().path, path);
-            } else {
-                assert!(route.is_none());
-            }
-        }
-    }
 
     #[cfg(not(target_os = "windows"))]
     #[test]
@@ -563,69 +386,6 @@ mod tests {
                 Route::retrieve_route(&Path::new(t.0), &PathBuf::from(t.1), ""),
                 String::from(t.2),
             )
-        }
-    }
-
-    #[cfg(not(target_os = "windows"))]
-    #[test]
-    fn unix_is_in_public_folder() {
-        let tests = [
-            ("public/index.js", true),
-            ("examples/public/index.js", true),
-            ("examples/public/other.js", true),
-            ("public.js", false),
-            ("examples/public.js", false),
-            ("./examples/public.js", false),
-            ("./examples/index.js", false),
-        ];
-
-        for t in tests {
-            assert_eq!(is_in_public_folder(Path::new(t.0)), t.1)
-        }
-    }
-
-    #[cfg(target_os = "windows")]
-    #[test]
-    fn win_is_in_public_folder() {
-        let tests = [
-            ("public\\index.js", true),
-            ("examples\\public\\index.js", true),
-            ("examples\\public\\other.js", true),
-            ("public.js", false),
-            ("examples\\public.js", false),
-            (".\\examples\\public.js", false),
-            (".\\examples\\index.js", false),
-        ];
-
-        for t in tests {
-            assert_eq!(is_in_public_folder(&Path::new(t.0)), t.1)
-        }
-    }
-
-    #[test]
-    fn format_provided_prefix() {
-        let tests = [
-            // Unix approach
-            ("", ""),
-            ("/app", "/app"),
-            ("app", "/app"),
-            ("app/", "/app"),
-            ("/app/", "/app"),
-            ("/app/test/", "/app/test"),
-            ("/app/test", "/app/test"),
-            ("app/test/", "/app/test"),
-            // Windows approach
-            ("\\app", "/app"),
-            ("app", "/app"),
-            ("app\\", "/app"),
-            ("\\app\\", "/app"),
-            ("\\app\\test\\", "/app/test"),
-            ("\\app\\test", "/app/test"),
-            ("app\\test\\", "/app/test"),
-        ];
-
-        for t in tests {
-            assert_eq!(format_prefix(t.0), String::from(t.1))
         }
     }
 }
