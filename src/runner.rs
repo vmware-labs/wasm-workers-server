@@ -231,7 +231,7 @@ impl Runner {
         linker.module(&mut store, "", &self.module)?;
         linker
             .get_default(&mut store, "")?
-            .typed::<(), (), _>(&store)?
+            .typed::<(), ()>(&store)?
             .call(&mut store, ())?;
 
         drop(store);
