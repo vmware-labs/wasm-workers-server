@@ -1,7 +1,9 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::Result;
+use super::runtimes::{javascript::JavaScriptRuntime, native::NativeRuntime};
+use anyhow::{anyhow, Result};
+use std::path::Path;
 use wasmtime_wasi::WasiCtxBuilder;
 
 /// Define the behavior a Runtime must have. This includes methods
@@ -29,4 +31,24 @@ pub trait Runtime {
     /// run this worker. It can be a custom (native) or a
     /// shared module (others).
     fn module_bytes(&self) -> Result<Vec<u8>>;
+}
+
+/// Initializes a runtime based on the file extension. In the future,
+/// This will contain a more complete struct that will identify local
+/// runtimes.
+pub fn init_runtime(path: &Path) -> Result<Box<dyn Runtime + Sync + Send>> {
+    if let Some(ext) = path.extension() {
+        let ext_as_str = ext.to_str().unwrap();
+
+        match ext_as_str {
+            "js" => Ok(Box::new(JavaScriptRuntime::new(path.to_path_buf())?)),
+            "wasm" => Ok(Box::new(NativeRuntime::new(path.to_path_buf()))),
+            _ => Err(anyhow!(format!(
+                "The '{}' extension does not have an associated runtime",
+                ext_as_str
+            ))),
+        }
+    } else {
+        Err(anyhow!("The given file does not have a valid extension"))
+    }
 }

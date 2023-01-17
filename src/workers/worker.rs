@@ -2,13 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::{
-    runtime::Runtime,
-    runtimes::javascript::JavaScriptRuntime,
-    runtimes::native::NativeRuntime,
+    runtime::{init_runtime, Runtime},
     wasm_io::{WasmInput, WasmOutput},
 };
 use actix_web::HttpRequest;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use std::{collections::HashMap, path::Path};
 use wasi_common::pipe::{ReadPipe, WritePipe};
 use wasmtime::{Engine, Linker, Module, Store};
@@ -29,28 +27,19 @@ pub struct Worker {
 impl Worker {
     /// Creates a new Worker
     pub fn new(path: &Path) -> Result<Self> {
-        if let Some(ext) = path.extension() {
-            let engine = Engine::default();
-            let ext_as_str = ext.to_str().unwrap();
-            let runtime: Box<dyn Runtime + Sync + Send> = if ext_as_str == "js" {
-                Box::new(JavaScriptRuntime::new(path.to_path_buf())?)
-            } else {
-                Box::new(NativeRuntime::new(path.to_path_buf()))
-            };
-            let bytes = runtime.module_bytes()?;
-            let module = Module::from_binary(&engine, &bytes)?;
+        let engine = Engine::default();
+        let runtime = init_runtime(path)?;
+        let bytes = runtime.module_bytes()?;
+        let module = Module::from_binary(&engine, &bytes)?;
 
-            // Prepare the environment if required
-            runtime.prepare()?;
+        // Prepare the environment if required
+        runtime.prepare()?;
 
-            Ok(Self {
-                engine,
-                module,
-                runtime,
-            })
-        } else {
-            Err(anyhow!("The given file does not have a valid extension"))
-        }
+        Ok(Self {
+            engine,
+            module,
+            runtime,
+        })
     }
 
     pub fn run(
