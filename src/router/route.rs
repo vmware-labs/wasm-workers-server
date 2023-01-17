@@ -1,7 +1,7 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{config::Config, runner::Runner};
+use crate::{config::Config, workers::Worker};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::{
@@ -37,14 +37,13 @@ pub enum RouteAffinity {
 /// api/index.wasm      =>  /api
 /// api/v2/ping.wasm    =>  /api/v2/ping
 /// ```
-#[derive(Clone)]
 pub struct Route {
     /// The wasm module that will manage the route
     pub handler: PathBuf,
     /// The URL path
     pub path: String,
-    /// The preconfigured runner
-    pub runner: Runner,
+    /// The associated worker
+    pub worker: Worker,
     /// The associated configuration if available
     pub config: Option<Config>,
 }
@@ -55,7 +54,8 @@ impl Route {
     ///
     /// This method also initializes the Runner and loads the Config if available.
     pub fn new(base_path: &Path, filepath: PathBuf, prefix: &str) -> Self {
-        let runner = Runner::new(&filepath).unwrap();
+        let worker = Worker::new(&filepath).unwrap();
+
         // Load configuration
         let mut config_path = filepath.clone();
         config_path.set_extension("toml");
@@ -73,7 +73,7 @@ impl Route {
         Self {
             path: Self::retrieve_route(base_path, &filepath, prefix),
             handler: filepath,
-            runner,
+            worker,
             config,
         }
     }

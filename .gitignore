@@ -3,3 +3,4 @@ target
 !tests/**/*.wasm
 examples/*.toml
 .DS_Store
+.wws

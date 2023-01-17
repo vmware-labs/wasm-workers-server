@@ -7,7 +7,7 @@ extern crate lazy_static;
 mod config;
 mod data;
 mod router;
-mod runner;
+mod workers;
 
 use actix_files::{Files, NamedFile};
 use actix_web::dev::{fn_service, ServiceRequest, ServiceResponse};
@@ -20,10 +20,10 @@ use actix_web::{
 use clap::Parser;
 use data::kv::KV;
 use router::Routes;
-use runner::WasmOutput;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
 use std::{collections::HashMap, sync::RwLock};
+use workers::wasm_io::WasmOutput;
 
 // Provide a static root_path so it can be used in the default_worker to manage
 // static assets.
@@ -159,8 +159,8 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
         };
 
         let handler_result = route
-            .runner
-            .run(&req, body_str, store, vars)
+            .worker
+            .run(&req, &body_str, store, vars)
             .unwrap_or_else(|_| WasmOutput::failed());
 
         let mut builder = HttpResponse::build(
@@ -246,7 +246,7 @@ async fn main() -> std::io::Result<()> {
 
         // Append routes to the current service
         for route in routes.routes.iter() {
-            app = app.service(web::resource(&route.actix_path()).to(wasm_handler));
+            app = app.service(web::resource(route.actix_path()).to(wasm_handler));
 
             // Configure KV
             if let Some(namespace) = route.config.as_ref().and_then(|c| c.data_kv_namespace()) {
@@ -261,7 +261,7 @@ async fn main() -> std::io::Result<()> {
         }
 
         app = app.service(
-            Files::new(&static_prefix, &args.path.join("public"))
+            Files::new(&static_prefix, args.path.join("public"))
                 .index_file("index.html")
                 // This handler check if there's an HTML file in the public folder that
                 // can reply to the given request. For example, if someone request /about,
