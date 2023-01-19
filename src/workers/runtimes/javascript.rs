@@ -1,7 +1,7 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use super::temp_utils::TempUtils;
+use super::data::Data;
 use crate::workers::runtime::Runtime;
 use anyhow::Result;
 use std::{fs, path::PathBuf};
@@ -15,23 +15,30 @@ pub struct JavaScriptRuntime {
     /// Path of the given module
     path: PathBuf,
     /// Utils to make temporary files
-    temp_utils: TempUtils,
+    data: Data,
 }
 
 impl JavaScriptRuntime {
-    /// Initializes the given runtime
+    /// Initializes the JavaScript runtime. This runtime includes a
+    /// compiled QuickJS Wasm module. To run a worker, we need to
+    /// mount the JS file into /src/index.js and the runtime will
+    /// automatically pick and run it. We use the Data struct for
+    /// this purpose
     pub fn new(path: PathBuf) -> Result<Self> {
-        let temp_utils = TempUtils::new(String::from("js"), &path)?;
+        let data = Data::new(String::from("js"), &path)?;
 
-        Ok(Self { path, temp_utils })
+        Ok(Self { path, data })
     }
 }
 
 impl Runtime for JavaScriptRuntime {
-    /// Prepare the environment. This method
-    /// initializes folders and create files if required
+    /// Prepare the environment to run this specific worker. Since
+    /// the current folder received by argument may include multiple
+    /// files (workers), we use the Data struct to write the JS source
+    /// file into an isolated and separate folder. Then, we will mount
+    /// it during the [prepare_wasi_ctx] call.
     fn prepare(&self) -> Result<()> {
-        self.temp_utils.write_source(&self.path)?;
+        self.data.write_source(&self.path)?;
 
         Ok(())
     }
@@ -39,7 +46,7 @@ impl Runtime for JavaScriptRuntime {
     /// Mount the source code in the WASI context so it can be
     /// processed by the engine
     fn prepare_wasi_ctx(&self, builder: WasiCtxBuilder) -> Result<WasiCtxBuilder> {
-        let source = fs::File::open(&self.temp_utils.folder)?;
+        let source = fs::File::open(&self.data.folder)?;
         Ok(builder.preopened_dir(Dir::from_std_file(source), "/src")?)
     }
 

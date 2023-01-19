@@ -10,8 +10,10 @@ use wasmtime_wasi::WasiCtxBuilder;
 /// to initialize the environment for the given runtime as well as
 /// the Wasi Context to process the request.
 pub trait Runtime {
-    /// Prepare the environment. This method
-    /// initializes folders and create files if required
+    /// Allow a runtime to prepare the run environment if it's required.
+    /// This method is called when loading the different workers from the
+    /// filesystem. This method is only called once before the service
+    /// is ready to start processing requests.
     fn prepare(&self) -> Result<()> {
         Ok(())
     }
@@ -24,12 +26,10 @@ pub trait Runtime {
         Ok(builder)
     }
 
-    /// Check if the given path can be managed by this runtime.
-    // fn can_manage(path: &Path) -> bool;
-
-    /// Returns a reference to the Wasm module that should
-    /// run this worker. It can be a custom (native) or a
-    /// shared module (others).
+    /// Returns a reference raw bytes of the Wasm module that should
+    /// run this worker. It can be directly the contents of the file
+    /// that was identified as a worker (.wasm / native) or a shared
+    /// runtime like JS or Python.
     fn module_bytes(&self) -> Result<Vec<u8>>;
 }
 

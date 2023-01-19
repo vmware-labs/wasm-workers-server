@@ -8,21 +8,25 @@
 use anyhow::Result;
 use std::{fs, path::Path};
 
-// Common tmp folder
+/// This is a temporary folder in which runtimes can prepare
+/// and store certain data. For example, the JS runtime have
+/// to mount a folder with the source code. To avoid moun†ing
+/// a folder that may include multiple files, it stores in
+/// .wws/js/XXX/index.js the worker file.
 const TMP_FOLDER: &str = ".wws";
 
-/// Struct to deal with temporary files as part of the
-/// Runtime process. Some runtimes may require to write
+/// Maange the required data to run a worker in a specific
+/// runtime. As stated before, some runtimes may require to write
 /// temporary files on a folder. Note that Wasm VMs require
 /// to mount a folder, not a file. To keep workers isolated
 /// between others, we will prepare specific folders with the
 /// source code only.
-pub struct TempUtils {
+pub struct Data {
     /// The folder inside the main TMP folder.
     pub folder: String,
 }
 
-impl TempUtils {
+impl Data {
     /// Creates a new temp folder for the given language. This will
     /// allow later on to write files in that folder.
     pub fn new(lang_folder: String, source_path: &Path) -> Result<Self> {
