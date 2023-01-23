@@ -8,6 +8,7 @@ mod config;
 mod data;
 mod router;
 mod workers;
+mod runtimes;
 
 use actix_files::{Files, NamedFile};
 use actix_web::dev::{fn_service, ServiceRequest, ServiceResponse};
