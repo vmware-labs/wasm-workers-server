@@ -1,6 +1,9 @@
-use serde::Deserialize;
-use super::{metadata::RuntimeMetadata};
+// Copyright 2022 VMware, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+use super::metadata::RuntimeMetadata;
 use anyhow::{anyhow, Result};
+use serde::Deserialize;
 
 // TODO: Remove it when implementing the manager
 #[allow(dead_code)]
@@ -16,7 +19,7 @@ pub struct Repository<'a> {
     version: u32,
     /// The list of runtimes available in the repository
     #[serde(borrow)]
-    runtimes: Vec<RuntimeMetadata<'a>>
+    runtimes: Vec<RuntimeMetadata<'a>>,
 }
 
 // TODO: Remove it when implementing the manager

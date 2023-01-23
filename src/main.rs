@@ -7,8 +7,8 @@ extern crate lazy_static;
 mod config;
 mod data;
 mod router;
-mod workers;
 mod runtimes;
+mod workers;
 
 use actix_files::{Files, NamedFile};
 use actix_web::dev::{fn_service, ServiceRequest, ServiceResponse};

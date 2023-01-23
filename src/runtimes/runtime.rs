@@ -13,7 +13,7 @@ pub enum RuntimeStatus {
     Active,
     Yanked,
     Deprecated,
-    Unknown
+    Unknown,
 }
 
 impl From<&str> for RuntimeStatus {

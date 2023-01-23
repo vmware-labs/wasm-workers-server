@@ -1,7 +1,10 @@
-use std::collections::HashMap;
-use serde::Deserialize;
+// Copyright 2022 VMware, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 use super::runtime::RuntimeStatus;
 use anyhow::{anyhow, Result};
+use serde::Deserialize;
+use std::collections::HashMap;
 
 // TODO: Remove it when implementing the manager
 #[allow(dead_code)]
@@ -41,7 +44,7 @@ pub struct RuntimeMetadata<'a> {
     /// function calls, etc.
     template: Option<&'a str>,
     /// The checksum to validate the given template file (SHA256)
-    template_polyfill: Option<&'a str>
+    template_polyfill: Option<&'a str>,
 }
 
 // TODO: Remove it when implementing the manager
