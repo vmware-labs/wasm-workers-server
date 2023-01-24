@@ -4,4 +4,5 @@
 mod metadata;
 mod modules;
 mod repository;
+mod remote_file;
 pub mod runtime;

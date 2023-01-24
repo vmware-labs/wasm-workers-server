@@ -16,10 +16,10 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 pub struct Repository<'a> {
     /// Version of the repository file
-    version: u32,
+    pub version: u32,
     /// The list of runtimes available in the repository
     #[serde(borrow)]
-    runtimes: Vec<RuntimeMetadata<'a>>,
+    pub runtimes: Vec<RuntimeMetadata<'a>>,
 }
 
 // TODO: Remove it when implementing the manager
@@ -30,5 +30,20 @@ impl<'a> Repository<'a> {
     pub fn from_slice(data: &'a [u8]) -> Result<Self> {
         toml::from_slice::<Repository>(data)
             .map_err(|_| anyhow!("wws could not deserialize the repository metadata"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn parse_index_toml() {
+        let contents = fs::read("tests/data/metadata/repository.toml").unwrap();
+        let repo = Repository::from_slice(&contents).unwrap();
+
+        assert_eq!(repo.version, 1);
+        assert_eq!(repo.runtimes.len(), 1);
     }
 }

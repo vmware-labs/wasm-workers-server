@@ -9,6 +9,7 @@ use wasmtime_wasi::WasiCtxBuilder;
 
 /// Define the status of a runtime in a target repository
 #[derive(Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum RuntimeStatus {
     Active,
     Yanked,
