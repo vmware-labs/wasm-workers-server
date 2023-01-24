@@ -3,6 +3,6 @@
 
 mod metadata;
 mod modules;
-mod repository;
 mod remote_file;
+mod repository;
 pub mod runtime;
