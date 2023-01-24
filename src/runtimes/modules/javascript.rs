@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::data::Data;
-use crate::workers::runtime::Runtime;
+use crate::runtimes::runtime::Runtime;
 use anyhow::Result;
 use std::{fs, path::PathBuf};
 use wasmtime_wasi::Dir;

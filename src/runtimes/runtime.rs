@@ -1,10 +1,34 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use super::runtimes::{javascript::JavaScriptRuntime, native::NativeRuntime};
+use super::modules::{javascript::JavaScriptRuntime, native::NativeRuntime};
 use anyhow::{anyhow, Result};
+use serde::Deserialize;
 use std::path::Path;
 use wasmtime_wasi::WasiCtxBuilder;
+
+/// Define the status of a runtime in a target repository
+#[derive(Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RuntimeStatus {
+    Active,
+    Yanked,
+    Deprecated,
+    Unknown,
+}
+
+impl From<&str> for RuntimeStatus {
+    /// Create a RuntimeStatus variant from a &str. It uses predefined
+    /// values
+    fn from(value: &str) -> Self {
+        match value {
+            "active" => RuntimeStatus::Active,
+            "yanked" => RuntimeStatus::Yanked,
+            "deprecated" => RuntimeStatus::Deprecated,
+            _ => RuntimeStatus::Unknown,
+        }
+    }
+}
 
 /// Define the behavior a Runtime must have. This includes methods
 /// to initialize the environment for the given runtime as well as

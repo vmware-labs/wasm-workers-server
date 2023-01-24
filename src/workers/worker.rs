@@ -1,10 +1,8 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use super::{
-    runtime::{init_runtime, Runtime},
-    wasm_io::{WasmInput, WasmOutput},
-};
+use super::wasm_io::{WasmInput, WasmOutput};
+use crate::runtimes::runtime::{init_runtime, Runtime};
 use actix_web::HttpRequest;
 use anyhow::Result;
 use std::{collections::HashMap, path::Path};
