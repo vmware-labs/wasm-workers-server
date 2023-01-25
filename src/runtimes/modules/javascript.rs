@@ -1,8 +1,8 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use super::data::Data;
 use crate::runtimes::runtime::Runtime;
+use crate::store::Store;
 use anyhow::Result;
 use std::{fs, path::PathBuf};
 use wasmtime_wasi::Dir;
@@ -14,8 +14,8 @@ static JS_ENGINE_WASM: &[u8] =
 pub struct JavaScriptRuntime {
     /// Path of the given module
     path: PathBuf,
-    /// Utils to make temporary files
-    data: Data,
+    /// Utils to store temporary files for this runtime
+    store: Store,
 }
 
 impl JavaScriptRuntime {
@@ -25,9 +25,10 @@ impl JavaScriptRuntime {
     /// automatically pick and run it. We use the Data struct for
     /// this purpose
     pub fn new(path: PathBuf) -> Result<Self> {
-        let data = Data::new(String::from("js"), &path)?;
+        let hash = Store::file_hash(&path)?;
+        let store = Store::new(&["workers", "js", &hash])?;
 
-        Ok(Self { path, data })
+        Ok(Self { path, store })
     }
 }
 
@@ -38,7 +39,7 @@ impl Runtime for JavaScriptRuntime {
     /// file into an isolated and separate folder. Then, we will mount
     /// it during the [prepare_wasi_ctx] call.
     fn prepare(&self) -> Result<()> {
-        self.data.write_source(&self.path)?;
+        self.store.copy(&self.path, &["index.js"])?;
 
         Ok(())
     }
@@ -46,7 +47,7 @@ impl Runtime for JavaScriptRuntime {
     /// Mount the source code in the WASI context so it can be
     /// processed by the engine
     fn prepare_wasi_ctx(&self, builder: WasiCtxBuilder) -> Result<WasiCtxBuilder> {
-        let source = fs::File::open(&self.data.folder)?;
+        let source = fs::File::open(&self.store.folder)?;
         Ok(builder.preopened_dir(Dir::from_std_file(source), "/src")?)
     }
 

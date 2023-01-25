@@ -31,6 +31,9 @@ toml = "0.5.9"
 base64 = "0.13.1"
 clap = { version = "4.0.10", features = ["derive"] }
 regex = "1"
+url = "2.3.1"
+reqwest = { version = "0.11" }
+sha256 = "1.1.1"
 
 [workspace]
 members = [

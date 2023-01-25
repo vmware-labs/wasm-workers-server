@@ -6,8 +6,10 @@ extern crate lazy_static;
 
 mod config;
 mod data;
+mod fetch;
 mod router;
 mod runtimes;
+mod store;
 mod workers;
 
 use actix_files::{Files, NamedFile};
