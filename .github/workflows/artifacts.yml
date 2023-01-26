@@ -4,7 +4,7 @@ on:
   push:
     tags:
     - "v[0-9]+.[0-9]+.[0-9]+"
-  # ADDING FOR TESTING PURPOSES. I WILL REMOVE IT
+  # ADDING FOR TESTING PURPOSES. I WILL REMOVE IT after confirming the fix
   pull_request:
     branches: [ "main" ]
 
