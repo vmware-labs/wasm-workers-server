@@ -54,7 +54,7 @@ impl Route {
     ///
     /// This method also initializes the Runner and loads the Config if available.
     pub fn new(base_path: &Path, filepath: PathBuf, prefix: &str) -> Self {
-        let worker = Worker::new(&filepath).unwrap();
+        let worker = Worker::new(base_path, &filepath).unwrap();
 
         // Load configuration
         let mut config_path = filepath.clone();

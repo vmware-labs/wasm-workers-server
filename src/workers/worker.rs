@@ -24,9 +24,9 @@ pub struct Worker {
 
 impl Worker {
     /// Creates a new Worker
-    pub fn new(path: &Path) -> Result<Self> {
+    pub fn new(project_root: &Path, path: &Path) -> Result<Self> {
         let engine = Engine::default();
-        let runtime = init_runtime(path)?;
+        let runtime = init_runtime(project_root, path)?;
         let bytes = runtime.module_bytes()?;
         let module = Module::from_binary(&engine, &bytes)?;
 

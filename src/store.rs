@@ -36,8 +36,8 @@ pub struct Store {
 impl Store {
     /// Instance a new store and creates the root folder. The root path is
     /// used to scope the files inside the STORE_FOLDER folder.
-    pub fn new(root: &[&str]) -> Result<Self> {
-        let folder = Self::build_root_path(root);
+    pub fn new(project_root: &Path, folder: &[&str]) -> Result<Self> {
+        let folder = Self::build_root_path(project_root, folder);
 
         // Try to create the directory
         fs::create_dir_all(&folder)?;
@@ -77,9 +77,9 @@ impl Store {
 
     /// Build a valid path for multiple platforms. It takes advantages of the
     /// Path methods
-    fn build_root_path(source: &[&str]) -> PathBuf {
+    fn build_root_path(root: &Path, source: &[&str]) -> PathBuf {
         source
             .iter()
-            .fold(PathBuf::from(STORE_FOLDER), |acc, comp| acc.join(comp))
+            .fold(root.join(STORE_FOLDER), |acc, comp| acc.join(comp))
     }
 }

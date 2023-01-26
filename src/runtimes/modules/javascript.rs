@@ -4,6 +4,7 @@
 use crate::runtimes::runtime::Runtime;
 use crate::store::Store;
 use anyhow::Result;
+use std::path::Path;
 use std::{fs, path::PathBuf};
 use wasmtime_wasi::Dir;
 use wasmtime_wasi::WasiCtxBuilder;
@@ -24,9 +25,9 @@ impl JavaScriptRuntime {
     /// mount the JS file into /src/index.js and the runtime will
     /// automatically pick and run it. We use the Data struct for
     /// this purpose
-    pub fn new(path: PathBuf) -> Result<Self> {
+    pub fn new(project_root: &Path, path: PathBuf) -> Result<Self> {
         let hash = Store::file_hash(&path)?;
-        let store = Store::new(&["workers", "js", &hash])?;
+        let store = Store::new(project_root, &["workers", "js", &hash])?;
 
         Ok(Self { path, store })
     }
