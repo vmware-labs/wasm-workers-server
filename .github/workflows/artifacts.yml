@@ -77,7 +77,7 @@ jobs:
       if: ${{ matrix.build == 'linux' }}
       run: |
         sudo apt-get update
-        sudo apt-get install musl-tools pkg-config libssl-dev
+        sudo apt-get install musl-tools
     - name: Install deps (MacOS)
       if: ${{ matrix.build == 'macos' }}
       run: |
@@ -89,7 +89,6 @@ jobs:
     - name: Build (Linux)
       if: ${{ matrix.build == 'linux' }}
       run: |
-        export PKG_CONFIG_ALLOW_CROSS=1
         ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{ matrix.platform }}
     - name: Tarball
       shell: bash
