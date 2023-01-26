@@ -2,7 +2,7 @@ name = "ruby"
 version = "3.2.0+20230118-8aec06d"
 status = "active"
 args = [ "--", "/src/index.rb" ]
-binary = { url = "https://github.com/vmware-labs/webassembly-language-runtimes/releases/download/ruby%2F3.2.0%2B20230118-8aec06d/ruby-3.2.0.wasm", checksum = { type = "sha256", value = "e2d91cff05ec59ed9c88aadbd3b477842092054bf24c5d944d5ad6dbafdd3b32" } }
+binary = { url = "https://github.com/vmware-labs/webassembly-language-runtimes/releases/download/ruby%2F3.2.0%2B20230118-8aec06d/ruby-3.2.0.wasm", filename = "ruby.wasm", checksum = { type = "sha256", value = "e2d91cff05ec59ed9c88aadbd3b477842092054bf24c5d944d5ad6dbafdd3b32" } }
 extensions = [ "rb" ]
-polyfill = { url = "https://raw.githubusercontent.com/Angelmmiguel/wws-index-test/main/ruby/poly.rb", checksum = { type = "sha256", value = "2ba09117ed20a05480615b2aaaf6c7cd7f61fa06f4919777d773df2fcbc736cf" } }
-template = { url = "https://raw.githubusercontent.com/Angelmmiguel/wws-index-test/main/ruby/template.txt", checksum = { type = "sha256", value = "6d808b4747cf30f82665a38a47e1176513bbdd6ad558c09db03d719e33ad2da0" } }
+polyfill = { url = "https://raw.githubusercontent.com/Angelmmiguel/wws-index-test/main/ruby/poly.rb", filename = "poly.rb", checksum = { type = "sha256", value = "2ba09117ed20a05480615b2aaaf6c7cd7f61fa06f4919777d773df2fcbc736cf" } }
+template = { url = "https://raw.githubusercontent.com/Angelmmiguel/wws-index-test/main/ruby/template.txt", filename = "template.txt", checksum = { type = "sha256", value = "6d808b4747cf30f82665a38a47e1176513bbdd6ad558c09db03d719e33ad2da0" } }

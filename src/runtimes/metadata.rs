@@ -1,10 +1,50 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use super::{remote_file::RemoteFile, runtime::RuntimeStatus};
+use crate::fetch::fetch;
 use anyhow::{anyhow, Result};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use sha256::digest as sha256_digest;
 use std::collections::HashMap;
+use url::Url;
+
+/// A Repository contains the list of runtimes available on it.
+/// This file is used by wws to properly show the list of available
+/// repos and install them.
+///
+/// By default, this repository class rely on the
+/// [WebAssembly Language Runtimes](https://github.com/vmware-labs/webassembly-language-runtimes)
+/// repository. It looks for a repository.toml file in the Git repo.
+#[derive(Deserialize)]
+pub struct Repository {
+    /// Version of the repository file
+    pub version: u32,
+    /// The list of runtimes available in the repository
+    pub runtimes: Vec<Runtime>,
+}
+
+// TODO: Remove it when implementing the manager
+#[allow(dead_code)]
+impl Repository {
+    /// Reads and parses the metadata from a slice of bytes. It will return
+    /// a result as the deserialization may fail.
+    pub fn from_str(data: &str) -> Result<Self> {
+        toml::from_str::<Repository>(data).map_err(|err| {
+            println!("Err: {:?}", err);
+            anyhow!("wws could not deserialize the repository metadata")
+        })
+    }
+
+    /// Retrieve a repository from a remote file. It will download the content
+    /// using reqwest and initializing the repository with it.
+    pub async fn from_remote_file(repository_url: &str) -> Result<Self> {
+        let url = Url::parse(repository_url)?;
+        let data = fetch(&url).await?;
+        let str_data = String::from_utf8(data)?;
+
+        Repository::from_str(&str_data)
+    }
+}
 
 // TODO: Remove it when implementing the manager
 #[allow(dead_code)]
@@ -16,53 +56,102 @@ use std::collections::HashMap;
 /// a source code as a worker. The configuration includes
 /// different pieces like polyfills files, templates,
 /// arguments, etc.
-#[derive(Deserialize)]
-pub struct RuntimeMetadata<'a> {
+#[derive(Deserialize, Serialize, Clone)]
+pub struct Runtime {
     /// Name of the runtime (like ruby, python, etc)
-    name: &'a str,
+    pub name: String,
     /// Specific version of the runtime
-    version: &'a str,
+    pub version: String,
     /// Current status in the repository
-    status: RuntimeStatus,
+    pub status: RuntimeStatus,
     /// Associated extensions
-    extensions: Vec<&'a str>,
+    pub extensions: Vec<String>,
     /// Arguments to pass to the Wasm module via WASI
-    args: Vec<&'a str>,
+    pub args: Vec<String>,
     /// A list of environment variables that must be configured
     /// for the runtime to work.
-    envs: Option<HashMap<&'a str, &'a str>>,
+    pub envs: Option<HashMap<String, String>>,
     /// The reference to a remote binary (url + checksum)
-    binary: RemoteFile<'a>,
+    pub binary: RemoteFile,
     /// The reference to a remote polyfill file (url + checksum)
-    polyfill: Option<RemoteFile<'a>>,
-    /// The refernmece to a template file for the worker. It will wrap the
+    pub polyfill: Option<RemoteFile>,
+    /// The reference to a template file for the worker. It will wrap the
     /// source code into a template that can include imports,
     /// function calls, etc.
-    template: Option<RemoteFile<'a>>,
+    pub template: Option<RemoteFile>,
 }
 
-// TODO: Remove it when implementing the manager
-#[allow(dead_code)]
-impl<'a> RuntimeMetadata<'a> {
-    /// Reads and parses the metadata from a slice of bytes. It will return
-    /// a result as the deserialization may fail.
-    pub fn from_slice(data: &'a [u8]) -> Result<Self> {
-        toml::from_slice::<RuntimeMetadata>(data)
-            .map_err(|_| anyhow!("wws could not deserialize the runtime metadata"))
+/// Define the status of a runtime in a target repository
+#[derive(Deserialize, Serialize, Clone)]
+#[serde(rename_all = "lowercase")]
+pub enum RuntimeStatus {
+    Active,
+    Yanked,
+    Deprecated,
+    Unknown,
+}
+
+impl From<&str> for RuntimeStatus {
+    /// Create a RuntimeStatus variant from a &str. It uses predefined
+    /// values
+    fn from(value: &str) -> Self {
+        match value {
+            "active" => RuntimeStatus::Active,
+            "yanked" => RuntimeStatus::Yanked,
+            "deprecated" => RuntimeStatus::Deprecated,
+            _ => RuntimeStatus::Unknown,
+        }
+    }
+}
+
+/// A file represents a combination of both a remote URL, filename
+/// and checksum.
+#[derive(Deserialize, Serialize, Clone)]
+pub struct RemoteFile {
+    /// URL pointing to the file
+    pub url: String,
+    /// Checksum to validate the given file
+    pub checksum: Checksum,
+    /// Provide a filename
+    pub filename: String,
+}
+
+/// A list of available checksums. For now, we will support only sha256
+#[derive(Deserialize, Serialize, Clone)]
+#[serde(rename_all = "lowercase", tag = "type")]
+pub enum Checksum {
+    Sha256 { value: String },
+}
+
+impl Checksum {
+    /// Validate the provided slice of bytes with the given checksum.
+    /// Depending on the type, it will calculate a different digest.
+    pub fn validate(&self, bytes: &[u8]) -> Result<()> {
+        match self {
+            Checksum::Sha256 { value } if value == &sha256_digest(bytes) => Ok(()),
+            _ => Err(anyhow!("The checksums dont not match")),
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::runtimes::remote_file::Checksum;
-
     use super::*;
     use std::{any::Any, fs};
 
     #[test]
+    fn parse_index_toml() {
+        let contents = fs::read_to_string("tests/data/metadata/repository.toml").unwrap();
+        let repo = Repository::from_str(&contents).unwrap();
+
+        assert_eq!(repo.version, 1);
+        assert_eq!(repo.runtimes.len(), 1);
+    }
+
+    #[test]
     fn parse_runtime_toml() {
-        let contents = fs::read("tests/data/metadata/runtime.toml").unwrap();
-        let metadata = RuntimeMetadata::from_slice(&contents).unwrap();
+        let contents = fs::read_to_string("tests/data/metadata/runtime.toml").unwrap();
+        let metadata = toml::from_str::<Runtime>(&contents).unwrap();
 
         assert_eq!(metadata.name, "ruby");
         assert_eq!(metadata.version, "3.2.0+20230118-8aec06d");
