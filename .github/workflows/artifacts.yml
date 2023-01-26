@@ -72,17 +72,19 @@ jobs:
     - name: Install target
       if: matrix.cross == false
       run: rustup target add ${{ matrix.arch }}-${{ matrix.platform }}
-    - name: Install deps
+    - name: Install deps (Linux)
       if: ${{ matrix.build == 'linux' }}
       run: |
         sudo apt-get update
         sudo apt-get install musl-tools pkg-config libssl-dev
-    - name: Install deps
+    - name: Install deps (MacOS)
       if: ${{ matrix.build == 'macos' }}
       run: |
         brew install openssl@1.1
     - name: Build
-      run: ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{ matrix.platform }}
+      run: |
+        export PKG_CONFIG_SYSROOT_DIR=/
+        ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{ matrix.platform }}
     - name: Tarball
       shell: bash
       run: |
