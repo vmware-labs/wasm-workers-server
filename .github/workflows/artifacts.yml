@@ -4,9 +4,6 @@ on:
   push:
     tags:
     - "v[0-9]+.[0-9]+.[0-9]+"
-  # ADDING FOR TESTING PURPOSES. I WILL REMOVE IT after confirming the fix
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   test:
@@ -17,7 +14,6 @@ jobs:
       run: cargo test
   build:
     strategy:
-      fail-fast: false
       matrix:
         build: [linux, windows, macos]
         arch: [x86_64, aarch64]
