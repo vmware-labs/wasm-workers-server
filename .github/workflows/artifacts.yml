@@ -73,15 +73,11 @@ jobs:
     - name: Install target
       if: matrix.cross == false
       run: rustup target add ${{ matrix.arch }}-${{ matrix.platform }}
-    - name: Install deps (Linux)
+    - name: Install deps
       if: ${{ matrix.build == 'linux' }}
       run: |
         sudo apt-get update
         sudo apt-get install musl-tools
-    - name: Install deps (MacOS)
-      if: ${{ matrix.build == 'macos' }}
-      run: |
-        brew install openssl@1.1
     - name: Build
       run: ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{ matrix.platform }}
     - name: Tarball
