@@ -4,6 +4,9 @@ on:
   push:
     tags:
     - "v[0-9]+.[0-9]+.[0-9]+"
+  # ADDING FOR TESTING PURPOSES. I WILL REMOVE IT
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   test:
@@ -73,7 +76,11 @@ jobs:
       if: ${{ matrix.build == 'linux' }}
       run: |
         sudo apt-get update
-        sudo apt-get install musl-tools
+        sudo apt-get install musl-tools pkg-config libssl-dev
+    - name: Install deps
+      if: ${{ matrix.build == 'macos' }}
+      run: |
+        brew install openssl@1.1
     - name: Build
       run: ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{ matrix.platform }}
     - name: Tarball
