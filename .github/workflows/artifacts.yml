@@ -83,13 +83,7 @@ jobs:
       run: |
         brew install openssl@1.1
     - name: Build
-      if: ${{ matrix.build != 'linux' }}
-      run: |
-        ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{ matrix.platform }}
-    - name: Build (Linux)
-      if: ${{ matrix.build == 'linux' }}
-      run: |
-        ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{ matrix.platform }}
+      run: ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{ matrix.platform }}
     - name: Tarball
       shell: bash
       run: |
