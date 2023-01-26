@@ -1,6 +1,7 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::store::STORE_FOLDER;
 use std::ffi::OsStr;
 use std::path::{Component, Path, PathBuf};
 use wax::{Glob, WalkEntry};
@@ -32,7 +33,12 @@ impl Files {
 
         glob.walk(&self.root)
             .filter_map(|el| match el {
-                Ok(entry) if !self.is_in_public_folder(entry.path()) => Some(entry),
+                Ok(entry)
+                    if !self.is_in_public_folder(entry.path())
+                        && !self.is_in_wws_folder(entry.path()) =>
+                {
+                    Some(entry)
+                }
                 _ => None,
             })
             .collect()
@@ -48,6 +54,14 @@ impl Files {
 
         path.components().any(|c| match c {
             Component::Normal(os_str) => os_str == OsStr::new("public"),
+            _ => false,
+        })
+    }
+
+    /// Checks if the given filepath is inside the ".wws" special folder.
+    fn is_in_wws_folder(&self, path: &Path) -> bool {
+        path.components().any(|c| match c {
+            Component::Normal(os_str) => os_str == OsStr::new(STORE_FOLDER),
             _ => false,
         })
     }

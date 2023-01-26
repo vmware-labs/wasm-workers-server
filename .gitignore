@@ -4,3 +4,4 @@ target
 examples/*.toml
 .DS_Store
 .wws
+.wws.toml

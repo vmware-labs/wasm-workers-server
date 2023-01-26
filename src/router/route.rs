@@ -1,7 +1,7 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{config::Config, workers::Worker};
+use crate::{workers::config::Config, workers::Worker};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::{

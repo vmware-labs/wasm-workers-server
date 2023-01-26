@@ -81,6 +81,15 @@ pub struct Runtime {
     pub template: Option<RemoteFile>,
 }
 
+/// Implement comparison by checking the name and version of a given repository.
+/// For now, we will rely on this simple comparison as a repository shouldn't
+/// include two runtimes with the same name and version
+impl PartialEq for Runtime {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.version == other.version
+    }
+}
+
 /// Define the status of a runtime in a target repository
 #[derive(Deserialize, Serialize, Clone)]
 #[serde(rename_all = "lowercase")]

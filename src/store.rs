@@ -19,7 +19,7 @@ use std::{
 /// to mount a folder with the source code. To avoid moun†ing
 /// a folder that may include multiple files, it stores in
 /// .wws/js/XXX/index.js the worker file.
-const STORE_FOLDER: &str = ".wws";
+pub const STORE_FOLDER: &str = ".wws";
 
 /// Struct to initialize, create and interact with files inside
 /// the store. All paths are considered &[&str] to ensure we
