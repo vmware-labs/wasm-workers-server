@@ -5,7 +5,7 @@ use crate::fetch::fetch;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use sha256::digest as sha256_digest;
-use std::{collections::HashMap, fmt};
+use std::collections::HashMap;
 use url::Url;
 
 /// A Repository contains the list of runtimes available on it.
@@ -79,21 +79,6 @@ pub struct Runtime {
     /// source code into a template that can include imports,
     /// function calls, etc.
     pub template: Option<RemoteFile>,
-}
-
-// Implement the Display trait to runtime metadata properly in the CLI
-impl fmt::Display for Runtime {
-    /// Prints the runtime as a row for a list of runtimes
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}\t{}\t{}\t{}",
-            &self.name,
-            &self.version,
-            self.extensions.join(", "),
-            &self.binary.url
-        )
-    }
 }
 
 /// Define the status of a runtime in a target repository

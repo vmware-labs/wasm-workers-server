@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::data::kv::KVConfigData;
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Deserializer};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -45,15 +46,14 @@ impl Config {
     /// [data.kv]
     /// namespace = "todos"
     /// ```
-    pub fn try_from_file(path: PathBuf) -> Result<Self, String> {
-        let contents =
-            fs::read_to_string(&path).expect("The configuration file was not properly loaded");
+    pub fn try_from_file(path: PathBuf) -> Result<Self> {
+        let contents = fs::read_to_string(&path)?;
 
         let try_config: Result<Config, toml::de::Error> = from_str(&contents);
 
         match try_config {
             Ok(c) => Ok(c),
-            Err(err) => Err(format!(
+            Err(err) => Err(anyhow!(
                 "Error reading the configuration file at {}: {}",
                 &path.to_str().unwrap_or("?"),
                 err
