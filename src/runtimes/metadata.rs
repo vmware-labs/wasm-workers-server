@@ -3,7 +3,7 @@
 
 use crate::fetch::fetch;
 use anyhow::{anyhow, Result};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sha256::digest as sha256_digest;
 use std::{collections::HashMap, fmt};
 use url::Url;
@@ -28,8 +28,8 @@ pub struct Repository {
 impl Repository {
     /// Reads and parses the metadata from a slice of bytes. It will return
     /// a result as the deserialization may fail.
-    pub fn from_slice(data: &[u8]) -> Result<Self> {
-        toml::from_slice::<Repository>(data).map_err(|err| {
+    pub fn from_str(data: &str) -> Result<Self> {
+        toml::from_str::<Repository>(data).map_err(|err| {
             println!("Err: {:?}", err);
             anyhow!("wws could not deserialize the repository metadata")
         })
@@ -40,8 +40,9 @@ impl Repository {
     pub async fn from_remote_file(repository_url: &str) -> Result<Self> {
         let url = Url::parse(repository_url)?;
         let data = fetch(&url).await?;
+        let str_data = String::from_utf8(data)?;
 
-        Repository::from_slice(&data)
+        Repository::from_str(&str_data)
     }
 }
 
@@ -55,7 +56,7 @@ impl Repository {
 /// a source code as a worker. The configuration includes
 /// different pieces like polyfills files, templates,
 /// arguments, etc.
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Runtime {
     /// Name of the runtime (like ruby, python, etc)
     pub name: String,
@@ -96,7 +97,7 @@ impl fmt::Display for Runtime {
 }
 
 /// Define the status of a runtime in a target repository
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum RuntimeStatus {
     Active,
@@ -120,7 +121,7 @@ impl From<&str> for RuntimeStatus {
 
 /// A file represents a combination of both a remote URL, filename
 /// and checksum.
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct RemoteFile {
     /// URL pointing to the file
     pub url: String,
@@ -131,7 +132,7 @@ pub struct RemoteFile {
 }
 
 /// A list of available checksums. For now, we will support only sha256
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(rename_all = "lowercase", tag = "type")]
 pub enum Checksum {
     Sha256 { value: String },
@@ -155,8 +156,8 @@ mod tests {
 
     #[test]
     fn parse_index_toml() {
-        let contents = fs::read("tests/data/metadata/repository.toml").unwrap();
-        let repo = Repository::from_slice(&contents).unwrap();
+        let contents = fs::read_to_string("tests/data/metadata/repository.toml").unwrap();
+        let repo = Repository::from_str(&contents).unwrap();
 
         assert_eq!(repo.version, 1);
         assert_eq!(repo.runtimes.len(), 1);
@@ -164,8 +165,8 @@ mod tests {
 
     #[test]
     fn parse_runtime_toml() {
-        let contents = fs::read("tests/data/metadata/runtime.toml").unwrap();
-        let metadata = toml::from_slice::<Runtime>(&contents).unwrap();
+        let contents = fs::read_to_string("tests/data/metadata/runtime.toml").unwrap();
+        let metadata = toml::from_str::<Runtime>(&contents).unwrap();
 
         assert_eq!(metadata.name, "ruby");
         assert_eq!(metadata.version, "3.2.0+20230118-8aec06d");
