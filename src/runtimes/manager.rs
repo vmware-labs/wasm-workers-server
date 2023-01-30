@@ -76,16 +76,21 @@ pub fn check_runtime(project_root: &Path, repository: &str, runtime: &RuntimeMet
     let binary = store.check_file(&[&runtime.binary.filename]);
     let mut template = true;
     let mut polyfill = true;
+    let mut wrapper = true;
 
     if let Some(template_file) = &runtime.template {
         template = store.check_file(&[&template_file.filename]);
+    }
+
+    if let Some(wrapper_file) = &runtime.wrapper {
+        wrapper = store.check_file(&[&wrapper_file.filename]);
     }
 
     if let Some(polyfill_file) = &runtime.polyfill {
         polyfill = store.check_file(&[&polyfill_file.filename]);
     }
 
-    binary && template && polyfill
+    binary && template && polyfill && wrapper
 }
 
 // Install a given runtime based on its metadata
