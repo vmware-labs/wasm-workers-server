@@ -13,11 +13,16 @@ use crate::{
 use anyhow::{anyhow, Result};
 use clap::{Args, Parser, Subcommand};
 use prettytable::{format, Cell, Row, Table};
+use std::env;
 
 /// Default repository name
 pub const DEFAULT_REPO_NAME: &str = "wlr";
 /// Default repository URL
 pub const DEFAULT_REPO_URL: &str = "https://languages.wasmlabs.dev/repository/v1/index.toml";
+
+/// Environment variable to set the repository name
+pub const WWS_REPO_NAME: &str = "WWS_REPO_NAME";
+pub const WWS_REPO_URL: &str = "WWS_REPO_URL";
 
 /// Manage the language runtimes in your project
 #[derive(Parser, Debug)]
@@ -93,7 +98,7 @@ impl Install {
 
                 // Update the configuration
                 let mut config = Config::load(project_root)?;
-                config.save_runtime(&repo_name, runtime);
+                config.save_runtime(&repo_name, &repo_url, runtime);
                 config.save(project_root)?;
 
                 println!("✅ Done");
@@ -254,7 +259,7 @@ impl Uninstall {
 
         if let Some(runtime) = runtime {
             println!(
-                "🗑 Uninstalling: {} - {} / {}",
+                "🗑  Uninstalling: {} - {} / {}",
                 &repo_name, &runtime.name, &runtime.version
             );
             uninstall_runtime(project_root, &repo_name, runtime)?;
@@ -262,7 +267,7 @@ impl Uninstall {
             config.save(project_root)?;
         } else {
             println!(
-                "🗑 The runtime was not installed: {} - {} / {}",
+                "🗑  The runtime was not installed: {} - {} / {}",
                 &repo_name, &self.name, &self.version
             );
         }
@@ -275,7 +280,7 @@ impl Uninstall {
 /// Utility to retrieve the repository name for the given command.
 /// It will look first for the flag and fallback to the default value.
 fn get_repo_name(args: &Runtimes) -> String {
-    let default_value = DEFAULT_REPO_NAME.into();
+    let default_value = env::var(WWS_REPO_NAME).unwrap_or_else(|_| DEFAULT_REPO_NAME.into());
     args.repo_name
         .as_ref()
         .unwrap_or(&default_value)
@@ -285,6 +290,6 @@ fn get_repo_name(args: &Runtimes) -> String {
 /// Utility to retrieve the repository url for the given command.
 /// It will look first for the flag and fallback to the default value.
 fn get_repo_url(args: &Runtimes) -> String {
-    let default_value = DEFAULT_REPO_URL.into();
+    let default_value = env::var(WWS_REPO_URL).unwrap_or_else(|_| DEFAULT_REPO_URL.into());
     args.repo_url.as_ref().unwrap_or(&default_value).to_string()
 }

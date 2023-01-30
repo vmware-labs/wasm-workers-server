@@ -1,7 +1,10 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::runtimes::metadata::Runtime;
+use crate::{
+    commands::runtimes::{DEFAULT_REPO_NAME, DEFAULT_REPO_URL},
+    runtimes::metadata::Runtime,
+};
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -42,7 +45,8 @@ impl Config {
             })
         } else {
             let new_repo = ConfigRepository {
-                name: "wlr".to_string(),
+                name: DEFAULT_REPO_NAME.to_string(),
+                url: DEFAULT_REPO_URL.to_string(),
                 runtimes: Vec::new(),
             };
 
@@ -54,15 +58,16 @@ impl Config {
     }
 
     /// Save a new installed runtime
-    pub fn save_runtime(&mut self, repository: &str, runtime: &Runtime) {
-        let repo = self.repositories.iter_mut().find(|r| r.name == repository);
+    pub fn save_runtime(&mut self, repo_name: &str, repo_url: &str, runtime: &Runtime) {
+        let repo = self.repositories.iter_mut().find(|r| r.name == repo_name);
 
         // Shadow to init an empty one if required
         match repo {
             Some(r) => r.runtimes.push(runtime.clone()),
             None => {
                 let new_repo = ConfigRepository {
-                    name: repository.to_string(),
+                    name: repo_name.to_string(),
+                    url: repo_url.to_string(),
                     runtimes: vec![runtime.clone()],
                 };
 
@@ -115,6 +120,8 @@ pub struct ConfigRepository {
     /// Local name to identify the repository. It avoids collisions when installing
     /// language runtimes
     pub name: String,
+    /// Set the url from which this repository was downloaded
+    url: String,
     /// Installed runtimes
     pub runtimes: Vec<Runtime>,
 }
