@@ -44,6 +44,12 @@ impl Repository {
 
         Repository::from_str(&str_data)
     }
+
+    pub fn find_runtime(&self, name: &str, version: &str) -> Option<&Runtime> {
+        self.runtimes
+            .iter()
+            .find(|r| r.name == name && r.version == version)
+    }
 }
 
 // TODO: Remove it when implementing the manager

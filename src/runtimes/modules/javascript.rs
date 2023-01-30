@@ -27,7 +27,7 @@ impl JavaScriptRuntime {
     /// this purpose
     pub fn new(project_root: &Path, path: PathBuf) -> Result<Self> {
         let hash = Store::file_hash(&path)?;
-        let store = Store::new(project_root, &["workers", "js", &hash])?;
+        let store = Store::create(project_root, &["workers", "js", &hash])?;
 
         Ok(Self { path, store })
     }

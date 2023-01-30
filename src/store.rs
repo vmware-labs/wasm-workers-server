@@ -8,7 +8,7 @@
 // This struct provide the basics to interact with that folder
 // in both Unix and Windows systems.
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -34,15 +34,45 @@ pub struct Store {
 // TODO: Remove it when implementing the full logic
 #[allow(dead_code)]
 impl Store {
+    /// Instance a new store. If you want to create the root folder, check [#create].
+    /// The root path is used to scope the files inside the STORE_FOLDER folder. Note
+    /// other methods may fail if you don't create the folder.
+    pub fn new(project_root: &Path, folder: &[&str]) -> Self {
+        let folder = Self::build_root_path(project_root, folder);
+
+        Self { folder }
+    }
+
     /// Instance a new store and creates the root folder. The root path is
     /// used to scope the files inside the STORE_FOLDER folder.
-    pub fn new(project_root: &Path, folder: &[&str]) -> Result<Self> {
+    pub fn create(project_root: &Path, folder: &[&str]) -> Result<Self> {
         let folder = Self::build_root_path(project_root, folder);
 
         // Try to create the directory
         fs::create_dir_all(&folder)?;
 
         Ok(Self { folder })
+    }
+
+    /// Create the root folder for the current context
+    pub fn create_root_folder(&self) -> Result<()> {
+        fs::create_dir_all(&self.folder)
+            .map_err(|err| anyhow!("There was an error creating the a required folder: {}", err))
+    }
+
+    /// Delete the root folder from the current context
+    pub fn delete_root_folder(&self) -> Result<()> {
+        if self.folder.exists() {
+            fs::remove_dir_all(&self.folder)
+                .map_err(|err| anyhow!("There was an error deleting the folder: {}", err))
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Check if the given file path exists in the current context
+    pub fn check_file(&self, path: &[&str]) -> bool {
+        self.build_folder_path(path).exists()
     }
 
     /// Write a specific file inside the configured root folder

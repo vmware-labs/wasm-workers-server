@@ -27,11 +27,9 @@ pub struct Config {
     /// Version of the .wws file
     version: u32,
     /// List of repositories
-    repositories: Vec<ConfigRepository>,
+    pub repositories: Vec<ConfigRepository>,
 }
 
-// TODO: Remove it when start adding the new subcommands
-#[allow(dead_code)]
 impl Config {
     /// Load the config file if it's present. It not, it will create a
     /// new empty config.
@@ -74,13 +72,27 @@ impl Config {
     }
 
     /// Remove an existing runtime if it's present.
-    pub fn remove_runtime(&mut self, repository: &str, runtime: &Runtime) {
+    pub fn remove_runtime(&mut self, repository: &str, name: &str, version: &str) {
         let repo = self.repositories.iter_mut().find(|r| r.name == repository);
 
         // Shadow to init an empty one if required
         if let Some(repo) = repo {
-            repo.runtimes.retain(|r| r != runtime);
+            repo.runtimes
+                .retain(|r| r.name != name && r.version != version);
         };
+    }
+
+    /// Get a given runtime from the current configuration if it's available.
+    pub fn get_runtime(&self, repository: &str, name: &str, version: &str) -> Option<&Runtime> {
+        let repo = self.repositories.iter().find(|r| r.name == repository);
+
+        if let Some(repo) = repo {
+            repo.runtimes
+                .iter()
+                .find(|r| r.name == name && r.version == version)
+        } else {
+            None
+        }
     }
 
     /// Write the current configuration into the `.wws.toml` file. It will
@@ -102,7 +114,7 @@ impl Config {
 pub struct ConfigRepository {
     /// Local name to identify the repository. It avoids collisions when installing
     /// language runtimes
-    name: String,
+    pub name: String,
     /// Installed runtimes
-    runtimes: Vec<Runtime>,
+    pub runtimes: Vec<Runtime>,
 }
