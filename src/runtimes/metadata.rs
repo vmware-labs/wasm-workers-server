@@ -95,9 +95,12 @@ pub struct Runtime {
     pub binary: RemoteFile,
     /// The reference to a remote polyfill file (url + checksum)
     pub polyfill: Option<RemoteFile>,
-    /// The reference to a template file for the worker. It will wrap the
+    /// The reference to a wrapper file for the worker. It will wrap the
     /// source code into a template that can include imports,
     /// function calls, etc.
+    pub wrapper: Option<RemoteFile>,
+    /// The reference to an example file of a functional worker for this
+    /// runtime. It will be used to quickly bootstrap new workers.
     pub template: Option<RemoteFile>,
 }
 

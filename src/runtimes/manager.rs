@@ -53,6 +53,10 @@ pub async fn install_runtime(
         download_file(polyfill, &store).await?;
     }
 
+    if let Some(wrapper) = &metadata.wrapper {
+        download_file(wrapper, &store).await?;
+    }
+
     if let Some(template) = &metadata.template {
         download_file(template, &store).await?;
     }
