@@ -16,11 +16,8 @@ use prettytable::{format, Cell, Row, Table};
 
 /// Default repository name
 pub const DEFAULT_REPO_NAME: &str = "wlr";
-// TODO (Angelmmiguel): update it to point to an index file generated on the
-// WebAssembly Languages Runtime repo.
 /// Default repository URL
-pub const DEFAULT_REPO_URL: &str =
-    "https://raw.githubusercontent.com/Angelmmiguel/wws-index-test/main/index.toml";
+pub const DEFAULT_REPO_URL: &str = "https://languages.wasmlabs.dev/repository/v1/index.toml";
 
 /// Manage the language runtimes in your project
 #[derive(Parser, Debug)]
