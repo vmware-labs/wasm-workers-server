@@ -31,8 +31,6 @@ pub struct Store {
     pub folder: PathBuf,
 }
 
-// TODO: Remove it when implementing the full logic
-#[allow(dead_code)]
 impl Store {
     /// Instance a new store. If you want to create the root folder, check [#create].
     /// The root path is used to scope the files inside the STORE_FOLDER folder. Note
@@ -55,6 +53,7 @@ impl Store {
     }
 
     /// Create the root folder for the current context
+    #[allow(dead_code)]
     pub fn create_root_folder(&self) -> Result<()> {
         fs::create_dir_all(&self.folder)
             .map_err(|err| anyhow!("There was an error creating the a required folder: {}", err))

@@ -8,8 +8,6 @@ use reqwest::header::USER_AGENT;
 /// The current wws version
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-// TODO: Remove it when implementing the manager
-#[allow(dead_code)]
 /// Fetch the contents of a given file and validates it
 /// using the Sha256.
 pub async fn fetch<T: AsRef<str>>(file: T) -> Result<Vec<u8>> {
@@ -28,8 +26,6 @@ pub async fn fetch<T: AsRef<str>>(file: T) -> Result<Vec<u8>> {
     Ok(body)
 }
 
-// TODO: Remove it when implementing the manager
-#[allow(dead_code)]
 /// Fetch the contents of a given file and validates it
 /// using the Sha256.
 pub async fn fetch_and_validate<T: AsRef<str>>(file: T, checksum: &Checksum) -> Result<Vec<u8>> {
