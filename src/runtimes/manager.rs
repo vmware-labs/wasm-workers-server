@@ -99,15 +99,12 @@ pub fn uninstall_runtime(
     repository: &str,
     metadata: &RuntimeMetadata,
 ) -> Result<()> {
-    let store = Store::new(
+    // Delete the current folder
+    Store::new(
         project_root,
         &["runtimes", repository, &metadata.name, &metadata.version],
-    );
-
-    // Delete the current folder
-    store.delete_root_folder()?;
-
-    Ok(())
+    )
+    .delete_root_folder()
 }
 
 /// Downloads a remote file in the given [Store].
