@@ -8,6 +8,9 @@ use sha256::digest as sha256_digest;
 use std::collections::HashMap;
 use url::Url;
 
+/// Identify the current max repository version this build can manage.
+const MAX_REPOSITORY_VERSION: u32 = 1;
+
 /// A Repository contains the list of runtimes available on it.
 /// This file is used by wws to properly show the list of available
 /// repos and install them.
@@ -19,12 +22,15 @@ use url::Url;
 pub struct Repository {
     /// Version of the repository file
     pub version: u32,
-    /// The list of runtimes available in the repository
+    /// The list of runtimes available in the repository. By default, it will be
+    /// filled with an empty vector. The goal is to keep this repository
+    /// compatible with future changes. If we don't add this value and change the
+    /// runtimes key to something else in the future, the CLI won't deserialize
+    /// the version.
+    #[serde(default)]
     pub runtimes: Vec<Runtime>,
 }
 
-// TODO: Remove it when implementing the manager
-#[allow(dead_code)]
 impl Repository {
     /// Reads and parses the metadata from a slice of bytes. It will return
     /// a result as the deserialization may fail.
@@ -42,12 +48,26 @@ impl Repository {
         let data = fetch(&url).await?;
         let str_data = String::from_utf8(data)?;
 
-        Repository::from_str(&str_data)
+        let repo = Repository::from_str(&str_data)?;
+
+        if repo.version > MAX_REPOSITORY_VERSION {
+            println!(
+                "⚠️  The repository index version ({}) is not supported by your wws installation.",
+                repo.version
+            );
+            println!("⚠️  This may cause unexpected or missing behaviors. Please, update wws and try it again");
+        }
+
+        Ok(repo)
+    }
+
+    pub fn find_runtime(&self, name: &str, version: &str) -> Option<&Runtime> {
+        self.runtimes
+            .iter()
+            .find(|r| r.name == name && r.version == version)
     }
 }
 
-// TODO: Remove it when implementing the manager
-#[allow(dead_code)]
 /// Metadata associated to a Runtime. It contains information
 /// about a certain runtime like name, version and all the
 /// details to run workers with it.
@@ -75,9 +95,12 @@ pub struct Runtime {
     pub binary: RemoteFile,
     /// The reference to a remote polyfill file (url + checksum)
     pub polyfill: Option<RemoteFile>,
-    /// The reference to a template file for the worker. It will wrap the
+    /// The reference to a wrapper file for the worker. It will wrap the
     /// source code into a template that can include imports,
     /// function calls, etc.
+    pub wrapper: Option<RemoteFile>,
+    /// The reference to an example file of a functional worker for this
+    /// runtime. It will be used to quickly bootstrap new workers.
     pub template: Option<RemoteFile>,
 }
 

@@ -4,6 +4,7 @@
 #[macro_use]
 extern crate lazy_static;
 
+mod commands;
 mod config;
 mod data;
 mod fetch;
@@ -21,10 +22,13 @@ use actix_web::{
     App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
 use clap::Parser;
+use commands::main::Main;
+use commands::runtimes::RuntimesCommands;
 use data::kv::KV;
 use router::Routes;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
+use std::process::exit;
 use std::{collections::HashMap, sync::RwLock};
 use workers::wasm_io::WasmOutput;
 
@@ -37,23 +41,27 @@ lazy_static! {
 
 // Arguments
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
-struct Args {
+#[command(author, version, about, long_about = None)]
+pub struct Args {
     /// Hostname to initiate the server
-    #[clap(long = "host", default_value = "127.0.0.1")]
+    #[arg(long = "host", default_value = "127.0.0.1")]
     hostname: String,
 
     /// Port to initiate the server
-    #[clap(short, long, default_value_t = 8080)]
+    #[arg(short, long, default_value_t = 8080)]
     port: u16,
 
     /// Folder to read WebAssembly modules from
-    #[clap(value_parser, default_value = ".")]
+    #[arg(value_parser, default_value = ".")]
     path: PathBuf,
 
     /// Prepend the given path to all URLs
-    #[clap(long, default_value = "")]
+    #[arg(long, default_value = "")]
     prefix: String,
+
+    /// Manage language runtimes in your project
+    #[command(subcommand)]
+    commands: Option<Main>,
 }
 
 struct DataConnectors {
@@ -212,87 +220,124 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();
 
-    // Initialize the routes
-    println!("⚙️  Loading routes from: {}", &args.path.display());
-    let routes = Data::new(Routes::new(&args.path, &args.prefix));
-
-    let data = Data::new(RwLock::new(DataConnectors { kv: KV::new() }));
-
-    println!("🗺  Detected routes:");
-    for route in routes.routes.iter() {
-        let default_name = String::from("default");
-        let name = if let Some(config) = &route.config {
-            config.name.as_ref().unwrap_or(&default_name)
-        } else {
-            &default_name
+    // Check the given subcommand
+    if let Some(Main::Runtimes(sub)) = &args.commands {
+        match &sub.runtime_commands {
+            RuntimesCommands::List(list) => {
+                if let Err(err) = list.run(sub).await {
+                    println!("❌ There was an error listing the runtimes from the repository");
+                    println!("👉 {}", err);
+                    exit(1);
+                }
+            }
+            RuntimesCommands::Install(install) => {
+                if let Err(err) = install.run(&args.path, sub).await {
+                    println!("❌ There was an error installing the runtime from the repository");
+                    println!("👉 {}", err);
+                    exit(1);
+                }
+            }
+            RuntimesCommands::Uninstall(uninstall) => {
+                if let Err(err) = uninstall.run(&args.path, sub) {
+                    println!("❌ There was an error uninstalling the runtime");
+                    println!("👉 {}", err);
+                    exit(1);
+                }
+            }
+            RuntimesCommands::Check(check) => {
+                if let Err(err) = check.run(&args.path) {
+                    println!("❌ There was an error checking the local runtimes");
+                    println!("👉 {}", err);
+                    exit(1);
+                }
+            }
         };
 
-        println!(
-            "    - http://{}:{}{}\n      => {} (name: {})",
-            &args.hostname,
-            args.port,
-            route.path,
-            route.handler.display(),
-            name
-        );
-    }
+        Ok(())
+    } else {
+        // TODO(Angelmmiguel): refactor this into a separate command!
+        // Initialize the routes
+        println!("⚙️  Loading routes from: {}", &args.path.display());
+        let routes = Data::new(Routes::new(&args.path, &args.prefix));
 
-    let server = HttpServer::new(move || {
-        let mut app = App::new()
-            // enable logger
-            .wrap(middleware::Logger::default())
-            // Clean path before sending it to the service
-            .wrap(middleware::NormalizePath::trim())
-            .app_data(Data::clone(&routes))
-            .app_data(Data::clone(&data))
-            .service(web::resource("/_debug").to(debug));
+        let data = Data::new(RwLock::new(DataConnectors { kv: KV::new() }));
 
-        // Append routes to the current service
+        println!("🗺  Detected routes:");
         for route in routes.routes.iter() {
-            app = app.service(web::resource(route.actix_path()).to(wasm_handler));
+            let default_name = String::from("default");
+            let name = if let Some(config) = &route.config {
+                config.name.as_ref().unwrap_or(&default_name)
+            } else {
+                &default_name
+            };
 
-            // Configure KV
-            if let Some(namespace) = route.config.as_ref().and_then(|c| c.data_kv_namespace()) {
-                data.write().unwrap().kv.create_store(&namespace);
+            println!(
+                "    - http://{}:{}{}\n      => {} (name: {})",
+                &args.hostname,
+                args.port,
+                route.path,
+                route.handler.display(),
+                name
+            );
+        }
+
+        let server = HttpServer::new(move || {
+            let mut app = App::new()
+                // enable logger
+                .wrap(middleware::Logger::default())
+                // Clean path before sending it to the service
+                .wrap(middleware::NormalizePath::trim())
+                .app_data(Data::clone(&routes))
+                .app_data(Data::clone(&data))
+                .service(web::resource("/_debug").to(debug));
+
+            // Append routes to the current service
+            for route in routes.routes.iter() {
+                app = app.service(web::resource(route.actix_path()).to(wasm_handler));
+
+                // Configure KV
+                if let Some(namespace) = route.config.as_ref().and_then(|c| c.data_kv_namespace()) {
+                    data.write().unwrap().kv.create_store(&namespace);
+                }
             }
-        }
 
-        // Serve static files from the static folder
-        let mut static_prefix = routes.prefix.clone();
-        if static_prefix.is_empty() {
-            static_prefix = String::from("/");
-        }
+            // Serve static files from the static folder
+            let mut static_prefix = routes.prefix.clone();
+            if static_prefix.is_empty() {
+                static_prefix = String::from("/");
+            }
 
-        app = app.service(
-            Files::new(&static_prefix, args.path.join("public"))
-                .index_file("index.html")
-                // This handler check if there's an HTML file in the public folder that
-                // can reply to the given request. For example, if someone request /about,
-                // this handler will look for a /public/about.html file.
-                .default_handler(fn_service(|req: ServiceRequest| async {
-                    let (req, _) = req.into_parts();
+            app = app.service(
+                Files::new(&static_prefix, args.path.join("public"))
+                    .index_file("index.html")
+                    // This handler check if there's an HTML file in the public folder that
+                    // can reply to the given request. For example, if someone request /about,
+                    // this handler will look for a /public/about.html file.
+                    .default_handler(fn_service(|req: ServiceRequest| async {
+                        let (req, _) = req.into_parts();
 
-                    match find_static_html(req.path()).await {
-                        Ok(existing_file) => {
-                            let res = existing_file.into_response(&req);
-                            Ok(ServiceResponse::new(req, res))
+                        match find_static_html(req.path()).await {
+                            Ok(existing_file) => {
+                                let res = existing_file.into_response(&req);
+                                Ok(ServiceResponse::new(req, res))
+                            }
+                            Err(_) => {
+                                let res = not_found_html(&req).await;
+                                Ok(ServiceResponse::new(req, res))
+                            }
                         }
-                        Err(_) => {
-                            let res = not_found_html(&req).await;
-                            Ok(ServiceResponse::new(req, res))
-                        }
-                    }
-                })),
+                    })),
+            );
+
+            app
+        })
+        .bind(format!("{}:{}", args.hostname.as_str(), args.port))?;
+
+        println!(
+            "🚀 Start serving requests at http://{}:{}\n",
+            &args.hostname, args.port
         );
 
-        app
-    })
-    .bind(format!("{}:{}", args.hostname.as_str(), args.port))?;
-
-    println!(
-        "🚀 Start serving requests at http://{}:{}\n",
-        &args.hostname, args.port
-    );
-
-    server.run().await
+        server.run().await
+    }
 }

@@ -1,7 +1,10 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::runtimes::metadata::Runtime;
+use crate::{
+    commands::runtimes::{DEFAULT_REPO_NAME, DEFAULT_REPO_URL},
+    runtimes::metadata::Runtime,
+};
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -27,11 +30,9 @@ pub struct Config {
     /// Version of the .wws file
     version: u32,
     /// List of repositories
-    repositories: Vec<ConfigRepository>,
+    pub repositories: Vec<ConfigRepository>,
 }
 
-// TODO: Remove it when start adding the new subcommands
-#[allow(dead_code)]
 impl Config {
     /// Load the config file if it's present. It not, it will create a
     /// new empty config.
@@ -44,7 +45,8 @@ impl Config {
             })
         } else {
             let new_repo = ConfigRepository {
-                name: "wlr".to_string(),
+                name: DEFAULT_REPO_NAME.to_string(),
+                url: DEFAULT_REPO_URL.to_string(),
                 runtimes: Vec::new(),
             };
 
@@ -56,15 +58,16 @@ impl Config {
     }
 
     /// Save a new installed runtime
-    pub fn save_runtime(&mut self, repository: &str, runtime: &Runtime) {
-        let repo = self.repositories.iter_mut().find(|r| r.name == repository);
+    pub fn save_runtime(&mut self, repo_name: &str, repo_url: &str, runtime: &Runtime) {
+        let repo = self.repositories.iter_mut().find(|r| r.name == repo_name);
 
         // Shadow to init an empty one if required
         match repo {
             Some(r) => r.runtimes.push(runtime.clone()),
             None => {
                 let new_repo = ConfigRepository {
-                    name: repository.to_string(),
+                    name: repo_name.to_string(),
+                    url: repo_url.to_string(),
                     runtimes: vec![runtime.clone()],
                 };
 
@@ -74,13 +77,27 @@ impl Config {
     }
 
     /// Remove an existing runtime if it's present.
-    pub fn remove_runtime(&mut self, repository: &str, runtime: &Runtime) {
+    pub fn remove_runtime(&mut self, repository: &str, name: &str, version: &str) {
         let repo = self.repositories.iter_mut().find(|r| r.name == repository);
 
         // Shadow to init an empty one if required
         if let Some(repo) = repo {
-            repo.runtimes.retain(|r| r != runtime);
+            repo.runtimes
+                .retain(|r| r.name != name && r.version != version);
         };
+    }
+
+    /// Get a given runtime from the current configuration if it's available.
+    pub fn get_runtime(&self, repository: &str, name: &str, version: &str) -> Option<&Runtime> {
+        let repo = self.repositories.iter().find(|r| r.name == repository);
+
+        if let Some(repo) = repo {
+            repo.runtimes
+                .iter()
+                .find(|r| r.name == name && r.version == version)
+        } else {
+            None
+        }
     }
 
     /// Write the current configuration into the `.wws.toml` file. It will
@@ -102,7 +119,9 @@ impl Config {
 pub struct ConfigRepository {
     /// Local name to identify the repository. It avoids collisions when installing
     /// language runtimes
-    name: String,
+    pub name: String,
+    /// Set the url from which this repository was downloaded
+    url: String,
     /// Installed runtimes
-    runtimes: Vec<Runtime>,
+    pub runtimes: Vec<Runtime>,
 }

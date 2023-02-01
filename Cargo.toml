@@ -34,6 +34,7 @@ regex = "1"
 url = "2.3.1"
 reqwest = { version = "0.11" }
 sha256 = "1.1.1"
+prettytable-rs = "0.10.0"
 
 [target.x86_64-unknown-linux-musl.dependencies]
 openssl = { version = "=0.10.45", features = ["vendored"] }

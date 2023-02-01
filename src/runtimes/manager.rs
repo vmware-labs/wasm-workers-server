@@ -35,15 +35,13 @@ pub fn init_runtime(project_root: &Path, path: &Path) -> Result<Box<dyn Runtime 
     }
 }
 
-// TODO: Remove it when implementing the full logic
-#[allow(dead_code)]
 // Install a given runtime based on its metadata
 pub async fn install_runtime(
     project_root: &Path,
     repository: &str,
     metadata: &RuntimeMetadata,
 ) -> Result<()> {
-    let store = Store::new(
+    let store = Store::create(
         project_root,
         &["runtimes", repository, &metadata.name, &metadata.version],
     )?;
@@ -55,6 +53,10 @@ pub async fn install_runtime(
         download_file(polyfill, &store).await?;
     }
 
+    if let Some(wrapper) = &metadata.wrapper {
+        download_file(wrapper, &store).await?;
+    }
+
     if let Some(template) = &metadata.template {
         download_file(template, &store).await?;
     }
@@ -62,7 +64,50 @@ pub async fn install_runtime(
     Ok(())
 }
 
-// TODO: Remove it when implementing the full logic
+/// Checks if the given [Runtime] is already installed locally.
+pub fn check_runtime(project_root: &Path, repository: &str, runtime: &RuntimeMetadata) -> bool {
+    // Check the different files
+    let store = Store::new(
+        project_root,
+        &["runtimes", repository, &runtime.name, &runtime.version],
+    );
+
+    // Check the existence of the different files
+    let binary = store.check_file(&[&runtime.binary.filename]);
+    let mut template = true;
+    let mut polyfill = true;
+    let mut wrapper = true;
+
+    if let Some(template_file) = &runtime.template {
+        template = store.check_file(&[&template_file.filename]);
+    }
+
+    if let Some(wrapper_file) = &runtime.wrapper {
+        wrapper = store.check_file(&[&wrapper_file.filename]);
+    }
+
+    if let Some(polyfill_file) = &runtime.polyfill {
+        polyfill = store.check_file(&[&polyfill_file.filename]);
+    }
+
+    binary && template && polyfill && wrapper
+}
+
+// Install a given runtime based on its metadata
+pub fn uninstall_runtime(
+    project_root: &Path,
+    repository: &str,
+    metadata: &RuntimeMetadata,
+) -> Result<()> {
+    // Delete the current folder
+    Store::new(
+        project_root,
+        &["runtimes", repository, &metadata.name, &metadata.version],
+    )
+    .delete_root_folder()
+}
+
+/// Downloads a remote file in the given [Store].
 async fn download_file(file: &RemoteFile, store: &Store) -> Result<()> {
     let contents = fetch_and_validate(&file.url, &file.checksum).await?;
     store.write(&[&file.filename], &contents)
