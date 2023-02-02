@@ -65,7 +65,7 @@ impl Route {
             match Config::try_from_file(config_path) {
                 Ok(c) => config = Some(c),
                 Err(err) => {
-                    eprintln!("{}", err);
+                    eprintln!("{err}");
                 }
             }
         }

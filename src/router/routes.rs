@@ -93,7 +93,7 @@ mod tests {
         let build_route = |file: &str| -> Route {
             Route::new(
                 Path::new("./tests/data/params"),
-                PathBuf::from(format!("./tests/data/params{}", file)),
+                PathBuf::from(format!("./tests/data/params{file}")),
                 "",
             )
         };
@@ -125,7 +125,7 @@ mod tests {
         let build_route = |file: &str| -> Route {
             Route::new(
                 Path::new("./tests/data/params"),
-                PathBuf::from(format!("./tests/data/params{}", file)),
+                PathBuf::from(format!("./tests/data/params{file}")),
                 "",
             )
         };

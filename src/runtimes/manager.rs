@@ -26,8 +26,7 @@ pub fn init_runtime(project_root: &Path, path: &Path) -> Result<Box<dyn Runtime 
             )?)),
             "wasm" => Ok(Box::new(NativeRuntime::new(path.to_path_buf()))),
             _ => Err(anyhow!(format!(
-                "The '{}' extension does not have an associated runtime",
-                ext_as_str
+                "The '{ext_as_str}' extension does not have an associated runtime"
             ))),
         }
     } else {
