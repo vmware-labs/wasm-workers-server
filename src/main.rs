@@ -264,7 +264,7 @@ async fn main() -> std::io::Result<()> {
             Ok(c) => c,
             Err(err) => {
                 println!("⚠️  There was an error reading the .wws.toml file. It will be ignored");
-                println!("⚠️  Error: {}", err);
+                println!("⚠️  Error: {err}");
 
                 Config::default()
             }

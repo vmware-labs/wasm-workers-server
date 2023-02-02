@@ -126,8 +126,10 @@ mod tests {
         ];
 
         for t in tests {
+            let config = Config::default();
             assert_eq!(
-                Files::new(Path::new(".\\tests\\data")).is_in_public_folder(Path::new(t.0)),
+                Files::new(Path::new(".\\tests\\data"), &config)
+                    .is_in_public_folder(Path::new(t.0)),
                 t.1
             )
         }
