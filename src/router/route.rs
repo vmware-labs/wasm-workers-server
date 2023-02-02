@@ -1,7 +1,7 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{workers::config::Config, workers::Worker};
+use crate::{config::Config as ProjectConfig, workers::config::Config, workers::Worker};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::{
@@ -53,8 +53,8 @@ impl Route {
     /// proper URL path based on the filename.
     ///
     /// This method also initializes the Runner and loads the Config if available.
-    pub fn new(base_path: &Path, filepath: PathBuf, prefix: &str) -> Self {
-        let worker = Worker::new(base_path, &filepath).unwrap();
+    pub fn new(base_path: &Path, filepath: PathBuf, prefix: &str, config: &ProjectConfig) -> Self {
+        let worker = Worker::new(base_path, &filepath, config).unwrap();
 
         // Load configuration
         let mut config_path = filepath.clone();

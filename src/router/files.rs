@@ -1,6 +1,7 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::config::Config;
 use crate::store::STORE_FOLDER;
 use std::ffi::OsStr;
 use std::path::{Component, Path, PathBuf};
@@ -11,16 +12,33 @@ use wax::{Glob, WalkEntry};
 /// provide utilities to work with public folders and
 /// other related resources.
 pub struct Files {
+    /// Root path
     root: PathBuf,
+    /// Available extensions based on the config
+    extensions: Vec<String>,
+    /// Check if the public folder exists
     has_public: bool,
 }
 
 impl Files {
     /// Initializes a new files instance. It will detect
     /// relevant resources for WWS like the public folder.
-    pub fn new(root: &Path) -> Self {
+    pub fn new(root: &Path, config: &Config) -> Self {
+        let mut extensions = vec![String::from("js"), String::from("wasm")];
+
+        for repo in &config.repositories {
+            for runtime in &repo.runtimes {
+                for ext in &runtime.extensions {
+                    if !extensions.contains(ext) {
+                        extensions.push(ext.clone());
+                    }
+                }
+            }
+        }
+
         Self {
             root: root.to_path_buf(),
+            extensions,
             has_public: root.join(Path::new("public")).exists(),
         }
     }
@@ -28,8 +46,9 @@ impl Files {
     /// Walk through all the different files associated to this
     /// project using a Glob pattern
     pub fn walk(&self) -> Vec<WalkEntry> {
+        let glob_pattern = format!("**/*.{{{}}}", self.extensions.join(","));
         let glob =
-            Glob::new("**/*.{wasm,js}").expect("Failed to read the files in the current directory");
+            Glob::new(&glob_pattern).expect("Failed to read the files in the current directory");
 
         glob.walk(&self.root)
             .filter_map(|el| match el {
@@ -85,8 +104,9 @@ mod tests {
         ];
 
         for t in tests {
+            let config = Config::default();
             assert_eq!(
-                Files::new(Path::new("./tests/data")).is_in_public_folder(Path::new(t.0)),
+                Files::new(Path::new("./tests/data"), &config).is_in_public_folder(Path::new(t.0)),
                 t.1
             )
         }

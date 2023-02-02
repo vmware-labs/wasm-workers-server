@@ -3,10 +3,10 @@
 
 use super::{
     metadata::{RemoteFile, Runtime as RuntimeMetadata},
-    modules::{javascript::JavaScriptRuntime, native::NativeRuntime},
+    modules::{external::ExternalRuntime, javascript::JavaScriptRuntime, native::NativeRuntime},
     runtime::Runtime,
 };
-use crate::{fetch::fetch_and_validate, store::Store};
+use crate::{config::Config, fetch::fetch_and_validate, store::Store};
 use anyhow::{anyhow, Result};
 use std::path::Path;
 
@@ -15,7 +15,11 @@ use std::path::Path;
 /// Initializes a runtime based on the file extension. In the future,
 /// This will contain a more complete struct that will identify local
 /// runtimes.
-pub fn init_runtime(project_root: &Path, path: &Path) -> Result<Box<dyn Runtime + Sync + Send>> {
+pub fn init_runtime(
+    project_root: &Path,
+    path: &Path,
+    config: &Config,
+) -> Result<Box<dyn Runtime + Sync + Send>> {
     if let Some(ext) = path.extension() {
         let ext_as_str = ext.to_str().unwrap();
 
@@ -25,10 +29,35 @@ pub fn init_runtime(project_root: &Path, path: &Path) -> Result<Box<dyn Runtime 
                 path.to_path_buf(),
             )?)),
             "wasm" => Ok(Box::new(NativeRuntime::new(path.to_path_buf()))),
-            _ => Err(anyhow!(format!(
-                "The '{}' extension does not have an associated runtime",
-                ext_as_str
-            ))),
+            other => {
+                let mut runtime_config = None;
+                let mut repo_name = "";
+                let other_string = other.to_string();
+
+                'outer: for repo in &config.repositories {
+                    for r in &repo.runtimes {
+                        if r.extensions.contains(&other_string) {
+                            runtime_config = Some(r);
+                            repo_name = &repo.name;
+                            break 'outer;
+                        }
+                    }
+                }
+
+                if let Some(runtime_config) = runtime_config {
+                    Ok(Box::new(ExternalRuntime::new(
+                        project_root,
+                        path.to_path_buf(),
+                        repo_name,
+                        runtime_config.clone(),
+                    )?))
+                } else {
+                    Err(anyhow!(format!(
+                        "The '{}' extension does not have an associated runtime",
+                        ext_as_str
+                    )))
+                }
+            }
         }
     } else {
         Err(anyhow!("The given file does not have a valid extension"))

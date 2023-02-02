@@ -9,6 +9,7 @@ use std::path::Path;
 
 use super::files::Files;
 use super::route::{Route, RouteAffinity};
+use crate::config::Config;
 
 /// Contains all registered routes
 pub struct Routes {
@@ -20,13 +21,13 @@ impl Routes {
     /// Initialize the list of routes from the given folder. This method will look for
     /// different files and will create the associated routes. This routing approach
     /// is pretty popular in web development and static sites.
-    pub fn new(path: &Path, base_prefix: &str) -> Self {
+    pub fn new(path: &Path, base_prefix: &str, config: &Config) -> Self {
         let mut routes = Vec::new();
         let prefix = Self::format_prefix(base_prefix);
-        let files = Files::new(path);
+        let files = Files::new(path, config);
 
         for entry in files.walk() {
-            routes.push(Route::new(path, entry.into_path(), &prefix));
+            routes.push(Route::new(path, entry.into_path(), &prefix, config));
         }
 
         Self { routes, prefix }
@@ -91,10 +92,12 @@ mod tests {
     #[test]
     fn route_path_affinity() {
         let build_route = |file: &str| -> Route {
+            let project_config = Config::default();
             Route::new(
                 Path::new("./tests/data/params"),
                 PathBuf::from(format!("./tests/data/params{}", file)),
                 "",
+                &project_config,
             )
         };
 
@@ -123,10 +126,12 @@ mod tests {
     #[test]
     fn best_route_by_affinity() {
         let build_route = |file: &str| -> Route {
+            let project_config = Config::default();
             Route::new(
                 Path::new("./tests/data/params"),
                 PathBuf::from(format!("./tests/data/params{}", file)),
                 "",
+                &project_config,
             )
         };
 

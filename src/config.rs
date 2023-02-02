@@ -44,16 +44,7 @@ impl Config {
                 anyhow!("Error opening the .wws.toml file. The file format is not correct")
             })
         } else {
-            let new_repo = ConfigRepository {
-                name: DEFAULT_REPO_NAME.to_string(),
-                url: DEFAULT_REPO_URL.to_string(),
-                runtimes: Vec::new(),
-            };
-
-            Ok(Self {
-                version: 1,
-                repositories: vec![new_repo],
-            })
+            Ok(Self::default())
         }
     }
 
@@ -112,6 +103,22 @@ impl Config {
     /// Retrieve the configuration path from the project root
     fn config_path(project_root: &Path) -> PathBuf {
         project_root.join(CONFIG_FILENAME)
+    }
+}
+
+impl Default for Config {
+    // Initialize an empty repository by default
+    fn default() -> Self {
+        let new_repo = ConfigRepository {
+            name: DEFAULT_REPO_NAME.to_string(),
+            url: DEFAULT_REPO_URL.to_string(),
+            runtimes: Vec::new(),
+        };
+
+        Self {
+            version: 1,
+            repositories: vec![new_repo],
+        }
     }
 }
 
