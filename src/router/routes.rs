@@ -95,7 +95,7 @@ mod tests {
             let project_config = Config::default();
             Route::new(
                 Path::new("./tests/data/params"),
-                PathBuf::from(format!("./tests/data/params{}", file)),
+                PathBuf::from(format!("./tests/data/params{file}")),
                 "",
                 &project_config,
             )
@@ -129,7 +129,7 @@ mod tests {
             let project_config = Config::default();
             Route::new(
                 Path::new("./tests/data/params"),
-                PathBuf::from(format!("./tests/data/params{}", file)),
+                PathBuf::from(format!("./tests/data/params{file}")),
                 "",
                 &project_config,
             )

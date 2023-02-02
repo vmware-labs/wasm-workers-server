@@ -53,8 +53,7 @@ pub fn init_runtime(
                     )?))
                 } else {
                     Err(anyhow!(format!(
-                        "The '{}' extension does not have an associated runtime",
-                        ext_as_str
+                        "The '{ext_as_str}' extension does not have an associated runtime"
                     )))
                 }
             }

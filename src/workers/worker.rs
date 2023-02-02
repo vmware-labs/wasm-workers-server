@@ -92,7 +92,7 @@ impl Worker {
 
         let string_err = String::from_utf8(err_contents)?;
         if !string_err.is_empty() {
-            println!("Error: {}", string_err);
+            println!("Error: {string_err}");
         }
 
         let contents: Vec<u8> = stdout

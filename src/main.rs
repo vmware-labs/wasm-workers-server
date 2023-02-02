@@ -88,11 +88,11 @@ async fn not_found_html(req: &HttpRequest) -> HttpResponse {
 /// If no file is present, it will try to get a default "public/404.html"
 async fn find_static_html(uri_path: &str) -> Result<NamedFile, Error> {
     // File path. This is required for the wasm_handler as dynamic routes may capture static files
-    let file_path = ROOT_PATH.join(format!("public{}", uri_path));
+    let file_path = ROOT_PATH.join(format!("public{uri_path}"));
     // A.k.a pretty urls. We may access /about and this matches to /about/index.html
-    let index_folder_path = ROOT_PATH.join(format!("public{}/index.html", uri_path));
+    let index_folder_path = ROOT_PATH.join(format!("public{uri_path}/index.html"));
     // Same as before, but the file is located at ./about.html
-    let html_ext_path = ROOT_PATH.join(format!("public{}.html", uri_path));
+    let html_ext_path = ROOT_PATH.join(format!("public{uri_path}.html"));
 
     if file_path.exists() {
         NamedFile::open_async(file_path).await
@@ -227,28 +227,28 @@ async fn main() -> std::io::Result<()> {
             RuntimesCommands::List(list) => {
                 if let Err(err) = list.run(sub).await {
                     println!("❌ There was an error listing the runtimes from the repository");
-                    println!("👉 {}", err);
+                    println!("👉 {err}");
                     exit(1);
                 }
             }
             RuntimesCommands::Install(install) => {
                 if let Err(err) = install.run(&args.path, sub).await {
                     println!("❌ There was an error installing the runtime from the repository");
-                    println!("👉 {}", err);
+                    println!("👉 {err}");
                     exit(1);
                 }
             }
             RuntimesCommands::Uninstall(uninstall) => {
                 if let Err(err) = uninstall.run(&args.path, sub) {
                     println!("❌ There was an error uninstalling the runtime");
-                    println!("👉 {}", err);
+                    println!("👉 {err}");
                     exit(1);
                 }
             }
             RuntimesCommands::Check(check) => {
                 if let Err(err) = check.run(&args.path) {
                     println!("❌ There was an error checking the local runtimes");
-                    println!("👉 {}", err);
+                    println!("👉 {err}");
                     exit(1);
                 }
             }
