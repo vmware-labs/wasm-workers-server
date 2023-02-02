@@ -12,7 +12,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// using the Sha256.
 pub async fn fetch<T: AsRef<str>>(file: T) -> Result<Vec<u8>> {
     let client = reqwest::Client::new();
-    let user_agent_value = format!("Wasm Workers Server/{}", VERSION);
+    let user_agent_value = format!("Wasm Workers Server/{VERSION}");
 
     let body: Vec<u8> = client
         .get(file.as_ref())

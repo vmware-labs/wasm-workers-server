@@ -36,7 +36,7 @@ impl Repository {
     /// a result as the deserialization may fail.
     pub fn from_str(data: &str) -> Result<Self> {
         toml::from_str::<Repository>(data).map_err(|err| {
-            println!("Err: {:?}", err);
+            println!("Err: {err}");
             anyhow!("wws could not deserialize the repository metadata")
         })
     }
