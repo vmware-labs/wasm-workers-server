@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Create a JavaScript worker
+# JavaScript
 
 Workers based on JavaScript work out of the box with Wasm Workers Server. The server integrates a JavaScript interpreter compiled into a WebAssembly module. Currently, the interpreter we support is [quickjs](https://bellard.org/quickjs/) and we are working on adding new ones.
 

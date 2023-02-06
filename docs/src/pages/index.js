@@ -17,8 +17,8 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/start">
-            Getting Started - 5min ⏱️
+            to="/docs/get-started/quickstart">
+            Get Started - 5min ⏱️
           </Link>
         </div>
       </div>
@@ -31,7 +31,7 @@ export default function Home() {
   return (
     <Layout
       title={siteConfig.title}
-      description="Wasm Workers Server is a project that allows you to run serverless code using a lightweight construct called workers. It's a self-contained binary that you can run almost anywhere.">
+      description="Wasm Workers Server is a framework that allows you to to develop and run serverless code using a lightweight construct called workers. It's a self-contained binary that you can run almost anywhere.">
       <HomepageHeader />
       <main>
         <HomepageFeatures />

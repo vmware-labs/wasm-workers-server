@@ -2,7 +2,7 @@
 sidebar_position: 2
 ---
 
-# Create a Rust worker
+# Rust
 
 Rust workers are compiled into a Wasm module.
 Then, they are loaded by Wasm Workers Server and start processing requests.

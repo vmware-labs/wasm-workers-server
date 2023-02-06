@@ -1,8 +1,7 @@
 {
-    "label": "Features",
-    "position": 4,
-    "link": {
-      "type": "generated-index"
-    }
+  "label": "Features",
+  "position": 2,
+  "link": {
+    "type": "generated-index"
   }
-  
+}

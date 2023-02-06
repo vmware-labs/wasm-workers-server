@@ -2,17 +2,17 @@
 sidebar_position: 2
 ---
 
-# Getting Started
+# Quickstart
 
 Wasm Workers runs almost anywhere. Thanks to its portability, downloading and running it anywhere is quite simple.
 
-First, you need to install the `wws` server:
+First, you need to install `wws`:
 
 ```bash
 curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/install.sh | bash
 ```
 
-Now, you can check the server:
+Now, you can check the different commands and options:
 
 ```bash
 wws --help

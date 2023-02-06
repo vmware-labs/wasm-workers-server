@@ -48,7 +48,7 @@ const config = {
         items: [
           {
             type: 'doc',
-            docId: 'intro',
+            docId: 'get-started/introduction',
             position: 'left',
             label: 'Documentation',
           },
@@ -80,11 +80,15 @@ const config = {
             title: 'Other Projects',
             items: [
               {
+                label: 'WebAssembly Language Runtimes',
+                href: 'https://github.com/vmware-labs/webassembly-language-runtimes',
+              },
+              {
                 label: 'WordPress in the Browser',
                 href: 'https://wordpress.wasmlabs.dev',
               },
               {
-                label: 'mod_wasm',
+                label: 'Apache HTTP Server mod_wasm module',
                 href: 'https://github.com/vmware-labs/mod_wasm',
               },
             ],
@@ -108,7 +112,7 @@ const config = {
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
-        additionalLanguages: ['rust', 'toml'],
+        additionalLanguages: ['rust', 'toml', 'ruby'],
       },
     }),
 };
