@@ -29,37 +29,46 @@ pub fn init_runtime(
                 path.to_path_buf(),
             )?)),
             "wasm" => Ok(Box::new(NativeRuntime::new(path.to_path_buf()))),
-            other => {
-                let mut runtime_config = None;
-                let mut repo_name = "";
-                let other_string = other.to_string();
-
-                'outer: for repo in &config.repositories {
-                    for r in &repo.runtimes {
-                        if r.extensions.contains(&other_string) {
-                            runtime_config = Some(r);
-                            repo_name = &repo.name;
-                            break 'outer;
-                        }
-                    }
-                }
-
-                if let Some(runtime_config) = runtime_config {
-                    Ok(Box::new(ExternalRuntime::new(
-                        project_root,
-                        path.to_path_buf(),
-                        repo_name,
-                        runtime_config.clone(),
-                    )?))
-                } else {
-                    Err(anyhow!(format!(
-                        "The '{ext_as_str}' extension does not have an associated runtime"
-                    )))
-                }
-            }
+            other => init_external_runtime(project_root, config, path, other),
         }
     } else {
         Err(anyhow!("The given file does not have a valid extension"))
+    }
+}
+
+/// Initialize an external runtime. It looks for the right runtime in the configuration
+/// metadata. Then, it will init the runtime with it.
+fn init_external_runtime(
+    project_root: &Path,
+    config: &Config,
+    path: &Path,
+    extension: &str,
+) -> Result<Box<dyn Runtime + Sync + Send>> {
+    let mut runtime_config = None;
+    let mut repo_name = "";
+    let other_string = extension.to_string();
+
+    'outer: for repo in &config.repositories {
+        for r in &repo.runtimes {
+            if r.extensions.contains(&other_string) {
+                runtime_config = Some(r);
+                repo_name = &repo.name;
+                break 'outer;
+            }
+        }
+    }
+
+    if let Some(runtime_config) = runtime_config {
+        Ok(Box::new(ExternalRuntime::new(
+            project_root,
+            path.to_path_buf(),
+            repo_name,
+            runtime_config.clone(),
+        )?))
+    } else {
+        Err(anyhow!(format!(
+            "The '{extension}' extension does not have an associated runtime"
+        )))
     }
 }
 
