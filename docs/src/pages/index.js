@@ -4,6 +4,7 @@ import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import HomepageFeatures from '@site/src/components/HomepageFeatures';
+import Diagram from "@site/src/pages/diagram.svg";
 
 import styles from './index.module.css';
 
@@ -16,10 +17,13 @@ function HomepageHeader() {
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
           <Link
-            className="button button--secondary button--lg"
+            className="button button--primary button--lg"
             to="/docs/get-started/quickstart">
-            Get Started - 5min ⏱️
+            Get Started in 5 min ⏱️
           </Link>
+        </div>
+        <div className="hero__diagram" aria-label="A diagram showing how Wasm Workers Server loads several files from the filesystem and run them as workers">
+          <Diagram />
         </div>
       </div>
     </header>
@@ -33,7 +37,7 @@ export default function Home() {
       title={siteConfig.title}
       description="Wasm Workers Server is a framework that allows you to to develop and run serverless code using a lightweight construct called workers. It's a self-contained binary that you can run almost anywhere.">
       <HomepageHeader />
-      <main>
+      <main className='home__main'>
         <HomepageFeatures />
         <pre className={styles.codeHero}>
           <code>{`$ curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/install.sh | bash

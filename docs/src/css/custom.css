@@ -4,6 +4,8 @@
  * work well for content-centric websites.
  */
 
+
+
 /* You can override the default Infima variables here. */
 :root {
   --ifm-color-primary: #007AB8;
@@ -29,6 +31,39 @@ html[data-theme='dark'] {
   --ifm-color-primary-lightest: #ccf0f7;
   --ifm-background-color: #1E2A31;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Home page */
+.hero--primary {
+  --ifm-hero-text-color: var(--ifm-color-content);
+}
+
+[data-theme='light'] .hero--primary {
+  --ifm-hero-background-color: var(--ifm-background-color);
+}
+
+[data-theme='dark'] .hero--primary {
+  --ifm-hero-background-color: var(--ifm-color-primary-darkest);
+}
+
+[data-theme='dark'] .hero--primary .button--primary {
+  color: white;
+}
+
+.hero__diagram {
+  margin: 2rem auto 0;
+}
+
+.home__main {
+  padding-bottom: 4rem;
+}
+
+[data-theme='light'] .home__main {
+  background-color: var(--ifm-color-primary-lightest);
+}
+
+.home__main .codeHero_src-pages-index-module {
+  margin-bottom: 0;
 }
 
 /* Add icons to the languages! */

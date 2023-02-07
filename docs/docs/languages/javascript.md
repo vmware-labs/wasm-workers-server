@@ -6,7 +6,7 @@ sidebar_position: 1
 
 Workers based on JavaScript work out of the box with Wasm Workers Server. The server integrates a JavaScript interpreter compiled into a WebAssembly module. Currently, the interpreter we support is [quickjs](https://bellard.org/quickjs/) and we are working on adding new ones.
 
-## Your first worker
+## Your first JavaScript worker
 
 JavaScript workers are based on the [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) / [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects from the Web Fetch API. Your worker needs to listen to the `fetch` event, which will include an associated `Request` object. The worker function will receive the request and generate a `Response` object to reply to the request.
 

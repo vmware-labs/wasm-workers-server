@@ -7,7 +7,7 @@ sidebar_position: 2
 Rust workers are compiled into a Wasm module.
 Then, they are loaded by Wasm Workers Server and start processing requests.
 
-## Your first worker
+## Your first Rust worker
 
 Every worker receives a [Request<String\>](https://docs.rs/http/0.2.8/http/request/struct.Request.html) struct and returns a [Response<Content\>](https://docs.rs/http/0.2.8/http/response/struct.Response.html). These structs come from the widely known [`http` crate](https://docs.rs/http/) and the `Content` struct is defined in our rust kit. It allows you returning different types. Finally, the `worker` macro connects your worker with `wws`.
 
