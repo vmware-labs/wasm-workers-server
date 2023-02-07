@@ -13,6 +13,7 @@ mod runtimes;
 mod store;
 mod workers;
 
+use crate::config::Config;
 use actix_files::{Files, NamedFile};
 use actix_web::dev::{fn_service, ServiceRequest, ServiceResponse};
 use actix_web::{
@@ -257,8 +258,20 @@ async fn main() -> std::io::Result<()> {
     } else {
         // TODO(Angelmmiguel): refactor this into a separate command!
         // Initialize the routes
+
+        // Loading the local configuration if available.
+        let config = match Config::load(&args.path) {
+            Ok(c) => c,
+            Err(err) => {
+                println!("⚠️  There was an error reading the .wws.toml file. It will be ignored");
+                println!("⚠️  Error: {err}");
+
+                Config::default()
+            }
+        };
+
         println!("⚙️  Loading routes from: {}", &args.path.display());
-        let routes = Data::new(Routes::new(&args.path, &args.prefix));
+        let routes = Data::new(Routes::new(&args.path, &args.prefix, &config));
 
         let data = Data::new(RwLock::new(DataConnectors { kv: KV::new() }));
 

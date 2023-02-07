@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::wasm_io::{WasmInput, WasmOutput};
-use crate::runtimes::{manager::init_runtime, runtime::Runtime};
+use crate::{
+    config::Config,
+    runtimes::{manager::init_runtime, runtime::Runtime},
+};
 use actix_web::HttpRequest;
 use anyhow::Result;
 use std::{collections::HashMap, path::Path};
@@ -24,9 +27,9 @@ pub struct Worker {
 
 impl Worker {
     /// Creates a new Worker
-    pub fn new(project_root: &Path, path: &Path) -> Result<Self> {
+    pub fn new(project_root: &Path, path: &Path, config: &Config) -> Result<Self> {
         let engine = Engine::default();
-        let runtime = init_runtime(project_root, path)?;
+        let runtime = init_runtime(project_root, path, config)?;
         let bytes = runtime.module_bytes()?;
         let module = Module::from_binary(&engine, &bytes)?;
 

@@ -82,6 +82,18 @@ impl Store {
         Ok(())
     }
 
+    /// Read the file content in the given store
+    pub fn read(&self, path: &[&str]) -> Result<Vec<u8>> {
+        let file_path = self.build_folder_path(path);
+        fs::read(&file_path).map_err(|err| {
+            anyhow!(
+                "There was an error reading the {} file: {}",
+                &file_path.display(),
+                err
+            )
+        })
+    }
+
     /// Copy file inside the configured root folder
     pub fn copy(&self, source: &Path, dest: &[&str]) -> Result<()> {
         let file_path = self.build_folder_path(dest);
@@ -91,7 +103,7 @@ impl Store {
     }
 
     /// This method builds a path in the context of the instance folder
-    fn build_folder_path(&self, source: &[&str]) -> PathBuf {
+    pub fn build_folder_path(&self, source: &[&str]) -> PathBuf {
         source
             .iter()
             .fold(self.folder.clone(), |acc, comp| acc.join(comp))
