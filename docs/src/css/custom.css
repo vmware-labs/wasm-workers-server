@@ -51,7 +51,7 @@ html[data-theme='dark'] {
 }
 
 .hero__diagram {
-  margin: 2rem auto 0;
+  margin: 2rem auto -1rem;
 }
 
 .home__main {
