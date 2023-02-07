@@ -57,7 +57,7 @@ In this example, the worker will get a request and print all the related informa
     });
     ```
 
-1. Save the file and run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../start.md) guide.
+1. Save the file and run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
 
     ```bash
     wws
@@ -107,7 +107,7 @@ To add a KV store to your worker, follow these steps:
     namespace = "counter"
     ```
 
-1. Save the file and run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../start.md) guide.
+1. Save the file and run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
 
     ```bash
     wws

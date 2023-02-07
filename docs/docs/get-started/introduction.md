@@ -30,7 +30,7 @@ $ curl http://localhost:8080/api/hello
 Hello Wasm!
 ```
 
-That's all! Now it's your turn [to download and start using Wasm Workers Server](./start.md).
+That's all! Now it's your turn [to download and start using Wasm Workers Server](./quickstart.md).
 
 ## What's a worker?
 

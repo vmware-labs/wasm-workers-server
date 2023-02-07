@@ -99,7 +99,7 @@ In this example, the worker will get a request and print all the related informa
       cargo build --release --target wasm32-wasi
     ```
 
-1. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../start.md) guide.
+1. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
 
     ```bash
     cd target/wasm32-wasi/release && \
@@ -216,7 +216,7 @@ To add a KV store to your worker, follow these steps:
     namespace = "workerkv"
     ```
 
-1. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../start.md) guide.
+1. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
 
     ```bash
     cd target/wasm32-wasi/release && \

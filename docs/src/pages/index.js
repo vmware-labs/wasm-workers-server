@@ -38,7 +38,11 @@ export default function Home() {
         <pre className={styles.codeHero}>
           <code>{`$ curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/install.sh | bash
 $ wws --help
-Usage: wws [OPTIONS] [PATH]
+Usage: wws [OPTIONS] [PATH] [COMMAND]
+
+Commands:
+  runtimes  Manage the language runtimes in your project
+  help      Print this message or the help of the given subcommand(s)
 
 Arguments:
   [PATH]  Folder to read WebAssembly modules from [default: .]
@@ -46,6 +50,7 @@ Arguments:
 Options:
       --host <HOSTNAME>  Hostname to initiate the server [default: 127.0.0.1]
   -p, --port <PORT>      Port to initiate the server [default: 8080]
+      --prefix <PREFIX>  Prepend the given path to all URLs [default: ]
   -h, --help             Print help information
   -V, --version          Print version information`}</code></pre>
       </main>

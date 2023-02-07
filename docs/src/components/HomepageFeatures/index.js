@@ -13,11 +13,11 @@ const FeatureList = [
     ),
   },
   {
-    title: 'Compatible',
+    title: 'Multi-language',
     emoji: "⚙️",
     description: (
       <>
-        Create workers in different languages thanks to WebAssembly.
+        Create workers in different languages like JavaScript, Ruby, Python and Rust thanks to WebAssembly.
       </>
     ),
   },

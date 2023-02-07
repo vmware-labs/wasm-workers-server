@@ -1,8 +1,8 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 ---
 
-# Environment Variables
+# Environment variables
 
 Wasm Workers Server allows you to configure environment variables so a worker can read them. This configuration is done through the `TOML` file associated to a worker (a `TOML` file with the same filename as the worker). **This means every worker has its own set of environment variables**.
 
@@ -18,8 +18,8 @@ JSON_MESSAGE = "Hello 👋! This message comes from an environment variable"
 
 Then, you can read them in your worker:
 
-* [Read environment variables in a JavaScript worker](../tutorials/javascript-workers.md#read-environment-variables)
-* [Read environment variables in a Rust worker](../tutorials/rust-workers.md#read-environment-variables)
+* [Read environment variables in a JavaScript worker](../languages/javascript.md#read-environment-variables)
+* [Read environment variables in a Rust worker](../languages/rust.md#read-environment-variables)
 
 ## Inject existing environment variables
 

@@ -7,7 +7,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Wasm Workers Server',
-  tagline: 'Run your workers anywhere',
+  tagline: 'A WebAssembly framework to develop serverless applications and run them anywhere',
   url: 'https://workers.wasmlabs.dev',
   baseUrl: '/',
   onBrokenLinks: 'throw',
@@ -72,7 +72,7 @@ const config = {
             items: [
               {
                 label: 'Tutorial',
-                to: '/docs/intro',
+                to: '/docs/get-started/quickstart',
               },
             ],
           },
@@ -112,7 +112,7 @@ const config = {
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
-        additionalLanguages: ['rust', 'toml', 'ruby'],
+        additionalLanguages: ['rust', 'toml', 'ruby', 'python'],
       },
     }),
 };
