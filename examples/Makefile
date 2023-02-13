@@ -1,4 +1,4 @@
-.PHONY: all rust-*
+.PHONY: all rust-* pdf-create
 
 rust-basic:
 	cd rust-basic && \
@@ -15,4 +15,9 @@ rust-params:
 	cargo build --target wasm32-wasi --release && \
 	mv target/wasm32-wasi/release/rust-params.wasm "./[id].wasm"
 
-all: rust-basic rust-kv
+pdf-create:
+	cd pdf-create && \
+	cargo build --target wasm32-wasi --release && \
+	mv target/wasm32-wasi/release/pdf-create.wasm ./index.wasm
+
+all: rust-basic rust-kv rust-params pdf-create

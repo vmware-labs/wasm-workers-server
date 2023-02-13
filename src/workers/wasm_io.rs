@@ -6,7 +6,7 @@ use actix_web::{
     HttpRequest,
 };
 use anyhow::Result;
-use base64::decode;
+use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -121,7 +121,7 @@ impl WasmOutput {
     /// decode the data if the base64 flag is enabled.
     pub fn body(&self) -> Result<Vec<u8>> {
         if self.base64 {
-            Ok(decode(&self.data)?)
+            Ok(general_purpose::STANDARD.decode(&self.data)?)
         } else {
             Ok(self.data.as_bytes().into())
         }
