@@ -62,9 +62,9 @@ impl Repository {
     }
 
     pub fn find_runtime(&self, name: &str, version: &str) -> Option<&Runtime> {
-        self.runtimes
-            .iter()
-            .find(|r| r.name == name && r.version == version)
+        self.runtimes.iter().find(|r| {
+            r.name == name && (r.version == version || r.tags.contains(&String::from(version)))
+        })
     }
 }
 
@@ -82,6 +82,9 @@ pub struct Runtime {
     pub name: String,
     /// Specific version of the runtime
     pub version: String,
+    /// Optional aliases for the version
+    #[serde(default)]
+    pub tags: Vec<String>,
     /// Current status in the repository
     pub status: RuntimeStatus,
     /// Associated extensions

@@ -160,14 +160,22 @@ impl List {
         table.add_row(Row::new(vec![
             Cell::new("Name"),
             Cell::new("Version"),
+            Cell::new("Tags"),
             Cell::new("Extension"),
             Cell::new("Binary"),
         ]));
 
         for runtime in &repo.runtimes {
+            let mut tags = runtime.tags.join(", ");
+
+            if tags.is_empty() {
+                tags.push('-');
+            }
+
             table.add_row(Row::new(vec![
                 Cell::new(&runtime.name),
                 Cell::new(&runtime.version),
+                Cell::new(&tags),
                 Cell::new(&runtime.extensions.join(", ")),
                 Cell::new(&runtime.binary.filename),
             ]));
@@ -199,13 +207,19 @@ impl Check {
             Cell::new("Installed"),
             Cell::new("Name"),
             Cell::new("Version"),
+            Cell::new("Tags"),
             Cell::new("Extension"),
             Cell::new("Binary"),
         ]));
 
         for repo in &config.repositories {
             for runtime in &repo.runtimes {
+                let mut tags = runtime.tags.join(", ");
                 let is_installed = check_runtime(project_root, &repo.name, runtime);
+
+                if tags.is_empty() {
+                    tags.push('-');
+                }
 
                 if !is_installed {
                     is_missing = true;
@@ -215,6 +229,7 @@ impl Check {
                     Cell::new(if is_installed { "✅" } else { "❌" }),
                     Cell::new(&runtime.name),
                     Cell::new(&runtime.version),
+                    Cell::new(&tags),
                     Cell::new(&runtime.extensions.join(", ")),
                     Cell::new(&runtime.binary.filename),
                 ]));
