@@ -45,16 +45,6 @@ class Response
     new(body, 404)
   end
 
-  def print_headers
-    serialized = "{"
-
-    headers.each do |k, v|
-      serialized = "#{serialized} \"#{k}\": \"#{v}\""
-    end
-
-    "#{serialized} }"
-  end
-
   def to_s
     JSON.generate({
       data: body,

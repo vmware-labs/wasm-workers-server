@@ -8,7 +8,7 @@ status = "active"
 args = [ "--", "/src/index.rb" ]
 binary = { url = "TBD", filename = "ruby.wasm", checksum = { type = "sha256", value = "TBD" } }
 extensions = [ "rb" ]
-polyfill = { url = "https://workers.wasmlabs.dev/repository/files/ruby/3/poly.rb", filename = "poly.rb", checksum = { type = "sha256", value = "2ba09117ed20a05480615b2aaaf6c7cd7f61fa06f4919777d773df2fcbc736cf" } }
+polyfill = { url = "https://workers.wasmlabs.dev/repository/files/ruby/3/poly.rb", filename = "poly.rb", checksum = { type = "sha256", value = "3987988ae3f4cbdbd3a9f3d68350a2f233316c2ad240843240c231b333943521" } }
 wrapper = { url = "https://workers.wasmlabs.dev/repository/files/ruby/3/wrapper.txt", filename = "wrapper.txt", checksum = { type = "sha256", value = "6d808b4747cf30f82665a38a47e1176513bbdd6ad558c09db03d719e33ad2da0" } }
 
 [[runtimes]]
