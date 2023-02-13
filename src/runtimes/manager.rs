@@ -130,6 +130,22 @@ pub fn check_runtime(project_root: &Path, repository: &str, runtime: &RuntimeMet
     binary && template && polyfill && wrapper
 }
 
+/// Check if there're missing runtimes based on the current configuration
+pub fn check_runtimes(project_root: &Path, config: &Config) -> bool {
+    let mut missing = false;
+
+    'outer: for repo in &config.repositories {
+        for runtime in &repo.runtimes {
+            if !check_runtime(project_root, &repo.name, runtime) {
+                missing = true;
+                break 'outer;
+            }
+        }
+    }
+
+    missing
+}
+
 // Install a given runtime based on its metadata
 pub fn uninstall_runtime(
     project_root: &Path,

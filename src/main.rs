@@ -14,6 +14,7 @@ mod store;
 mod workers;
 
 use crate::config::Config;
+use crate::runtimes::manager::check_runtimes;
 use actix_files::{Files, NamedFile};
 use actix_web::dev::{fn_service, ServiceRequest, ServiceResponse};
 use actix_web::{
@@ -269,6 +270,12 @@ async fn main() -> std::io::Result<()> {
                 Config::default()
             }
         };
+
+        // Check if there're missing runtimes
+        if check_runtimes(&args.path, &config) {
+            println!("⚠️  Required language runtimes are not installed. Some files may not be considered workers");
+            println!("⚠️  You can install the missing runtimes with: wws runtimes install");
+        }
 
         println!("⚙️  Loading routes from: {}", &args.path.display());
         let routes = Data::new(Routes::new(&args.path, &args.prefix, &config));
