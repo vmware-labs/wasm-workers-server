@@ -1,0 +1,5 @@
+require_relative "./poly";
+
+{source}
+
+puts "#{worker(json_to_request($stdin.gets.to_s))}"

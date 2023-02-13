@@ -16,9 +16,9 @@ use prettytable::{format, Cell, Row, Table};
 use std::env;
 
 /// Default repository name
-pub const DEFAULT_REPO_NAME: &str = "wlr";
+pub const DEFAULT_REPO_NAME: &str = "wasmlabs";
 /// Default repository URL
-pub const DEFAULT_REPO_URL: &str = "https://assets.wasmlabs.dev/repository/v1/index.toml";
+pub const DEFAULT_REPO_URL: &str = "https://workers.wasmlabs.dev/repository/v1/index.toml";
 
 /// Environment variable to set the repository name
 pub const WWS_REPO_NAME: &str = "WWS_REPO_NAME";

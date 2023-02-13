@@ -1,1 +1,23 @@
-version = "1"
+version = 1
+
+[[runtimes]]
+name = "ruby"
+version = "3.2.0+TBD"
+tags = [ "latest", "3.2.0" ]
+status = "active"
+args = [ "--", "/src/index.rb" ]
+binary = { url = "TBD", filename = "ruby.wasm", checksum = { type = "sha256", value = "TBD" } }
+extensions = [ "rb" ]
+polyfill = { url = "https://workers.wasmlabs.dev/repository/files/ruby/3/poly.rb", filename = "poly.rb", checksum = { type = "sha256", value = "2ba09117ed20a05480615b2aaaf6c7cd7f61fa06f4919777d773df2fcbc736cf" } }
+wrapper = { url = "https://workers.wasmlabs.dev/repository/files/ruby/3/wrapper.txt", filename = "wrapper.txt", checksum = { type = "sha256", value = "6d808b4747cf30f82665a38a47e1176513bbdd6ad558c09db03d719e33ad2da0" } }
+
+[[runtimes]]
+name = "python"
+version = "3.11.1+TBD"
+tags = [ "latest", "3.11.1" ]
+status = "active"
+args = [ "--", "/src/index.py" ]
+binary = { url = "TBD", filename = "python.wasm", checksum = { type = "sha256", value = "TBD" } }
+extensions = [ "py" ]
+polyfill = { url = "https://workers.wasmlabs.dev/repository/files/python/3/poly.py", filename = "poly.py", checksum = { type = "sha256", value = "ce179a41a02ef4e71f4f6e0c84d06509393b104b3bc3238b4d30fac8d1b6884d" } }
+wrapper = { url = "https://workers.wasmlabs.dev/repository/files/python/3/wrapper.txt", filename = "wrapper.txt", checksum = { type = "sha256", value = "cf1edc5b1427180ec09d18f4d169580379f1b12001f30e330759f9a0f8745357" } }
