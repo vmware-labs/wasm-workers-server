@@ -2,12 +2,12 @@
 sidebar_position: 2
 ---
 
-# Create a Rust worker
+# Rust
 
 Rust workers are compiled into a Wasm module.
 Then, they are loaded by Wasm Workers Server and start processing requests.
 
-## Your first worker
+## Your first Rust worker
 
 Every worker receives a [Request<String\>](https://docs.rs/http/0.2.8/http/request/struct.Request.html) struct and returns a [Response<Content\>](https://docs.rs/http/0.2.8/http/response/struct.Response.html). These structs come from the widely known [`http` crate](https://docs.rs/http/) and the `Content` struct is defined in our rust kit. It allows you returning different types. Finally, the `worker` macro connects your worker with `wws`.
 
@@ -99,7 +99,7 @@ In this example, the worker will get a request and print all the related informa
       cargo build --release --target wasm32-wasi
     ```
 
-1. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../start.md) guide.
+1. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
 
     ```bash
     cd target/wasm32-wasi/release && \
@@ -216,7 +216,7 @@ To add a KV store to your worker, follow these steps:
     namespace = "workerkv"
     ```
 
-1. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../start.md) guide.
+1. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
 
     ```bash
     cd target/wasm32-wasi/release && \

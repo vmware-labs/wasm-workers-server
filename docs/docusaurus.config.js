@@ -7,7 +7,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Wasm Workers Server',
-  tagline: 'Run your workers anywhere',
+  tagline: 'A WebAssembly framework to develop serverless applications and run them anywhere',
   url: 'https://workers.wasmlabs.dev',
   baseUrl: '/',
   onBrokenLinks: 'throw',
@@ -48,7 +48,7 @@ const config = {
         items: [
           {
             type: 'doc',
-            docId: 'intro',
+            docId: 'get-started/introduction',
             position: 'left',
             label: 'Documentation',
           },
@@ -72,7 +72,7 @@ const config = {
             items: [
               {
                 label: 'Tutorial',
-                to: '/docs/intro',
+                to: '/docs/get-started/quickstart',
               },
             ],
           },
@@ -80,11 +80,15 @@ const config = {
             title: 'Other Projects',
             items: [
               {
+                label: 'WebAssembly Language Runtimes',
+                href: 'https://github.com/vmware-labs/webassembly-language-runtimes',
+              },
+              {
                 label: 'WordPress in the Browser',
                 href: 'https://wordpress.wasmlabs.dev',
               },
               {
-                label: 'mod_wasm',
+                label: 'Apache HTTP Server mod_wasm module',
                 href: 'https://github.com/vmware-labs/mod_wasm',
               },
             ],
@@ -108,7 +112,7 @@ const config = {
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
-        additionalLanguages: ['rust', 'toml'],
+        additionalLanguages: ['rust', 'toml', 'ruby', 'python'],
       },
     }),
 };

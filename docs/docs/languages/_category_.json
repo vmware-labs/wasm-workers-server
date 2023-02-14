@@ -1,0 +1,10 @@
+{
+  "label": "Supported languages",
+  "position": 3,
+  "collapsed": false,
+  "collapsible": false,
+  "link": {
+    "type": "doc",
+    "id": "introduction"
+  }
+}

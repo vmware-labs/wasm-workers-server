@@ -8,25 +8,25 @@ const FeatureList = [
     emoji: "⚡️",
     description: (
       <>
-        Start serving your first responses in 5 minutes.
+        Start serving your first responses in 1 minute. <a href="https://twitter.com/vmwwasm/status/1582316125865775106" target="_blank" rel="noopener noreferrer">Don't you trust us?</a>
+      </>
+    ),
+  },
+  {
+    title: 'Multi-language',
+    emoji: "⚙️",
+    description: (
+      <>
+        Create workers in different languages like JavaScript, Ruby, Python and Rust thanks to WebAssembly.
       </>
     ),
   },
   {
     title: 'Compatible',
-    emoji: "⚙️",
-    description: (
-      <>
-        Create workers in different languages thanks to WebAssembly.
-      </>
-    ),
-  },
-  {
-    title: 'Run anywhere',
     emoji: "🚀",
     description: (
       <>
-        Run it locally, in a small device, free-tier VPS, etc. Almost anywhere.
+        Run your workers locally, in a small device, free-tier VPS, etc. Even in other platforms.
       </>
     ),
   },

@@ -2,22 +2,26 @@
 sidebar_position: 2
 ---
 
-# Getting Started
+# Quickstart
 
 Wasm Workers runs almost anywhere. Thanks to its portability, downloading and running it anywhere is quite simple.
 
-First, you need to install the `wws` server:
+First, you need to install `wws`:
 
 ```bash
-curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/install.sh | bash
+curl -fsSL https://workers.wasmlabs.dev/install | bash
 ```
 
-Now, you can check the server:
+Now, you can check the different commands and options:
 
 ```bash
 wws --help
 
-Usage: wws [OPTIONS] [PATH]
+Usage: wws [OPTIONS] [PATH] [COMMAND]
+
+Commands:
+  runtimes  Manage the language runtimes in your project
+  help      Print this message or the help of the given subcommand(s)
 
 Arguments:
   [PATH]  Folder to read WebAssembly modules from [default: .]
@@ -25,6 +29,7 @@ Arguments:
 Options:
       --host <HOSTNAME>  Hostname to initiate the server [default: 127.0.0.1]
   -p, --port <PORT>      Port to initiate the server [default: 8080]
+      --prefix <PREFIX>  Prepend the given path to all URLs [default: ]
   -h, --help             Print help information
   -V, --version          Print version information
 ```
@@ -54,7 +59,7 @@ Now, open your browser at <http://127.0.0.1:8080>.
 
 Now you got the taste of Wasm Workers, it's time to create your first worker:
 
-* [Create your first JavaScript worker](./tutorials/javascript-workers.md)
-* [Create your first Rust worker](./tutorials/rust-workers.md)
+* [Create your first JavaScript worker](../languages/javascript.md)
+* [Create your first Rust worker](../languages/rust.md)
 
 And if you are curious, here you have a guide about [how it works](./how-it-works.md).

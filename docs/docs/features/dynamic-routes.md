@@ -17,8 +17,8 @@ After defining the route paremeters, the worker receives a special argument call
 
 Check these guides to understand how to read parameters in the different supported languages:
 
-* [Dynamic routes in JavaScript](../tutorials/javascript-workers.md#dynamic-routes)
-* [Dynamic routes in Rust](../tutorials/rust-workers.md#dynamic-routes)
+* [Dynamic routes in JavaScript](../languages/javascript.md#dynamic-routes)
+* [Dynamic routes in Rust](../languages/rust.md#dynamic-routes)
 
 ## Dynamic routes and folders
 

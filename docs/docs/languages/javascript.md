@@ -2,11 +2,11 @@
 sidebar_position: 1
 ---
 
-# Create a JavaScript worker
+# JavaScript
 
 Workers based on JavaScript work out of the box with Wasm Workers Server. The server integrates a JavaScript interpreter compiled into a WebAssembly module. Currently, the interpreter we support is [quickjs](https://bellard.org/quickjs/) and we are working on adding new ones.
 
-## Your first worker
+## Your first JavaScript worker
 
 JavaScript workers are based on the [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) / [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects from the Web Fetch API. Your worker needs to listen to the `fetch` event, which will include an associated `Request` object. The worker function will receive the request and generate a `Response` object to reply to the request.
 
@@ -57,7 +57,7 @@ In this example, the worker will get a request and print all the related informa
     });
     ```
 
-1. Save the file and run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../start.md) guide.
+1. Save the file and run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
 
     ```bash
     wws
@@ -107,7 +107,7 @@ To add a KV store to your worker, follow these steps:
     namespace = "counter"
     ```
 
-1. Save the file and run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../start.md) guide.
+1. Save the file and run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
 
     ```bash
     wws
