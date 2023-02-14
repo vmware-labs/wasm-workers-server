@@ -1,4 +1,4 @@
-use base64::encode;
+use base64::{engine::general_purpose, Engine as _};
 
 /// Identifies the content of a response. In other words, the body.
 /// We need this intermediate entity in Rust to be able to expose
@@ -17,7 +17,7 @@ pub enum Content {
 
 impl From<Vec<u8>> for Content {
     fn from(s: Vec<u8>) -> Content {
-        Content::Base64(encode(s))
+        Content::Base64(general_purpose::STANDARD.encode(s))
     }
 }
 
