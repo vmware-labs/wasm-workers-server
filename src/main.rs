@@ -170,10 +170,11 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
             None => None,
         };
 
-        let handler_result = route
-            .worker
-            .run(&req, &body_str, store, vars)
-            .unwrap_or_else(|_| WasmOutput::failed());
+        let (handler_result, handler_success) = match route.worker.run(&req, &body_str, store, vars)
+        {
+            Ok(output) => (output, true),
+            Err(_) => (WasmOutput::failed(), false),
+        };
 
         let mut builder = HttpResponse::build(
             StatusCode::from_u16(handler_result.status).unwrap_or(StatusCode::OK),
@@ -188,7 +189,7 @@ async fn wasm_handler(req: HttpRequest, body: Bytes) -> HttpResponse {
         }
 
         // Write to the state if required
-        if kv_namespace.is_some() {
+        if handler_success && kv_namespace.is_some() {
             data_connectors
                 .write()
                 .unwrap()
