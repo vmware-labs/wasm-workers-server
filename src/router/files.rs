@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::config::Config;
+use crate::runtimes::manager::check_runtime;
 use crate::store::STORE_FOLDER;
 use std::ffi::OsStr;
 use std::path::{Component, Path, PathBuf};
@@ -29,7 +30,7 @@ impl Files {
         for repo in &config.repositories {
             for runtime in &repo.runtimes {
                 for ext in &runtime.extensions {
-                    if !extensions.contains(ext) {
+                    if check_runtime(root, &repo.name, runtime) && !extensions.contains(ext) {
                         extensions.push(ext.clone());
                     }
                 }
