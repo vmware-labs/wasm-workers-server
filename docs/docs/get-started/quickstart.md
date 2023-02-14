@@ -9,7 +9,7 @@ Wasm Workers runs almost anywhere. Thanks to its portability, downloading and ru
 First, you need to install `wws`:
 
 ```bash
-curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/install.sh | bash
+curl -fsSL https://workers.wasmlabs.dev/install | bash
 ```
 
 Now, you can check the different commands and options:

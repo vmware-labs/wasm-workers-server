@@ -40,7 +40,7 @@ export default function Home() {
       <main className='home__main'>
         <HomepageFeatures />
         <pre className={styles.codeHero}>
-          <code>{`$ curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/install.sh | bash
+          <code>{`$ curl -fsSL https://workers.wasmlabs.dev/install | bash
 $ wws --help
 Usage: wws [OPTIONS] [PATH] [COMMAND]
 
