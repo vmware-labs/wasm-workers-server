@@ -42,8 +42,13 @@ impl<'a> WasmInput<'a> {
             params.insert(k.to_string(), v.to_string());
         }
 
+        let url = match request.uri().path_and_query() {
+            Some(path) => path.as_str(),
+            None => request.uri().path(),
+        };
+
         Self {
-            url: request.uri().path(),
+            url,
             method: request.method().as_str(),
             headers: Self::build_headers_hash(request.headers()),
             body,
