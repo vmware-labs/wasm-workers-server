@@ -8,19 +8,43 @@ def json_to_request(input)
     json['body'],
     json['method'],
     json['headers'],
-    json['params']
+    json['params'],
+    json['kv']
   )
+end
+
+class Cache
+  @@kv = {}
+
+  def self.init(kv)
+    @@kv = kv
+  end
+
+  def self.dump
+    @@kv
+  end
+
+  def self.get(key)
+    @@kv[key.to_s]
+  end
+
+  def self.set(key, value)
+    @@kv[key.to_s] = value.to_s
+  end
 end
 
 class Request
   attr_reader :url, :body, :method, :headers, :params
 
-  def initialize(url, body, method, headers, params)
+  def initialize(url, body, method, headers, params, kv)
     @url = url
     @body = body
     @method = method
     @headers = headers
     @params = params
+
+    # Initializes the cache
+    Cache.init(kv)
   end
 end
 
@@ -50,7 +74,7 @@ class Response
       data: body,
       status: status_code,
       headers: headers,
-      kv: {}
+      kv: Cache.dump
     })
   end
 end
