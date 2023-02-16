@@ -2,11 +2,11 @@ version = 1
 
 [[runtimes]]
 name = "ruby"
-version = "3.2.0+TBD"
+version = "3.2.0+20230215"
 tags = [ "latest", "3.2.0" ]
 status = "active"
 args = [ "--", "/src/index.rb" ]
-binary = { url = "TBD", filename = "ruby.wasm", checksum = { type = "sha256", value = "TBD" } }
+binary = { url = "https://github.com/vmware-labs/webassembly-language-runtimes/releases/download/ruby%2F3.2.0%2B20230215-1349da9/ruby-3.2.0.wasm", filename = "ruby.wasm", checksum = { type = "sha256", value = "1ea101553585a9ec4734ed3774648107ccd7beb6971f9ce687a084d06b8409f9" } }
 extensions = [ "rb" ]
 polyfill = { url = "https://workers.wasmlabs.dev/repository/files/ruby/3/poly.rb", filename = "poly.rb", checksum = { type = "sha256", value = "044b0d4bde7d3a9b0f275821fb5b67cc2e382267904df2516a23dbec1fae6bae" } }
 wrapper = { url = "https://workers.wasmlabs.dev/repository/files/ruby/3/wrapper.txt", filename = "wrapper.txt", checksum = { type = "sha256", value = "6d808b4747cf30f82665a38a47e1176513bbdd6ad558c09db03d719e33ad2da0" } }
