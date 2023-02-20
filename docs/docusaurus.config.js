@@ -20,6 +20,8 @@ const config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
+  // Get the index metadata for `wws` language runtimes
+  staticDirectories: ["static", "../metadata"],
 
   presets: [
     [
