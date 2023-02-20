@@ -30,7 +30,6 @@ use data::kv::KV;
 use router::Routes;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
-use std::process::exit;
 use std::{collections::HashMap, sync::RwLock};
 use workers::wasm_io::WasmOutput;
 
@@ -225,38 +224,40 @@ async fn main() -> std::io::Result<()> {
 
     // Check the given subcommand
     if let Some(Main::Runtimes(sub)) = &args.commands {
+        let mut run_result = Ok(());
+
         match &sub.runtime_commands {
             RuntimesCommands::List(list) => {
                 if let Err(err) = list.run(sub).await {
                     println!("❌ There was an error listing the runtimes from the repository");
                     println!("👉 {err}");
-                    exit(1);
+                    run_result = Err(Error::new(ErrorKind::InvalidData, ""));
                 }
             }
             RuntimesCommands::Install(install) => {
                 if let Err(err) = install.run(&args.path, sub).await {
                     println!("❌ There was an error installing the runtime from the repository");
                     println!("👉 {err}");
-                    exit(1);
+                    run_result = Err(Error::new(ErrorKind::InvalidData, ""));
                 }
             }
             RuntimesCommands::Uninstall(uninstall) => {
                 if let Err(err) = uninstall.run(&args.path, sub) {
                     println!("❌ There was an error uninstalling the runtime");
                     println!("👉 {err}");
-                    exit(1);
+                    run_result = Err(Error::new(ErrorKind::InvalidData, ""));
                 }
             }
             RuntimesCommands::Check(check) => {
                 if let Err(err) = check.run(&args.path) {
                     println!("❌ There was an error checking the local runtimes");
                     println!("👉 {err}");
-                    exit(1);
+                    run_result = Err(Error::new(ErrorKind::InvalidData, ""));
                 }
             }
         };
 
-        Ok(())
+        run_result
     } else {
         // TODO(Angelmmiguel): refactor this into a separate command!
         // Initialize the routes
