@@ -164,7 +164,7 @@ impl Checksum {
     pub fn validate(&self, bytes: &[u8]) -> Result<()> {
         match self {
             Checksum::Sha256 { value } if value == &sha256_digest(bytes) => Ok(()),
-            _ => Err(anyhow!("The checksums dont not match")),
+            _ => Err(anyhow!("The checksums don't match")),
         }
     }
 }
