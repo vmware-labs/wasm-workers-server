@@ -1,6 +1,11 @@
 /install https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/install.sh 307
 /docs/intro /docs/get-started/introduction 301
+/docs/intro/ /docs/get-started/introduction 301
 /docs/start /docs/get-started/quickstart 301
+/docs/start/ /docs/get-started/quickstart 301
 /docs/how-it-works /docs/get-started/how-it-works 301
+/docs/how-it-works/ /docs/get-started/how-it-works 301
 /docs/tutorials/javascript-workers /docs/languages/javascript 301
+/docs/tutorials/javascript-workers/ /docs/languages/javascript 301
 /docs/tutorials/rust-workers /docs/languages/rust 301
+/docs/tutorials/rust-workers/ /docs/languages/rust 301
