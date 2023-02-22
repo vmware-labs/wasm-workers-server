@@ -1,0 +1,44 @@
+version = 1
+
+[[repositories]]
+name = "wasmlabs"
+url = "https://workers.wasmlabs.dev/repository/v1/index.toml"
+
+[[repositories.runtimes]]
+name = "python"
+version = "3.11.1+20230217"
+tags = [
+    "latest",
+    "3.11",
+    "3.11.1",
+]
+status = "active"
+extensions = ["py"]
+args = [
+    "--",
+    "/src/index.py",
+]
+
+[repositories.runtimes.binary]
+url = "https://github.com/vmware-labs/webassembly-language-runtimes/releases/download/python%2F3.11.1%2B20230217-15dfbed/python-3.11.1.wasm"
+filename = "python.wasm"
+
+[repositories.runtimes.binary.checksum]
+type = "sha256"
+value = "66589b289f76bd716120f76f234e4dd663064ed5b6256c92d441d84e51d7585d"
+
+[repositories.runtimes.polyfill]
+url = "https://workers.wasmlabs.dev/repository/v1/files/python/3/poly.py"
+filename = "poly.py"
+
+[repositories.runtimes.polyfill.checksum]
+type = "sha256"
+value = "2027b73556ca02155f026cee751ab736985917d2f28bbcad5aac928c719e1112"
+
+[repositories.runtimes.wrapper]
+url = "https://workers.wasmlabs.dev/repository/v1/files/python/3/wrapper.txt"
+filename = "wrapper.txt"
+
+[repositories.runtimes.wrapper.checksum]
+type = "sha256"
+value = "cf1edc5b1427180ec09d18f4d169580379f1b12001f30e330759f9a0f8745357"

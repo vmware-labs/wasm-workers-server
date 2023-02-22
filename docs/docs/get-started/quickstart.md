@@ -37,7 +37,7 @@ Options:
 You can download some of our example `.js` modules:
 
 ```bash
-curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/examples/js-basic/handler.js \
+curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/examples/js-basic/index.js \
     -o ./index.js
 ```
 

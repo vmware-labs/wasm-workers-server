@@ -183,7 +183,7 @@ If you prefer, you can configure the environment variable value dynamically by f
 
 ## Other examples
 
-* [Basic](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/js-basic/handler.js)
-* [JSON](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/js-json/handler.js)
-* [Redirect](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/js-redirect/handler.js)
-* [Tic Tac Toe](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/js-tictactoe/handler.js)
+* [Basic](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/js-basic/)
+* [JSON](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/js-json/)
+* [Redirect](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/js-redirect/)
+* [Tic Tac Toe](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/js-tictactoe/)

@@ -18,7 +18,7 @@ wws runtimes install python latest
 
 ## Your first Python worker
 
-Python workers are based on the [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) / [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects from the Web Fetch API. Since these entities don't exist in the Python language, the worker includes a polyfill with these two classes. You can find the [polyfill code here](#).
+Python workers are based on the [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) / [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects from the Web Fetch API. Since these entities don't exist in the Python language, the worker includes a polyfill with these two classes. You can find the [polyfill code here](https://github.com/vmware-labs/wasm-workers-server/blob/main/metadata/repository/v1/files/python/3/python.rb).
 
 In this example, the worker will get a request and print all the related information.
 
@@ -78,3 +78,116 @@ In this example, the worker will get a request and print all the related informa
     ```
 
 1. Finally, open <http://127.0.0.1:8080> in your browser.
+
+## Add a Key / Value store
+
+Wasm Workers allows you to add a Key / Value store to your workers. Read more information about this feature in the [Key / Value store](../features/key-value.md) section.
+
+To add a KV store to your worker, follow these steps:
+
+1. First, create a `counter.py` file. It will access the KV store through the `Cache` object:
+
+    ```python title="./counter.py"
+    CACHE_KEY = "counter"
+
+    def worker(request):
+        count = Cache.get(CACHE_KEY)
+
+        if count is None:
+            count = 0
+        else:
+            count = int(count)
+
+        # Body response
+        body = '''\
+            The counter value is: {count}
+        '''.format(
+            count=count
+        )
+
+        # Build a new response
+        res = Response(body)
+
+        # Update the counter
+        Cache.set(CACHE_KEY, count + 1)
+
+        return res
+    ```
+
+1. Create a `counter.toml` file with the following content. Note the name of the TOML file must match the name of the worker. In this case we have `counter.py` and `counter.toml` in the same folder:
+
+    ```toml title="./counter.toml"
+    name = "counter"
+    version = "1"
+
+    [data]
+    [data.kv]
+    namespace = "counter"
+    ```
+
+1. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide. You also need to install the Python runtime with the command below:
+
+    ```plain
+    wws runtimes install python latest
+    ```
+
+1. Save the file and run your worker with `wws`:
+
+    ```bash
+    wws
+
+    ⚙️ Loading routes from: .
+    🗺 Detected routes:
+        - http://127.0.0.1:8080/counter
+        => counter.py (name: default)
+    🚀 Start serving requests at http://127.0.0.1:8080
+    ```
+
+1. Finally, open <http://127.0.0.1:8080/counter> in your browser.
+
+## Dynamic routes
+
+You can define [dynamic routes by adding route parameters to your worker files](../features/dynamic-routes.md) (like `[id].py`). To read them in Ruby, access to the `request.params` object:
+
+```python
+def worker(request):
+    body = "The URL parameter is: {param}".format(
+        param=request.params['id']
+    )
+
+    Response(body)
+```
+
+## Read environment variables
+
+Environment variables are configured [via the related TOML configuration file](../features/environment-variables.md). These variables are directly injected as global constants in your worker. To read them, just use the same name you configured in your TOML file:
+
+```toml title="./envs.toml"
+name = "envs"
+version = "1"
+
+[vars]
+MESSAGE = "Hello 👋! This message comes from an environment variable"
+```
+
+Now, you can read the `MESSAGE` environment variable using the Python `os` module:
+
+```python title="./envs.py"
+import os
+
+def worker(req):
+    # Body response
+    body = "The environment variable value is: {message}".format(
+        message=os.getenv("MESSAGE")
+    )
+
+    return Response(body)
+```
+
+If you prefer, you can configure the environment variable value dynamically by following [these instructions](../features/environment-variables.md#inject-existing-environment-variables).
+
+## Examples
+
+* [Basic](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/python-basic/)
+* [Key / Value](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/python-kv/)
+* [Environment variables](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/python-envs/)

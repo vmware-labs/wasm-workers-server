@@ -54,6 +54,10 @@ html[data-theme='dark'] {
   margin: 2rem auto -1rem;
 }
 
+.hero__diagram svg {
+  max-width: 100%;
+}
+
 .home__main {
   padding-bottom: 4rem;
 }

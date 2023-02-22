@@ -48,7 +48,7 @@ Options:
 Then, you can download some of our example modules and try them directly:
 
 ```bash
-curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/examples/js-basic/handler.js \
+curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/examples/js-basic/index.js \
   -o ./index.js && \
   wws .
 ```

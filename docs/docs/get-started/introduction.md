@@ -10,7 +10,11 @@ Wasm Workers Server is a framework that allows you to develop and run serverless
 
 ```bash
 $ wws --help
-Usage: wws [OPTIONS] [PATH]
+Usage: wws [OPTIONS] [PATH] [COMMAND]
+
+Commands:
+  runtimes  Manage the language runtimes in your project
+  help      Print this message or the help of the given subcommand(s)
 
 Arguments:
   [PATH]  Folder to read WebAssembly modules from [default: .]
@@ -18,8 +22,9 @@ Arguments:
 Options:
       --host <HOSTNAME>  Hostname to initiate the server [default: 127.0.0.1]
   -p, --port <PORT>      Port to initiate the server [default: 8080]
-  -h, --help             Print help information
-  -V, --version          Print version information
+      --prefix <PREFIX>  Prepend the given path to all URLs [default: ]
+  -h, --help             Print help
+  -V, --version          Print version
 ```
 
 You don't need to configure anything by default. Just drop your workers in a folder and run the project to get an HTTP server and start serving requests 🚀.

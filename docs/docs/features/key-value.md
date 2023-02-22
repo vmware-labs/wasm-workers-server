@@ -18,6 +18,8 @@ The worker may access all the data and perform changes over it. Then, a new K/V 
 
 * [Add a K/V store to JavaScript workers](../languages/javascript.md#add-a-key--value-store)
 * [Add a K/V store to Rust workers](../languages/rust.md#add-a-key--value-store)
+* [Add a K/V store to Python workers](../languages/python.md#add-a-key--value-store)
+* [Add a K/V store to Ruby workers](../languages/ruby.md#add-a-key--value-store)
 
 ## Limitations
 
