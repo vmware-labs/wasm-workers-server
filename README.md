@@ -1,8 +1,8 @@
 # Wasm Workers Server
 
-Wasm Workers Server (`wws`) is an HTTP server that runs applications with WebAssembly. These applications are composed by multiple modules, called "workers" or "handlers". Each of these modules is in charge of replying to a specific HTTP path in your application.
+Wasm Workers Server (`wws`) is a framework to develop and run serverless applications server in WebAssembly. These applications are composed by multiple modules called "workers". Each of these tiny modules is in charge of replying to a specific HTTP path in your application.
 
-The server loads the existing Wasm modules and compatible languages in the current path. The filenames and folders determine the final routes that will be served. This is called "filesystem routing" and is a popular technique. Successful frameworks such as [NextJS](https://nextjs.org/) and [Eleventy](https://www.11ty.dev/) work in this way.
+The server loads the existing Wasm modules and compatible languages in the given path. The filenames and folders determine the final routes that will be served. This is called "filesystem routing" and is a popular technique. Successful frameworks such as [NextJS](https://nextjs.org/) and [Eleventy](https://www.11ty.dev/) work in this way.
 
 Here you have an example of running the tool:
 
@@ -20,19 +20,27 @@ $ wws .
 🚀 Start serving requests at http://127.0.0.1:8080
 ```
 
-## Getting Started
+## Documentation
+
+All our documentation is available at <https://workers.wasmlabs.dev>.
+
+## Get Started
 
 Wasm Workers Server runs almost anywhere. Thanks to its portability, downloading and running it anywhere is quite simple:
 
 ```bash
-curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/install.sh | bash && \
+curl -fsSL https://workers.wasmlabs.dev/install | bash && \
   wws --help
 ```
 
 You will see the help of the server:
 
 ```
-Usage: wws [OPTIONS] [PATH]
+Usage: wws [OPTIONS] [PATH] [COMMAND]
+
+Commands:
+  runtimes  Manage the language runtimes in your project
+  help      Print this message or the help of the given subcommand(s)
 
 Arguments:
   [PATH]  Folder to read WebAssembly modules from [default: .]
@@ -41,8 +49,8 @@ Options:
       --host <HOSTNAME>  Hostname to initiate the server [default: 127.0.0.1]
   -p, --port <PORT>      Port to initiate the server [default: 8080]
       --prefix <PREFIX>  Prepend the given path to all URLs [default: ]
-  -h, --help             Print help information
-  -V, --version          Print version information
+  -h, --help             Print help
+  -V, --version          Print version
 ```
 
 Then, you can download some of our example modules and try them directly:
@@ -70,7 +78,7 @@ Now, open your browser at <http://127.0.0.1:8080>.
 By default, our `install.sh` script will place the `wws` binary in the `/usr/local/bin` path. If you want to install it in your current path, you can run the installer with the `--local` option:
 
 ```bash
-curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/install.sh | bash -s -- --local && \
+curl -fsSL https://workers.wasmlabs.dev/install | bash -s -- --local && \
   ./wws --help
 ```
 
@@ -92,23 +100,15 @@ docker run --rm -v /tmp/wws-app:/app -p 8080:8080 ghcr.io/vmware-labs/wws:latest
 
 Wasm Workers Server focuses on simplicity. We want you to run workers (written in different languages) safely in WebAssembly. For interpreted languages, we add different interpreters:
 
-| Language | Wasm module | Interpreter |
+| Language | Support | Requires an external runtime |
 | --- | --- | --- |
-| Rust | ✅ | ❌ |
-| JavaScript | ❌ | ✅ |
+| Rust | ✅ | No |
+| JavaScript | ✅ | No |
+| Ruby | ✅ | [Yes](https://workers.wasmlabs.dev/docs/languages/ruby#installation) |
+| Python | ✅ | [Yes](https://workers.wasmlabs.dev/docs/languages/python#installation) |
 | ... | ... | ... |
 
-We will include more interpreters in the future.
-
-### JavaScript Workers
-
-The integrated interpreter is based on [QuickJS](https://bellard.org/quickjs/) (compiled with the [quickjs-wasm-rs](https://crates.io/crates/quickjs-wasm-rs) crate). The compatible workers follow the Web Workers API approach. However, not all the Web Workers API is available in these workers. These are some of the missing features:
-
-- No modules available. Workers must be a single file
-- Fetch API
-- Async / Await
-
-We will work on including these features in the future.
+To get more information about multi-language support in Wasm Workers Server, [check our documentation](https://workers.wasmlabs.dev/docs/languages/introduction).
 
 ## Development
 
