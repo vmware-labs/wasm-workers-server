@@ -2936,7 +2936,7 @@ dependencies = [
 
 [[package]]
 name = "wasm-workers-rs"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -2948,7 +2948,7 @@ dependencies = [
 
 [[package]]
 name = "wasm-workers-server"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "actix-files",
  "actix-web",
@@ -3498,7 +3498,7 @@ dependencies = [
 
 [[package]]
 name = "worker"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "anyhow",
  "http",
