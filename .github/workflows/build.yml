@@ -43,7 +43,7 @@ jobs:
           target
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Test
-      run: cargo test
+      run: cargo test --all
   build:
     runs-on: ubuntu-latest
     steps:

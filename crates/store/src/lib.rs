@@ -7,7 +7,6 @@
 //
 // This struct provide the basics to interact with that folder
 // in both Unix and Windows systems.
-
 use anyhow::{anyhow, Result};
 use std::{
     fs,
@@ -53,7 +52,6 @@ impl Store {
     }
 
     /// Create the root folder for the current context
-    #[allow(dead_code)]
     pub fn create_root_folder(&self) -> Result<()> {
         fs::create_dir_all(&self.folder)
             .map_err(|err| anyhow!("There was an error creating the a required folder: {}", err))

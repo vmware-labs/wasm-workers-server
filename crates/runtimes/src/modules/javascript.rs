@@ -1,16 +1,16 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::runtimes::runtime::Runtime;
-use crate::store::Store;
+use crate::runtime::Runtime;
 use anyhow::Result;
 use std::path::Path;
 use std::{fs, path::PathBuf};
 use wasmtime_wasi::Dir;
 use wasmtime_wasi::WasiCtxBuilder;
+use wws_store::Store;
 
 static JS_ENGINE_WASM: &[u8] =
-    include_bytes!("../../../kits/javascript/wasm-workers-quick-js-engine.wasm");
+    include_bytes!("../../../../kits/javascript/wasm-workers-quick-js-engine.wasm");
 
 pub struct JavaScriptRuntime {
     /// Path of the given module

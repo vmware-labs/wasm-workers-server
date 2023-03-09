@@ -6,6 +6,7 @@ use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use sha256::digest as sha256_digest;
 use std::collections::HashMap;
+use std::str::FromStr;
 use url::Url;
 
 /// Identify the current max repository version this build can manage.
@@ -32,15 +33,6 @@ pub struct Repository {
 }
 
 impl Repository {
-    /// Reads and parses the metadata from a slice of bytes. It will return
-    /// a result as the deserialization may fail.
-    pub fn from_str(data: &str) -> Result<Self> {
-        toml::from_str::<Repository>(data).map_err(|err| {
-            println!("Err: {err}");
-            anyhow!("wws could not deserialize the repository metadata")
-        })
-    }
-
     /// Retrieve a repository from a remote file. It will download the content
     /// using reqwest and initializing the repository with it.
     pub async fn from_remote_file(repository_url: &str) -> Result<Self> {
@@ -64,6 +56,19 @@ impl Repository {
     pub fn find_runtime(&self, name: &str, version: &str) -> Option<&Runtime> {
         self.runtimes.iter().find(|r| {
             r.name == name && (r.version == version || r.tags.contains(&String::from(version)))
+        })
+    }
+}
+
+impl FromStr for Repository {
+    type Err = anyhow::Error;
+
+    /// Reads and parses the metadata from a slice of bytes. It will return
+    /// a result as the deserialization may fail.
+    fn from_str(data: &str) -> Result<Self> {
+        toml::from_str::<Repository>(data).map_err(|err| {
+            println!("Err: {err}");
+            anyhow!("wws could not deserialize the repository metadata")
         })
     }
 }
@@ -176,7 +181,7 @@ mod tests {
 
     #[test]
     fn parse_index_toml() {
-        let contents = fs::read_to_string("tests/data/metadata/repository.toml").unwrap();
+        let contents = fs::read_to_string("../../tests/data/metadata/repository.toml").unwrap();
         let repo = Repository::from_str(&contents).unwrap();
 
         assert_eq!(repo.version, 1);
@@ -185,7 +190,7 @@ mod tests {
 
     #[test]
     fn parse_runtime_toml() {
-        let contents = fs::read_to_string("tests/data/metadata/runtime.toml").unwrap();
+        let contents = fs::read_to_string("../../tests/data/metadata/runtime.toml").unwrap();
         let metadata = toml::from_str::<Runtime>(&contents).unwrap();
 
         assert_eq!(metadata.name, "ruby");

@@ -1,13 +1,13 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::data::kv::KVConfigData;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Deserializer};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::{env, fs};
 use toml::from_str;
+use wws_data_kv::KVConfigData;
 
 /// Workers configuration. These files are optional when no configuration change is required.
 #[derive(Deserialize, Clone)]

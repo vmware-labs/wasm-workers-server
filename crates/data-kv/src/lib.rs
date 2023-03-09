@@ -1,8 +1,11 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+mod store;
+
 use serde::Deserialize;
 use std::collections::HashMap;
+use store::KVStore;
 
 /// The Key/Value store configuration. This information is read from workers TOML files.
 #[derive(Deserialize, Clone)]
@@ -19,13 +22,6 @@ pub struct KV {
 }
 
 impl KV {
-    /// Creates a new KV instance. It initializes the K/V stores to an empty HashMap
-    pub fn new() -> Self {
-        Self {
-            stores: HashMap::new(),
-        }
-    }
-
     /// Creates a K/V store for the given namespace. If there's an existing store,
     /// this method won't apply any change.
     pub fn create_store(&mut self, namespace: &str) {
@@ -55,31 +51,11 @@ impl KV {
     }
 }
 
-/// A K/V store. It's composed by a namespace and the list of Key/Values
-pub struct KVStore {
-    /// The namespace associated to this Key/Value store
-    pub namespace: String,
-    /// The list of Key - Values. In this project, both keys and values are considered
-    /// strings.
-    store: HashMap<String, String>,
-}
-
-impl KVStore {
-    /// Creates a new K/V store for the given namespace
-    pub fn new(namespace: String) -> Self {
+impl Default for KV {
+    /// Creates a new KV instance. It initializes the K/V stores to an empty HashMap
+    fn default() -> Self {
         Self {
-            namespace,
-            store: HashMap::new(),
+            stores: HashMap::new(),
         }
-    }
-
-    /// Clone the current content of the Key/Value store
-    pub fn clone(&self) -> HashMap<String, String> {
-        self.store.clone()
-    }
-
-    /// Replace the content of the K/V store with a new state
-    pub fn replace(&mut self, state: HashMap<String, String>) {
-        self.store = state;
     }
 }

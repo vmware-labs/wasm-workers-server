@@ -1,12 +1,12 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::Config;
-use crate::runtimes::manager::check_runtime;
-use crate::store::STORE_FOLDER;
 use std::ffi::OsStr;
 use std::path::{Component, Path, PathBuf};
 use wax::{Glob, WalkEntry};
+use wws_config::Config;
+use wws_runtimes_manager::check_runtime;
+use wws_store::STORE_FOLDER;
 
 /// Manages the files associated to a Wasm Workers Run.
 /// It uses glob patterns to detect the workers and
@@ -107,7 +107,8 @@ mod tests {
         for t in tests {
             let config = Config::default();
             assert_eq!(
-                Files::new(Path::new("./tests/data"), &config).is_in_public_folder(Path::new(t.0)),
+                Files::new(Path::new("../../tests/data"), &config)
+                    .is_in_public_folder(Path::new(t.0)),
                 t.1
             )
         }
@@ -129,7 +130,7 @@ mod tests {
         for t in tests {
             let config = Config::default();
             assert_eq!(
-                Files::new(Path::new(".\\tests\\data"), &config)
+                Files::new(Path::new("..\\..\\tests\\data"), &config)
                     .is_in_public_folder(Path::new(t.0)),
                 t.1
             )

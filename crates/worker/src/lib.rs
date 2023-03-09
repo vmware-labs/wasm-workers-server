@@ -1,17 +1,18 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use super::wasm_io::{WasmInput, WasmOutput};
-use crate::{
-    config::Config,
-    runtimes::{manager::init_runtime, runtime::Runtime},
-};
+pub mod config;
+pub mod io;
+
 use actix_web::HttpRequest;
 use anyhow::Result;
+use io::{WasmInput, WasmOutput};
 use std::{collections::HashMap, path::Path};
 use wasi_common::pipe::{ReadPipe, WritePipe};
 use wasmtime::{Engine, Linker, Module, Store};
 use wasmtime_wasi::WasiCtxBuilder;
+use wws_config::Config;
+use wws_runtimes::{init_runtime, Runtime};
 
 /// A worker contains the engine and the associated runtime.
 /// This struct will process requests by preparing the environment

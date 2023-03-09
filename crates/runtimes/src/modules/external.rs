@@ -1,16 +1,15 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    runtimes::{metadata::Runtime as RuntimeMetadata, runtime::Runtime},
-    store::Store,
-};
+use crate::runtime::Runtime;
 use anyhow::Result;
 use std::{
     fs,
     path::{Path, PathBuf},
 };
 use wasmtime_wasi::{Dir, WasiCtxBuilder};
+use wws_runtimes_manager::metadata::Runtime as RuntimeMetadata;
+use wws_store::Store;
 
 /// Run language runtimes that were downloaded externally. This
 /// runtime prepare the worker and configure the WASI context

@@ -1,16 +1,18 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    commands::runtimes::{DEFAULT_REPO_NAME, DEFAULT_REPO_URL},
-    runtimes::metadata::Runtime,
-};
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
     path::{Path, PathBuf},
 };
+use wws_runtimes_manager::{check_runtime, metadata::Runtime};
+
+/// Default repository name
+pub const DEFAULT_REPO_NAME: &str = "wasmlabs";
+/// Default repository URL
+pub const DEFAULT_REPO_URL: &str = "https://workers.wasmlabs.dev/repository/v1/index.toml";
 
 /// Config file name
 const CONFIG_FILENAME: &str = ".wws.toml";
@@ -89,6 +91,19 @@ impl Config {
         } else {
             None
         }
+    }
+
+    /// Check if there're missing runtimes based on the current configuration
+    pub fn check_runtimes(&self, project_root: &Path) -> bool {
+        for repo in &self.repositories {
+            for runtime in &repo.runtimes {
+                if !check_runtime(project_root, &repo.name, runtime) {
+                    return true;
+                }
+            }
+        }
+
+        false
     }
 
     /// Write the current configuration into the `.wws.toml` file. It will

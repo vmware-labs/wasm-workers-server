@@ -1,7 +1,7 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::runtimes::runtime::Runtime;
+use crate::runtime::Runtime;
 use anyhow::Result;
 use std::{fs, path::PathBuf};
 

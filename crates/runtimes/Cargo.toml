@@ -1,0 +1,16 @@
+[package]
+name = "wws-runtimes"
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+
+[dependencies]
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+wasmtime-wasi = { workspace = true }
+wws-config = { workspace = true }
+wws-store = { workspace = true }
+wws-runtimes-manager = { workspace = true }

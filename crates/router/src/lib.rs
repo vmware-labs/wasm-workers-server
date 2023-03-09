@@ -5,11 +5,14 @@
 // Declare the different routes for the project
 // based on the files in the given folder
 //
-use std::path::Path;
 
-use super::files::Files;
-use super::route::{Route, RouteAffinity};
-use crate::config::Config;
+mod files;
+mod route;
+
+use files::Files;
+use route::{Route, RouteAffinity};
+use std::path::Path;
+use wws_config::Config;
 
 /// Contains all registered routes
 pub struct Routes {
@@ -94,8 +97,8 @@ mod tests {
         let build_route = |file: &str| -> Route {
             let project_config = Config::default();
             Route::new(
-                Path::new("./tests/data/params"),
-                PathBuf::from(format!("./tests/data/params{file}")),
+                Path::new("../../tests/data/params"),
+                PathBuf::from(format!("../../tests/data/params{file}")),
                 "",
                 &project_config,
             )
@@ -128,8 +131,8 @@ mod tests {
         let build_route = |file: &str| -> Route {
             let project_config = Config::default();
             Route::new(
-                Path::new("./tests/data/params"),
-                PathBuf::from(format!("./tests/data/params{file}")),
+                Path::new("../../tests/data/params"),
+                PathBuf::from(format!("../../tests/data/params{file}")),
                 "",
                 &project_config,
             )

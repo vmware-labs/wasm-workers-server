@@ -5,16 +5,7 @@
 extern crate lazy_static;
 
 mod commands;
-mod config;
-mod data;
-mod fetch;
-mod router;
-mod runtimes;
-mod store;
-mod workers;
 
-use crate::config::Config;
-use crate::runtimes::manager::check_runtimes;
 use actix_files::{Files, NamedFile};
 use actix_web::dev::{fn_service, ServiceRequest, ServiceResponse};
 use actix_web::{
@@ -26,12 +17,13 @@ use actix_web::{
 use clap::Parser;
 use commands::main::Main;
 use commands::runtimes::RuntimesCommands;
-use data::kv::KV;
-use router::Routes;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
 use std::{collections::HashMap, sync::RwLock};
-use workers::wasm_io::WasmOutput;
+use wws_config::Config;
+use wws_data_kv::KV;
+use wws_router::Routes;
+use wws_worker::io::WasmOutput;
 
 // Provide a static root_path so it can be used in the default_worker to manage
 // static assets.
@@ -274,7 +266,7 @@ async fn main() -> std::io::Result<()> {
         };
 
         // Check if there're missing runtimes
-        if check_runtimes(&args.path, &config) {
+        if config.check_runtimes(&args.path) {
             println!("⚠️  Required language runtimes are not installed. Some files may not be considered workers");
             println!("⚠️  You can install the missing runtimes with: wws runtimes install");
         }
@@ -282,7 +274,7 @@ async fn main() -> std::io::Result<()> {
         println!("⚙️  Loading routes from: {}", &args.path.display());
         let routes = Data::new(Routes::new(&args.path, &args.prefix, &config));
 
-        let data = Data::new(RwLock::new(DataConnectors { kv: KV::new() }));
+        let data = Data::new(RwLock::new(DataConnectors { kv: KV::default() }));
 
         println!("🗺  Detected routes:");
         for route in routes.routes.iter() {
