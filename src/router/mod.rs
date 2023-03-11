@@ -1,7 +1,7 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-mod files;
+pub mod files;
 mod route;
 mod routes;
 

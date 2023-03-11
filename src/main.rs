@@ -279,8 +279,15 @@ async fn main() -> std::io::Result<()> {
             println!("⚠️  You can install the missing runtimes with: wws runtimes install");
         }
 
+        let files = router::files::Files::new(&args.path, &config);
+        let entries = files.walk();
+        println!(
+            "⚙️  {} files are identified as workers. Start processing them",
+            entries.len()
+        );
+
         println!("⚙️  Loading routes from: {}", &args.path.display());
-        let routes = Data::new(Routes::new(&args.path, &args.prefix, &config));
+        let routes = Data::new(Routes::new(entries, &args.path, &args.prefix, &config));
 
         let data = Data::new(RwLock::new(DataConnectors { kv: KV::new() }));
 

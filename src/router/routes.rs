@@ -5,11 +5,10 @@
 // Declare the different routes for the project
 // based on the files in the given folder
 //
-use std::path::Path;
-
-use super::files::Files;
 use super::route::{Route, RouteAffinity};
 use crate::config::Config;
+use std::path::Path;
+use wax::WalkEntry;
 
 /// Contains all registered routes
 pub struct Routes {
@@ -21,12 +20,11 @@ impl Routes {
     /// Initialize the list of routes from the given folder. This method will look for
     /// different files and will create the associated routes. This routing approach
     /// is pretty popular in web development and static sites.
-    pub fn new(path: &Path, base_prefix: &str, config: &Config) -> Self {
+    pub fn new(entries: Vec<WalkEntry>, path: &Path, base_prefix: &str, config: &Config) -> Self {
         let mut routes = Vec::new();
         let prefix = Self::format_prefix(base_prefix);
-        let files = Files::new(path, config);
 
-        for entry in files.walk() {
+        for entry in entries {
             routes.push(Route::new(path, entry.into_path(), &prefix, config));
         }
 
