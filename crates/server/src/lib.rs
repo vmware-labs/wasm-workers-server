@@ -45,7 +45,8 @@ pub async fn serve(
             // Clean path before sending it to the service
             .wrap(middleware::NormalizePath::trim())
             .app_data(Data::clone(&routes))
-            .app_data(Data::clone(&data));
+            .app_data(Data::clone(&data))
+            .app_data(Data::clone(&root_path));
 
         // Append routes to the current service
         for route in routes.routes.iter() {

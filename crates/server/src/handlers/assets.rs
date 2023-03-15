@@ -5,7 +5,7 @@ use actix_files::NamedFile;
 use actix_web::{web::Data, HttpRequest};
 use std::{
     io::{Error, ErrorKind},
-    path::Path,
+    path::PathBuf,
 };
 
 /// Find a static HTML file in the `public` folder. This function is used
@@ -14,7 +14,7 @@ use std::{
 ///
 /// If no file is present, it will try to get a default "public/404.html"
 pub async fn handle_assets(req: &HttpRequest) -> Result<NamedFile, Error> {
-    let root_path = req.app_data::<Data<&Path>>().unwrap();
+    let root_path = req.app_data::<Data<PathBuf>>().unwrap();
     let uri_path = req.path();
 
     // File path. This is required for the wasm_handler as dynamic routes may capture static files
