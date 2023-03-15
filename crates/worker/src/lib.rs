@@ -6,12 +6,15 @@ pub mod io;
 
 use actix_web::HttpRequest;
 use anyhow::Result;
+use config::Config;
 use io::{WasmInput, WasmOutput};
+use std::fs;
+use std::path::PathBuf;
 use std::{collections::HashMap, path::Path};
 use wasi_common::pipe::{ReadPipe, WritePipe};
 use wasmtime::{Engine, Linker, Module, Store};
-use wasmtime_wasi::WasiCtxBuilder;
-use wws_config::Config;
+use wasmtime_wasi::{Dir, WasiCtxBuilder};
+use wws_config::Config as ProjectConfig;
 use wws_runtimes::{init_runtime, Runtime};
 
 /// A worker contains the engine and the associated runtime.
@@ -24,13 +27,30 @@ pub struct Worker {
     module: Module,
     /// Worker runtime
     runtime: Box<dyn Runtime + Sync + Send>,
+    /// Current config
+    pub config: Config,
+    /// Project base path
+    project_root: PathBuf,
 }
 
 impl Worker {
     /// Creates a new Worker
-    pub fn new(project_root: &Path, path: &Path, config: &Config) -> Result<Self> {
+    pub fn new(project_root: &Path, path: &Path, project_config: &ProjectConfig) -> Result<Self> {
+        // Load configuration
+        let mut config_path = path.to_path_buf();
+        config_path.set_extension("toml");
+        let mut config = Config::default();
+
+        if fs::metadata(&config_path).is_ok() {
+            if let Ok(c) = Config::try_from_file(config_path) {
+                config = c;
+            } else {
+                println!("Error loading the config!");
+            }
+        }
+
         let engine = Engine::default();
-        let runtime = init_runtime(project_root, path, config)?;
+        let runtime = init_runtime(project_root, path, project_config)?;
         let bytes = runtime.module_bytes()?;
         let module = Module::from_binary(&engine, &bytes)?;
 
@@ -41,6 +61,8 @@ impl Worker {
             engine,
             module,
             runtime,
+            config,
+            project_root: project_root.to_path_buf(),
         })
     }
 
@@ -71,6 +93,15 @@ impl Worker {
             .stdout(Box::new(stdout.clone()))
             .stderr(Box::new(stderr.clone()))
             .envs(&tuple_vars)?;
+
+        // Mount folders from the configuration
+        if let Some(folders) = self.config.folders.as_ref() {
+            for folder in folders {
+                let source = fs::File::open(&self.project_root.join(&folder.from))?;
+                wasi_builder =
+                    wasi_builder.preopened_dir(Dir::from_std_file(source), &folder.to)?;
+            }
+        }
 
         // Pass to the runtime to add any WASI specific requirement
         wasi_builder = self.runtime.prepare_wasi_ctx(wasi_builder)?;

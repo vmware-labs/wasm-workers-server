@@ -1,0 +1,5 @@
+version = "1"
+
+[[folders]]
+from = "./_assets"
+to = "/src/assets"

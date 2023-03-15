@@ -52,7 +52,7 @@ pub async fn serve(
             app = app.service(web::resource(route.actix_path()).to(handle_worker));
 
             // Configure KV
-            if let Some(namespace) = route.config.as_ref().and_then(|c| c.data_kv_namespace()) {
+            if let Some(namespace) = route.worker.config.data_kv_namespace() {
                 data.write().unwrap().kv.create_store(&namespace);
             }
         }

@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use store::KVStore;
 
 /// The Key/Value store configuration. This information is read from workers TOML files.
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Default)]
 pub struct KVConfigData {
     /// The namespace the worker will access in the global Key / Value store
     pub namespace: String,

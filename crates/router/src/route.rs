@@ -5,11 +5,10 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::{
     ffi::OsStr,
-    fs,
     path::{Component, Path, PathBuf},
 };
 use wws_config::Config as ProjectConfig;
-use wws_worker::{config::Config, Worker};
+use wws_worker::Worker;
 
 lazy_static! {
     static ref PARAMETER_REGEX: Regex = Regex::new(r"\[\w+\]").unwrap();
@@ -45,8 +44,6 @@ pub struct Route {
     pub path: String,
     /// The associated worker
     pub worker: Worker,
-    /// The associated configuration if available
-    pub config: Option<Config>,
 }
 
 impl Route {
@@ -54,28 +51,18 @@ impl Route {
     /// proper URL path based on the filename.
     ///
     /// This method also initializes the Runner and loads the Config if available.
-    pub fn new(base_path: &Path, filepath: PathBuf, prefix: &str, config: &ProjectConfig) -> Self {
-        let worker = Worker::new(base_path, &filepath, config).unwrap();
-
-        // Load configuration
-        let mut config_path = filepath.clone();
-        config_path.set_extension("toml");
-        let mut config = None::<Config>;
-
-        if fs::metadata(&config_path).is_ok() {
-            match Config::try_from_file(config_path) {
-                Ok(c) => config = Some(c),
-                Err(err) => {
-                    eprintln!("{err}");
-                }
-            }
-        }
+    pub fn new(
+        base_path: &Path,
+        filepath: PathBuf,
+        prefix: &str,
+        project_config: &ProjectConfig,
+    ) -> Self {
+        let worker = Worker::new(base_path, &filepath, project_config).unwrap();
 
         Self {
             path: Self::retrieve_route(base_path, &filepath, prefix),
             handler: filepath,
             worker,
-            config,
         }
     }
 

@@ -8,7 +8,7 @@ use actix_web::{
     web::{Bytes, Data},
     HttpRequest, HttpResponse,
 };
-use std::{collections::HashMap, sync::RwLock};
+use std::sync::RwLock;
 use wws_router::Routes;
 use wws_worker::io::WasmOutput;
 
@@ -55,17 +55,8 @@ pub async fn handle_worker(req: HttpRequest, body: Bytes) -> HttpResponse {
         let body_str = String::from_utf8(body.to_vec()).unwrap_or_else(|_| String::from(""));
 
         // Init from configuration
-        let empty_hash = HashMap::new();
-        let mut vars = &empty_hash;
-        let mut kv_namespace = None;
-
-        match &route.config {
-            Some(config) => {
-                kv_namespace = config.data_kv_namespace();
-                vars = &config.vars;
-            }
-            None => {}
-        };
+        let vars = &route.worker.config.vars;
+        let kv_namespace = route.worker.config.data_kv_namespace();
 
         let store = match &kv_namespace {
             Some(namespace) => {
