@@ -1,0 +1,17 @@
+[package]
+name = "wws-runtimes-manager"
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+
+[dependencies]
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }
+wws-store = { workspace = true }
+url = "2.3.1"
+sha256 = "1.1.1"
+reqwest = "0.11"

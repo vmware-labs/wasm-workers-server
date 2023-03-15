@@ -3,17 +3,14 @@
 
 use std::path::Path;
 
-use crate::{
-    config::Config,
-    runtimes::{
-        manager::{check_runtime, install_runtime, uninstall_runtime},
-        metadata::Repository,
-    },
-};
 use anyhow::{anyhow, Result};
 use clap::{Args, Parser, Subcommand};
 use prettytable::{format, Cell, Row, Table};
 use std::env;
+use wws_config::Config;
+use wws_runtimes_manager::{
+    check_runtime, install_runtime, metadata::Repository, uninstall_runtime,
+};
 
 /// Default repository name
 pub const DEFAULT_REPO_NAME: &str = "wasmlabs";

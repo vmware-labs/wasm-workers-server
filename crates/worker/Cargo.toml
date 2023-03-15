@@ -1,0 +1,24 @@
+[package]
+name = "wws-worker"
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+
+[lib]
+doctest = false
+
+[dependencies]
+actix-web = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }
+wasmtime = { workspace = true }
+wasmtime-wasi = { workspace = true }
+wasi-common = { workspace = true }
+wws-config = { workspace = true }
+wws-data-kv = { workspace = true }
+wws-runtimes = { workspace = true }
+base64 = "0.21.0"

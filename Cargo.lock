@@ -2950,27 +2950,16 @@ dependencies = [
 name = "wasm-workers-server"
 version = "1.0.1"
 dependencies = [
- "actix-files",
  "actix-web",
  "anyhow",
- "base64 0.21.0",
- "blake3",
  "clap 4.1.4",
  "env_logger 0.9.3",
- "lazy_static",
  "openssl",
  "prettytable-rs",
- "regex",
- "reqwest",
- "serde",
- "serde_json",
- "sha256",
- "toml 0.7.2",
- "url",
- "wasi-common",
- "wasmtime",
- "wasmtime-wasi",
- "wax",
+ "wws-config",
+ "wws-router",
+ "wws-runtimes-manager",
+ "wws-server",
 ]
 
 [[package]]
@@ -3507,6 +3496,104 @@ dependencies = [
  "serde_json",
  "syn",
  "wasi",
+]
+
+[[package]]
+name = "wws-config"
+version = "1.0.1"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_json",
+ "toml 0.7.2",
+ "wws-runtimes-manager",
+]
+
+[[package]]
+name = "wws-data-kv"
+version = "1.0.1"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "wws-router"
+version = "1.0.1"
+dependencies = [
+ "lazy_static",
+ "regex",
+ "wax",
+ "wws-config",
+ "wws-runtimes-manager",
+ "wws-store",
+ "wws-worker",
+]
+
+[[package]]
+name = "wws-runtimes"
+version = "1.0.1"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_json",
+ "wasmtime-wasi",
+ "wws-config",
+ "wws-runtimes-manager",
+ "wws-store",
+]
+
+[[package]]
+name = "wws-runtimes-manager"
+version = "1.0.1"
+dependencies = [
+ "anyhow",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha256",
+ "toml 0.7.2",
+ "url",
+ "wws-store",
+]
+
+[[package]]
+name = "wws-server"
+version = "1.0.1"
+dependencies = [
+ "actix-files",
+ "actix-web",
+ "anyhow",
+ "wws-data-kv",
+ "wws-router",
+ "wws-worker",
+]
+
+[[package]]
+name = "wws-store"
+version = "1.0.1"
+dependencies = [
+ "anyhow",
+ "blake3",
+]
+
+[[package]]
+name = "wws-worker"
+version = "1.0.1"
+dependencies = [
+ "actix-web",
+ "anyhow",
+ "base64 0.21.0",
+ "serde",
+ "serde_json",
+ "toml 0.7.2",
+ "wasi-common",
+ "wasmtime",
+ "wasmtime-wasi",
+ "wws-config",
+ "wws-data-kv",
+ "wws-runtimes",
 ]
 
 [[package]]

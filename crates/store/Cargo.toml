@@ -1,0 +1,11 @@
+[package]
+name = "wws-store"
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+
+[dependencies]
+anyhow = { workspace = true }
+blake3 = "1.3.3"
