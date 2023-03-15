@@ -19,6 +19,7 @@ use std::sync::RwLock;
 use wws_data_kv::KV;
 use wws_router::Routes;
 
+#[derive(Default)]
 pub(crate) struct DataConnectors {
     kv: KV,
 }
@@ -33,7 +34,7 @@ pub async fn serve(
     port: u16,
 ) -> Result<Server> {
     // Initializes the data connectors. For now, just KV
-    let data = Data::new(RwLock::new(DataConnectors { kv: KV::default() }));
+    let data = Data::new(RwLock::new(DataConnectors::default()));
     let routes = Data::new(base_routes);
     let root_path = Data::new(root_path.to_owned());
 
