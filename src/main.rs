@@ -1,9 +1,6 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-#[macro_use]
-extern crate lazy_static;
-
 mod commands;
 
 use clap::Parser;
@@ -14,13 +11,6 @@ use std::path::PathBuf;
 use wws_config::Config;
 use wws_router::Routes;
 use wws_server::serve;
-
-// Provide a static root_path so it can be used in the default_worker to manage
-// static assets.
-lazy_static! {
-    static ref ARGS: Args = Args::parse();
-    static ref ROOT_PATH: PathBuf = ARGS.path.clone();
-}
 
 // Arguments
 #[derive(Parser, Debug)]
@@ -49,7 +39,7 @@ pub struct Args {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let args = &*ARGS;
+    let args = Args::parse();
 
     std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();

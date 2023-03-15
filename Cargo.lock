@@ -2950,22 +2950,16 @@ dependencies = [
 name = "wasm-workers-server"
 version = "1.0.1"
 dependencies = [
- "actix-files",
  "actix-web",
  "anyhow",
  "clap 4.1.4",
  "env_logger 0.9.3",
- "lazy_static",
  "openssl",
  "prettytable-rs",
  "wws-config",
- "wws-data-kv",
  "wws-router",
- "wws-runtimes",
  "wws-runtimes-manager",
  "wws-server",
- "wws-store",
- "wws-worker",
 ]
 
 [[package]]
