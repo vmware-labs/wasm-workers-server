@@ -94,12 +94,14 @@ impl Config {
     }
 
     /// Check if there're missing runtimes based on the current configuration
-    pub fn check_runtimes(&self, project_root: &Path) -> bool {
+    pub fn is_missing_any_runtime(&self, project_root: &Path) -> bool {
         for repo in &self.repositories {
-            for runtime in &repo.runtimes {
-                if !check_runtime(project_root, &repo.name, runtime) {
-                    return true;
-                }
+            if repo
+                .runtimes
+                .iter()
+                .any(|r| !check_runtime(project_root, &repo.name, r))
+            {
+                return true;
             }
         }
 

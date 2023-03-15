@@ -16,6 +16,7 @@ pub struct KVConfigData {
 
 /// An in-memory Key/Value store. It contains multiple namespaces which has their
 /// own K/V store inside. This is used to scope the data workers can access
+#[derive(Default)]
 pub struct KV {
     /// The available K/V stores
     pub stores: HashMap<String, KVStore>,
@@ -48,14 +49,5 @@ impl KV {
     /// to write information to the given store
     pub fn find_mut_store(&mut self, namespace: &str) -> Option<&mut KVStore> {
         self.stores.get_mut(namespace)
-    }
-}
-
-impl Default for KV {
-    /// Creates a new KV instance. It initializes the K/V stores to an empty HashMap
-    fn default() -> Self {
-        Self {
-            stores: HashMap::new(),
-        }
     }
 }

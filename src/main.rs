@@ -96,7 +96,7 @@ async fn main() -> std::io::Result<()> {
         };
 
         // Check if there're missing runtimes
-        if config.check_runtimes(&args.path) {
+        if config.is_missing_any_runtime(&args.path) {
             println!("⚠️  Required language runtimes are not installed. Some files may not be considered workers");
             println!("⚠️  You can install the missing runtimes with: wws runtimes install");
         }
