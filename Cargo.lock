@@ -2963,6 +2963,7 @@ dependencies = [
  "wws-router",
  "wws-runtimes",
  "wws-runtimes-manager",
+ "wws-server",
  "wws-store",
  "wws-worker",
 ]
@@ -3561,6 +3562,18 @@ dependencies = [
  "toml 0.7.2",
  "url",
  "wws-store",
+]
+
+[[package]]
+name = "wws-server"
+version = "1.0.1"
+dependencies = [
+ "actix-files",
+ "actix-web",
+ "anyhow",
+ "wws-data-kv",
+ "wws-router",
+ "wws-worker",
 ]
 
 [[package]]

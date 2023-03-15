@@ -33,6 +33,7 @@ prettytable-rs = "0.10.0"
 wws-config = { workspace = true }
 wws-data-kv = { workspace = true }
 wws-router = { workspace = true }
+wws-server = { workspace = true }
 wws-store = { workspace = true }
 wws-runtimes = { workspace = true }
 wws-runtimes-manager = { workspace = true }
@@ -51,6 +52,7 @@ members = [
   "crates/router",
   "crates/runtimes",
   "crates/runtimes-manager",
+  "crates/server",
   "crates/store",
   "crates/worker",
   "kits/rust",
@@ -77,6 +79,7 @@ wws-runtimes = { path = "./crates/runtimes" }
 wws-runtimes-manager = { path = "./crates/runtimes-manager" }
 wws-data-kv = { path = "./crates/data-kv" }
 wws-router = { path = "./crates/router" }
+wws-server = { path = "./crates/server" }
 wws-store = { path = "./crates/store" }
 wws-worker = { path = "./crates/worker" }
 wasmtime = "6.0.1"
