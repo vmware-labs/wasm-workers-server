@@ -106,20 +106,12 @@ async fn main() -> std::io::Result<()> {
 
         println!("🗺  Detected routes:");
         for route in routes.routes.iter() {
-            let default_name = String::from("default");
-            let name = if let Some(config) = &route.config {
-                config.name.as_ref().unwrap_or(&default_name)
-            } else {
-                &default_name
-            };
-
             println!(
-                "    - http://{}:{}{}\n      => {} (name: {})",
+                "    - http://{}:{}{}\n      => {}",
                 &args.hostname,
                 args.port,
                 route.path,
-                route.handler.display(),
-                name
+                route.handler.display()
             );
         }
 

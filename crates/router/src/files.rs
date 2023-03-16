@@ -8,6 +8,8 @@ use wws_config::Config;
 use wws_runtimes_manager::check_runtime;
 use wws_store::STORE_FOLDER;
 
+pub const IGNORE_PATH_PREFIX: &str = "_";
+
 /// Manages the files associated to a Wasm Workers Run.
 /// It uses glob patterns to detect the workers and
 /// provide utilities to work with public folders and
@@ -53,35 +55,22 @@ impl Files {
 
         glob.walk(&self.root)
             .filter_map(|el| match el {
-                Ok(entry)
-                    if !self.is_in_public_folder(entry.path())
-                        && !self.is_in_wws_folder(entry.path()) =>
-                {
-                    Some(entry)
-                }
+                Ok(entry) if !self.should_ignore(entry.path()) => Some(entry),
                 _ => None,
             })
             .collect()
     }
 
-    /// Checks if the given filepath is inside the "public" folder.
-    /// It will return an early false if the project doesn't have
-    /// a public folder.
-    fn is_in_public_folder(&self, path: &Path) -> bool {
-        if !self.has_public {
-            return false;
-        }
-
+    /// Perform multiple checks to confirm if the given file should be ignored.
+    /// The current checks are: file is not inside the public or .wws folder, and
+    /// any component starts with _.
+    fn should_ignore(&self, path: &Path) -> bool {
         path.components().any(|c| match c {
-            Component::Normal(os_str) => os_str == OsStr::new("public"),
-            _ => false,
-        })
-    }
-
-    /// Checks if the given filepath is inside the ".wws" special folder.
-    fn is_in_wws_folder(&self, path: &Path) -> bool {
-        path.components().any(|c| match c {
-            Component::Normal(os_str) => os_str == OsStr::new(STORE_FOLDER),
+            Component::Normal(os_str) => {
+                (self.has_public && os_str == OsStr::new("public"))
+                    || os_str == OsStr::new(STORE_FOLDER)
+                    || os_str.to_string_lossy().starts_with(IGNORE_PATH_PREFIX)
+            }
             _ => false,
         })
     }
@@ -107,8 +96,7 @@ mod tests {
         for t in tests {
             let config = Config::default();
             assert_eq!(
-                Files::new(Path::new("../../tests/data"), &config)
-                    .is_in_public_folder(Path::new(t.0)),
+                Files::new(Path::new("../../tests/data"), &config).should_ignore(Path::new(t.0)),
                 t.1
             )
         }
@@ -130,8 +118,7 @@ mod tests {
         for t in tests {
             let config = Config::default();
             assert_eq!(
-                Files::new(Path::new("..\\..\\tests\\data"), &config)
-                    .is_in_public_folder(Path::new(t.0)),
+                Files::new(Path::new("..\\..\\tests\\data"), &config).should_ignore(Path::new(t.0)),
                 t.1
             )
         }

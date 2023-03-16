@@ -10,7 +10,7 @@ use toml::from_str;
 use wws_data_kv::KVConfigData;
 
 /// Workers configuration. These files are optional when no configuration change is required.
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Default)]
 pub struct Config {
     /// Worker name. For logging purposes
     pub name: Option<String>,
@@ -18,13 +18,15 @@ pub struct Config {
     pub version: String,
     /// Optional data configuration
     pub data: Option<ConfigData>,
+    /// Optional folders
+    pub folders: Option<Vec<Folder>>,
     /// Optional environment configuration
     #[serde(deserialize_with = "read_environment_variables", default)]
     pub vars: HashMap<String, String>,
 }
 
 /// Configure a data plugin for the worker
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Default)]
 pub struct ConfigData {
     /// Creates a Key/Value store associated to the given worker
     pub kv: Option<KVConfigData>,
@@ -104,6 +106,44 @@ where
             }
             None => Ok(HashMap::new()),
         },
+        Err(err) => Err(err),
+    }
+}
+
+/// A folder to mount in the worker
+#[derive(Deserialize, Clone, Default)]
+pub struct Folder {
+    /// Local folder
+    #[serde(deserialize_with = "deserialize_path", default)]
+    pub from: PathBuf,
+    /// Mount point
+    pub to: String,
+}
+
+/// Deserialize a valid path for the given platform. This method checks and
+/// split the path by the different separators and join the final path
+/// using the current OS requirements.
+fn deserialize_path<'de, D>(deserializer: D) -> Result<PathBuf, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let result: Result<String, D::Error> = Deserialize::deserialize(deserializer);
+
+    match result {
+        Ok(value) => {
+            let split = if value.contains('/') {
+                // Unix separator
+                value.split('/')
+            } else {
+                // Windows separator
+                value.split('\\')
+            };
+
+            Ok(split.fold(PathBuf::new(), |mut acc, el| {
+                acc.push(el);
+                acc
+            }))
+        }
         Err(err) => Err(err),
     }
 }
