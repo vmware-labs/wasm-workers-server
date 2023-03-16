@@ -31,6 +31,8 @@ pub struct Worker {
     pub config: Config,
     /// Project base path
     project_root: PathBuf,
+    /// The worker filepath
+    path: PathBuf,
 }
 
 impl Worker {
@@ -63,6 +65,7 @@ impl Worker {
             runtime,
             config,
             project_root: project_root.to_path_buf(),
+            path: path.to_path_buf(),
         })
     }
 
@@ -97,7 +100,9 @@ impl Worker {
         // Mount folders from the configuration
         if let Some(folders) = self.config.folders.as_ref() {
             for folder in folders {
-                let source = fs::File::open(&self.project_root.join(&folder.from))?;
+                let base = &self.path.parent().unwrap_or(&self.project_root);
+
+                let source = fs::File::open(base.join(&folder.from))?;
                 wasi_builder =
                     wasi_builder.preopened_dir(Dir::from_std_file(source), &folder.to)?;
             }
