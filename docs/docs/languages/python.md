@@ -147,7 +147,7 @@ To add a KV store to your worker, follow these steps:
 
 ## Dynamic routes
 
-You can define [dynamic routes by adding route parameters to your worker files](../features/dynamic-routes.md) (like `[id].py`). To read them in Ruby, access to the `request.params` object:
+You can define [dynamic routes by adding route parameters to your worker files](../features/dynamic-routes.md) (like `[id].py`). To read them in Python, access to the `request.params` object:
 
 ```python
 def worker(request):
