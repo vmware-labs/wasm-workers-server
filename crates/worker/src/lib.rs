@@ -5,7 +5,7 @@ pub mod config;
 pub mod io;
 
 use actix_web::HttpRequest;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use config::Config;
 use io::{WasmInput, WasmOutput};
 use std::fs;
@@ -29,8 +29,6 @@ pub struct Worker {
     runtime: Box<dyn Runtime + Sync + Send>,
     /// Current config
     pub config: Config,
-    /// Project base path
-    project_root: PathBuf,
     /// The worker filepath
     path: PathBuf,
 }
@@ -64,7 +62,6 @@ impl Worker {
             module,
             runtime,
             config,
-            project_root: project_root.to_path_buf(),
             path: path.to_path_buf(),
         })
     }
@@ -100,11 +97,14 @@ impl Worker {
         // Mount folders from the configuration
         if let Some(folders) = self.config.folders.as_ref() {
             for folder in folders {
-                let base = &self.path.parent().unwrap_or(&self.project_root);
-
-                let source = fs::File::open(base.join(&folder.from))?;
-                wasi_builder =
-                    wasi_builder.preopened_dir(Dir::from_std_file(source), &folder.to)?;
+                if let Some(base) = &self.path.parent() {
+                    let source = fs::File::open(base.join(&folder.from))?;
+                    wasi_builder =
+                        wasi_builder.preopened_dir(Dir::from_std_file(source), &folder.to)?;
+                } else {
+                    // TODO: Revisit error management on #73
+                    return Err(anyhow!("The worker couldn't be initialized"));
+                }
             }
         }
 
