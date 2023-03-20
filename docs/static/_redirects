@@ -1,5 +1,6 @@
 /install https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/install.sh 307
 /quickstart /docs/get-started/quickstart 301
+/examples https://github.com/vmware-labs/wasm-workers-server/tree/main/examples 301
 /docs/intro /docs/get-started/introduction 301
 /docs/intro/ /docs/get-started/introduction 301
 /docs/start /docs/get-started/quickstart 301
