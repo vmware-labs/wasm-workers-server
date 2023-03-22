@@ -1,11 +1,12 @@
 [package]
 name = "wasm-workers-rs"
-version = "1.0.1"
-edition = "2021"
-license = "Apache-2.0"
 homepage = "https://workers.wasmlabs.dev/"
 documentation = "https://workers.wasmlabs.dev/docs/intro"
-repository = "https://github.com/vmware-labs/wasm-workers-server/"
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
 
 [lib]
 path = "src/lib.rs"
