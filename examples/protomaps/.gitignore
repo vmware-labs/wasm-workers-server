@@ -1,0 +1,5 @@
+# Python cache
+__pycache__
+
+# Ignore maps
+_maps/*.pmtiles

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<head>
+    <title>Protomaps + Wasm Workers Server</title>
+    <link rel="stylesheet" href="/css/leaflet.css"/>
+    <script src="/js/leaflet.js"></script>
+    <script src="/js/protomaps.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        #map {
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        // Planet map
+        var map = L.map('map', {
+            minZoom: 0,
+            maxZoom: 12
+        }).setView([12.7454359, -22.6035673], 3);
+        var layer = protomaps.leafletLayer({ url: '/{z}/{x}/{y}' })
+        layer.addTo(map);
+    </script>
+</body>
+</html>

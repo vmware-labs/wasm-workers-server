@@ -1,0 +1,12 @@
+version = "1"
+
+[vars]
+MAP_FILE = "planet"
+
+[[folders]]
+from = "../../../_libs"
+to = "/src/libs"
+
+[[folders]]
+from = "../../../_maps"
+to = "/src/maps"

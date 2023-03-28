@@ -1,0 +1,44 @@
+version = 1
+
+[[repositories]]
+name = "wasmlabs"
+url = "https://workers.wasmlabs.dev/repository/v1/index.toml"
+
+[[repositories.runtimes]]
+name = "ruby"
+version = "3.2.0+20230215-1"
+tags = [
+    "latest",
+    "3.2",
+    "3.2.0",
+]
+status = "active"
+extensions = ["rb"]
+args = [
+    "--",
+    "/src/index.rb",
+]
+
+[repositories.runtimes.binary]
+url = "https://github.com/vmware-labs/webassembly-language-runtimes/releases/download/ruby%2F3.2.0%2B20230215-1349da9/ruby-3.2.0.wasm"
+filename = "ruby.wasm"
+
+[repositories.runtimes.binary.checksum]
+type = "sha256"
+value = "abe348fba157a756f86194be445c77c99e8ed64ca76495ea07ed984f09eb66ae"
+
+[repositories.runtimes.polyfill]
+url = "https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/109-improve-python-polyfill/metadata/repository/v1/files/ruby/3-1/poly.rb"
+filename = "poly.rb"
+
+[repositories.runtimes.polyfill.checksum]
+type = "sha256"
+value = "449855a5d315879ab0ad830aa6a3f689e68fed4490617ea03efc77c9da64f630"
+
+[repositories.runtimes.wrapper]
+url = "https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/109-improve-python-polyfill/metadata/repository/v1/files/ruby/3-1/wrapper.txt"
+filename = "wrapper.txt"
+
+[repositories.runtimes.wrapper.checksum]
+type = "sha256"
+value = "6d808b4747cf30f82665a38a47e1176513bbdd6ad558c09db03d719e33ad2da0"
