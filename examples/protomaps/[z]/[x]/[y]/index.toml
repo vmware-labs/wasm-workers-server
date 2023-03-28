@@ -1,7 +1,7 @@
 version = "1"
 
 [vars]
-MAP_FILE = "planet"
+MAP_FILE = "map"
 
 [[folders]]
 from = "../../../_libs"

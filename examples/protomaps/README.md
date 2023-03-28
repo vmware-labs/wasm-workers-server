@@ -42,3 +42,9 @@ You can deploy this project as a standalone server (`wws`) or you can build the 
 ```plain
 make build-image
 ```
+
+# Maps license
+
+The example map (`./_maps/map.pmtiles`) was created with the ["Protomaps Small Map"](https://app.protomaps.com/downloads/small_map) tool based on the OpenStreetData data.
+
+OpenStreetMap® is open data, licensed under the Open Data Commons Open Database License (ODbL) by the OpenStreetMap Foundation (OSMF). Read more at https://www.openstreetmap.org/copyright and https://opendatacommons.org/licenses/odbl/1-0/.

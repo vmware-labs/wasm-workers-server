@@ -2,4 +2,4 @@
 __pycache__
 
 # Ignore maps
-_maps/*.pmtiles
+_maps/planet.pmtiles

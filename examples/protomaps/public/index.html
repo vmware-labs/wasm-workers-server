@@ -19,9 +19,9 @@
     <script>
         // Planet map
         var map = L.map('map', {
-            minZoom: 0,
-            maxZoom: 12
-        }).setView([12.7454359, -22.6035673], 3);
+            minZoom: 14,
+            maxZoom: 20
+        }).setView([57.4785915,-4.2259108], 18);
         var layer = protomaps.leafletLayer({ url: '/{z}/{x}/{y}' })
         layer.addTo(map);
     </script>
