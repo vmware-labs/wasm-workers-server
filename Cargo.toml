@@ -76,6 +76,6 @@ wws-router = { path = "./crates/router" }
 wws-server = { path = "./crates/server" }
 wws-store = { path = "./crates/store" }
 wws-worker = { path = "./crates/worker" }
-wasmtime = "6.0.1"
-wasmtime-wasi = "6.0.1"
-wasi-common = "6.0.1"
+wasmtime = "6.0.2"
+wasmtime-wasi = "6.0.2"
+wasi-common = "6.0.2"
