@@ -80,6 +80,28 @@ impl Files {
 mod tests {
     use super::*;
 
+    use std::collections::HashSet;
+
+    #[test]
+    fn walk_default_ignore() {
+        let config = Config::default();
+        let files = Files::new(Path::new("tests/data/files"), &config);
+
+        let mut expected = HashSet::new();
+        expected.insert("tests/data/files/examples.js".to_string());
+        expected.insert("tests/data/files/index.js".to_string());
+        expected.insert("tests/data/files/public.js".to_string());
+        expected.insert("tests/data/files/examples/public.js".to_string());
+        expected.insert("tests/data/files/examples/index/index.js".to_string());
+
+        let mut actual = HashSet::new();
+        for entry in files.walk() {
+            actual.insert(String::from(entry.path().to_string_lossy()));
+        }
+
+        assert_eq!(expected, actual);
+    }
+
     #[cfg(not(target_os = "windows"))]
     #[test]
     fn unix_is_in_public_folder() {
