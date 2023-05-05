@@ -121,6 +121,24 @@ impl Config {
     fn config_path(project_root: &Path) -> PathBuf {
         project_root.join(CONFIG_FILENAME)
     }
+
+    /// Provides a list of all file extensions handled by the runtimes
+    /// that are currently installed in `project_root`
+    pub fn get_runtime_extensions(&self, project_root: &Path) -> Vec<String> {
+        let mut extensions: Vec<String> = vec![String::from("js"), String::from("wasm")];
+
+        for repo in &self.repositories {
+            for runtime in &repo.runtimes {
+                for ext in &runtime.extensions {
+                    if check_runtime(project_root, &repo.name, runtime) && !extensions.contains(ext) {
+                        extensions.push(ext.clone());
+                    }
+                }
+            }
+        }
+
+        extensions
+    }
 }
 
 impl Default for Config {
