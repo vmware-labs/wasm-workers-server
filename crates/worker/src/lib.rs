@@ -3,15 +3,16 @@
 
 pub mod config;
 pub mod io;
+mod stdio;
 
 use actix_web::HttpRequest;
 use anyhow::{anyhow, Result};
 use config::Config;
 use io::{WasmInput, WasmOutput};
-use std::fs;
+use stdio::Stdio;
+use std::fs::{self, File};
 use std::path::PathBuf;
 use std::{collections::HashMap, path::Path};
-use wasi_common::pipe::{ReadPipe, WritePipe};
 use wasmtime::{Engine, Linker, Module, Store};
 use wasmtime_wasi::{Dir, WasiCtxBuilder};
 use wws_config::Config as ProjectConfig;
@@ -72,13 +73,21 @@ impl Worker {
         body: &str,
         kv: Option<HashMap<String, String>>,
         vars: &HashMap<String, String>,
+        stderr: &Option<File>
     ) -> Result<WasmOutput> {
         let input = serde_json::to_string(&WasmInput::new(request, body, kv)).unwrap();
 
-        // Prepare STDIO
-        let stdout = WritePipe::new_in_memory();
-        let stderr = WritePipe::new_in_memory();
-        let stdin = ReadPipe::from(input);
+        // Prepare the stderr file if present
+        let stderr_file;
+
+        if let Some(file) = stderr {
+            stderr_file = Some(file.try_clone()?);
+        } else {
+            stderr_file = None;
+        }
+
+        // Initialize stdio and configure it
+        let stdio = Stdio::new(&input, stderr_file);
 
         let mut linker = Linker::new(&self.engine);
         wasmtime_wasi::add_to_linker(&mut linker, |s| s)?;
@@ -89,10 +98,10 @@ impl Worker {
 
         // Create the initial WASI context
         let mut wasi_builder = WasiCtxBuilder::new()
-            .stdin(Box::new(stdin))
-            .stdout(Box::new(stdout.clone()))
-            .stderr(Box::new(stderr.clone()))
             .envs(&tuple_vars)?;
+
+        // Configure the stdio
+        wasi_builder = stdio.configure_wasi_ctx(wasi_builder);
 
         // Mount folders from the configuration
         if let Some(folders) = self.config.folders.as_ref() {
@@ -122,17 +131,8 @@ impl Worker {
 
         drop(store);
 
-        let err_contents: Vec<u8> = stderr
-            .try_into_inner()
-            .map_err(|_err| anyhow::Error::msg("Nothing to show"))?
-            .into_inner();
-
-        let string_err = String::from_utf8(err_contents)?;
-        if !string_err.is_empty() {
-            println!("Error: {string_err}");
-        }
-
-        let contents: Vec<u8> = stdout
+        let contents: Vec<u8> = stdio
+            .stdout
             .try_into_inner()
             .map_err(|_err| anyhow::Error::msg("Nothing to show"))?
             .into_inner();

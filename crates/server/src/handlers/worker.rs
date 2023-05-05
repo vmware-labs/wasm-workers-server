@@ -8,7 +8,7 @@ use actix_web::{
     web::{Bytes, Data},
     HttpRequest, HttpResponse,
 };
-use std::sync::RwLock;
+use std::{sync::RwLock, fs::File};
 use wws_router::Routes;
 use wws_worker::io::WasmOutput;
 
@@ -31,6 +31,7 @@ use wws_worker::io::WasmOutput;
 /// allowing Actix to select it for us.
 pub async fn handle_worker(req: HttpRequest, body: Bytes) -> HttpResponse {
     let routes = req.app_data::<Data<Routes>>().unwrap();
+    let stderr_file = req.app_data::<Data<Option<File>>>().unwrap();
     let data_connectors = req
         .app_data::<Data<RwLock<DataConnectors>>>()
         .unwrap()
@@ -68,7 +69,7 @@ pub async fn handle_worker(req: HttpRequest, body: Bytes) -> HttpResponse {
             None => None,
         };
 
-        let (handler_result, handler_success) = match route.worker.run(&req, &body_str, store, vars)
+        let (handler_result, handler_success) = match route.worker.run(&req, &body_str, store, vars, stderr_file.get_ref())
         {
             Ok(output) => (output, true),
             Err(_) => (WasmOutput::failed(), false),
