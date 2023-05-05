@@ -44,8 +44,11 @@ impl Files {
         return include_pattern
             .walk(&self.root)
             .not(self.ignore_patterns.iter().map(|s| s.as_str()))
-            .expect("Failed to parse ignore patterns when processing files in the current directory")
-            .map(|e| e.unwrap()).collect();
+            .expect(
+                "Failed to parse ignore patterns when processing files in the current directory",
+            )
+            .map(|e| e.unwrap())
+            .collect();
     }
 
     fn construct_include_pattern(file_extensions: Vec<String>) -> String {

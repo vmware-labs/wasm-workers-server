@@ -24,7 +24,12 @@ impl Routes {
     /// Initialize the list of routes from the given folder. This method will look for
     /// different files and will create the associated routes. This routing approach
     /// is pretty popular in web development and static sites.
-    pub fn new(path: &Path, base_prefix: &str, ignore_patterns: Vec<String>, config: &Config) -> Self {
+    pub fn new(
+        path: &Path,
+        base_prefix: &str,
+        ignore_patterns: Vec<String>,
+        config: &Config,
+    ) -> Self {
         let mut routes = Vec::new();
         let prefix = Self::format_prefix(base_prefix);
         let runtime_extensions = config.get_runtime_extensions(path);
