@@ -81,6 +81,7 @@ mod tests {
     use super::*;
 
     use std::collections::HashSet;
+    use path_slash::PathBufExt as _;
 
     #[test]
     fn walk_default_ignore() {
@@ -88,15 +89,15 @@ mod tests {
         let files = Files::new(Path::new("tests/data/files"), &config);
 
         let mut expected = HashSet::new();
-        expected.insert("tests/data/files/examples.js".to_string());
-        expected.insert("tests/data/files/index.js".to_string());
-        expected.insert("tests/data/files/public.js".to_string());
-        expected.insert("tests/data/files/examples/public.js".to_string());
-        expected.insert("tests/data/files/examples/index/index.js".to_string());
+        expected.insert(PathBuf::from_slash("tests/data/files/examples.js"));
+        expected.insert(PathBuf::from_slash("tests/data/files/index.js"));
+        expected.insert(PathBuf::from_slash("tests/data/files/public.js"));
+        expected.insert(PathBuf::from_slash("tests/data/files/examples/public.js"));
+        expected.insert(PathBuf::from_slash("tests/data/files/examples/index/index.js"));
 
         let mut actual = HashSet::new();
         for entry in files.walk() {
-            actual.insert(String::from(entry.path().to_string_lossy()));
+            actual.insert(PathBuf::from_slash(String::from(entry.path().to_string_lossy())));
         }
 
         assert_eq!(expected, actual);
