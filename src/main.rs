@@ -108,7 +108,7 @@ async fn main() -> std::io::Result<()> {
         println!("⚙️  Loading routes from: {}", &args.path.display());
         let routes = Routes::new(&args.path, &args.prefix, args.ignore, &config);
 
-        println!("🗺  Detected routes:");
+        println!("🗺  Detected {} routes:", routes.routes.len());
         for route in routes.routes.iter() {
             println!(
                 "    - http://{}:{}{}\n      => {}",
