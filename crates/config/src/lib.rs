@@ -130,7 +130,8 @@ impl Config {
         for repo in &self.repositories {
             for runtime in &repo.runtimes {
                 for ext in &runtime.extensions {
-                    if check_runtime(project_root, &repo.name, runtime) && !extensions.contains(ext) {
+                    if check_runtime(project_root, &repo.name, runtime) && !extensions.contains(ext)
+                    {
                         extensions.push(ext.clone());
                     }
                 }
