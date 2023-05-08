@@ -33,7 +33,7 @@ pub async fn serve(
     base_routes: Routes,
     hostname: &str,
     port: u16,
-    stderr: Option<&Path>
+    stderr: Option<&Path>,
 ) -> Result<Server> {
     // Initializes the data connectors. For now, just KV
     let data = Data::new(RwLock::new(DataConnectors::default()));
@@ -43,10 +43,7 @@ pub async fn serve(
 
     // Configure stderr
     if let Some(path) = stderr {
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .open(path)?;
+        let file = OpenOptions::new().read(true).write(true).open(path)?;
 
         stderr_file = Data::new(Some(file));
     } else {

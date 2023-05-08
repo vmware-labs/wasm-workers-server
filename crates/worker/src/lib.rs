@@ -9,10 +9,10 @@ use actix_web::HttpRequest;
 use anyhow::{anyhow, Result};
 use config::Config;
 use io::{WasmInput, WasmOutput};
-use stdio::Stdio;
 use std::fs::{self, File};
 use std::path::PathBuf;
 use std::{collections::HashMap, path::Path};
+use stdio::Stdio;
 use wasmtime::{Engine, Linker, Module, Store};
 use wasmtime_wasi::{Dir, WasiCtxBuilder};
 use wws_config::Config as ProjectConfig;
@@ -73,7 +73,7 @@ impl Worker {
         body: &str,
         kv: Option<HashMap<String, String>>,
         vars: &HashMap<String, String>,
-        stderr: &Option<File>
+        stderr: &Option<File>,
     ) -> Result<WasmOutput> {
         let input = serde_json::to_string(&WasmInput::new(request, body, kv)).unwrap();
 
@@ -97,8 +97,7 @@ impl Worker {
             vars.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
 
         // Create the initial WASI context
-        let mut wasi_builder = WasiCtxBuilder::new()
-            .envs(&tuple_vars)?;
+        let mut wasi_builder = WasiCtxBuilder::new().envs(&tuple_vars)?;
 
         // Configure the stdio
         wasi_builder = stdio.configure_wasi_ctx(wasi_builder);

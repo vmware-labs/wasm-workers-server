@@ -1,4 +1,4 @@
-use std::{io::Cursor, fs::{File}};
+use std::{fs::File, io::Cursor};
 use wasi_common::pipe::{ReadPipe, WritePipe};
 use wasmtime_wasi::WasiCtxBuilder;
 
@@ -19,7 +19,7 @@ pub struct Stdio {
     /// Defines the stdout to extract the data from the module
     pub stdout: WritePipe<Cursor<Vec<u8>>>,
     /// Defines the stderr to expose logs from inside the module
-    pub stderr: Option<WritePipe<File>>
+    pub stderr: Option<WritePipe<File>>,
 }
 
 impl Stdio {
@@ -36,7 +36,7 @@ impl Stdio {
         Self {
             stdin: ReadPipe::from(input),
             stdout: WritePipe::new_in_memory(),
-            stderr
+            stderr,
         }
     }
 

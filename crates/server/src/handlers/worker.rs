@@ -8,7 +8,7 @@ use actix_web::{
     web::{Bytes, Data},
     HttpRequest, HttpResponse,
 };
-use std::{sync::RwLock, fs::File};
+use std::{fs::File, sync::RwLock};
 use wws_router::Routes;
 use wws_worker::io::WasmOutput;
 
@@ -69,11 +69,14 @@ pub async fn handle_worker(req: HttpRequest, body: Bytes) -> HttpResponse {
             None => None,
         };
 
-        let (handler_result, handler_success) = match route.worker.run(&req, &body_str, store, vars, stderr_file.get_ref())
-        {
-            Ok(output) => (output, true),
-            Err(_) => (WasmOutput::failed(), false),
-        };
+        let (handler_result, handler_success) =
+            match route
+                .worker
+                .run(&req, &body_str, store, vars, stderr_file.get_ref())
+            {
+                Ok(output) => (output, true),
+                Err(_) => (WasmOutput::failed(), false),
+            };
 
         let mut builder = HttpResponse::build(
             StatusCode::from_u16(handler_result.status).unwrap_or(StatusCode::OK),
