@@ -39,11 +39,14 @@ impl Stdio {
             stderr
         }
     }
+
     pub fn configure_wasi_ctx(&self, builder: WasiCtxBuilder) -> WasiCtxBuilder {
         let builder = builder
             .stdin(Box::new(self.stdin.clone()))
             .stdout(Box::new(self.stdout.clone()));
 
+        // Set stderr if it was previously configured. If not, inherit
+        // it from the environment
         if let Some(pipe) = self.stderr.clone() {
             builder.stderr(Box::new(pipe))
         } else {
