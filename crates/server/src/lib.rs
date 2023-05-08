@@ -14,6 +14,7 @@ use anyhow::Result;
 use handlers::assets::handle_assets;
 use handlers::not_found::handle_not_found;
 use handlers::worker::handle_worker;
+use std::fs::OpenOptions;
 use std::path::Path;
 use std::sync::RwLock;
 use wws_data_kv::KV;
@@ -32,11 +33,22 @@ pub async fn serve(
     base_routes: Routes,
     hostname: &str,
     port: u16,
+    stderr: Option<&Path>,
 ) -> Result<Server> {
     // Initializes the data connectors. For now, just KV
     let data = Data::new(RwLock::new(DataConnectors::default()));
     let routes = Data::new(base_routes);
     let root_path = Data::new(root_path.to_owned());
+    let stderr_file;
+
+    // Configure stderr
+    if let Some(path) = stderr {
+        let file = OpenOptions::new().read(true).write(true).open(path)?;
+
+        stderr_file = Data::new(Some(file));
+    } else {
+        stderr_file = Data::new(None);
+    }
 
     let server = HttpServer::new(move || {
         let mut app = App::new()
@@ -46,7 +58,8 @@ pub async fn serve(
             .wrap(middleware::NormalizePath::trim())
             .app_data(Data::clone(&routes))
             .app_data(Data::clone(&data))
-            .app_data(Data::clone(&root_path));
+            .app_data(Data::clone(&root_path))
+            .app_data(Data::clone(&stderr_file));
 
         // Append routes to the current service
         for route in routes.routes.iter() {

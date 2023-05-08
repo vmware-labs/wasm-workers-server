@@ -115,7 +115,7 @@ async fn main() -> std::io::Result<()> {
             );
         }
 
-        let server = serve(&args.path, routes, &args.hostname, args.port)
+        let server = serve(&args.path, routes, &args.hostname, args.port, None)
             .await
             .map_err(|err| Error::new(ErrorKind::AddrInUse, err))?;
 
