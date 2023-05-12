@@ -18,7 +18,7 @@ wws runtimes install python latest
 
 ## Your first Python worker
 
-Python workers are based on the [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) / [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects from the Web Fetch API. Since these entities don't exist in the Python language, the worker includes a polyfill with these two classes. You can find the [polyfill code here](https://github.com/vmware-labs/wasm-workers-server/blob/main/metadata/repository/v1/files/python/3/python.rb).
+Python workers are based on the [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) / [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects from the Web Fetch API. Since these entities don't exist in the Python language, the worker includes a polyfill with these two classes. You can find the [polyfill code here](https://github.com/vmware-labs/wasm-workers-server/blob/main/metadata/repository/v1/files/python/3/poly.py).
 
 In this example, the worker will get a request and print all the related information.
 
