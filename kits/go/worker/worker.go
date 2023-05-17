@@ -20,20 +20,19 @@ func init() {
 }
 
 type input struct {
-	Url     string
-	Method  string
-	Headers map[string]string
-	Body    string
-	Kv      map[string]string
-	Params  map[string]string
+	url     string
+	method  string
+	headers map[string]string
+	body    string
+	params  map[string]string
 }
 
 type output struct {
-	Data    string
-	Headers map[string]string
-	Status  uint16
-	Kv      map[string]string
-	Base64  bool
+	data    string
+	headers map[string]string
+	status  uint16
+	kv      map[string]string
+	base64  bool
 
 	httpHeader http.Header
 }
@@ -48,23 +47,23 @@ func (o *output) Header() http.Header {
 
 func (o *output) Write(data []byte) (int, error) {
 	if utf8.Valid(data) {
-		o.Data = string(data)
+		o.data = string(data)
 	} else {
-		o.Base64 = true
-		o.Data = base64.StdEncoding.EncodeToString(data)
+		o.base64 = true
+		o.data = base64.StdEncoding.EncodeToString(data)
 	}
 
-	if o.Status == 0 {
-		o.Status = 200
+	if o.status == 0 {
+		o.status = 200
 	}
 
 	for k, v := range o.httpHeader {
-		o.Headers[k] = v[0]
+		o.headers[k] = v[0]
 	}
 
 	headersOut := "{"
 
-	for k, v := range o.Headers {
+	for k, v := range o.headers {
 		headersOut += fmt.Sprintf(`"%s":"%s",`, k, v)
 	}
 
@@ -79,13 +78,13 @@ func (o *output) Write(data []byte) (int, error) {
 	kvOut = strings.TrimSuffix(kvOut, ",") + "}"
 
 	fmt.Printf("{\"data\":\"%s\",\"headers\":%s,\"status\":%d,\"kv\":%s,\"base64\":%t}",
-		strings.ReplaceAll(o.Data, "\"", "\\\""), headersOut, o.Status, kvOut, o.Base64)
+		strings.ReplaceAll(o.data, "\"", "\\\""), headersOut, o.status, kvOut, o.base64)
 
-	return len(o.Data), nil
+	return len(o.data), nil
 }
 
 func (o *output) WriteHeader(statusCode int) {
-	o.Status = uint16(statusCode)
+	o.status = uint16(statusCode)
 }
 
 func readInput() *input {
@@ -95,23 +94,21 @@ func readInput() *input {
 	}
 
 	in := &input{
-		Url:    gjson.GetBytes(stdin, "url").String(),
-		Method: gjson.GetBytes(stdin, "method").String(),
-		Body:   gjson.GetBytes(stdin, "body").String(),
+		url:    gjson.GetBytes(stdin, "url").String(),
+		method: gjson.GetBytes(stdin, "method").String(),
+		body:   gjson.GetBytes(stdin, "body").String(),
 	}
 
 	if gjson.GetBytes(stdin, "headers").Exists() {
-		in.Headers = make(map[string]string)
+		in.headers = make(map[string]string)
 
 		gjson.GetBytes(stdin, "headers").ForEach(func(key, value gjson.Result) bool {
-			in.Headers[key.String()] = value.String()
+			in.headers[key.String()] = value.String()
 			return true
 		})
 	}
 
 	if gjson.GetBytes(stdin, "kv").Exists() {
-		in.Kv = make(map[string]string)
-
 		gjson.GetBytes(stdin, "kv").ForEach(func(key, value gjson.Result) bool {
 			cache[key.String()] = value.String()
 			return true
@@ -119,10 +116,10 @@ func readInput() *input {
 	}
 
 	if gjson.GetBytes(stdin, "params").Exists() {
-		in.Params = make(map[string]string)
+		in.params = make(map[string]string)
 
 		gjson.GetBytes(stdin, "params").ForEach(func(key, value gjson.Result) bool {
-			in.Headers[key.String()] = value.String()
+			in.params[key.String()] = value.String()
 			return true
 		})
 	}
@@ -131,24 +128,27 @@ func readInput() *input {
 }
 
 func createRequest(in *input) *http.Request {
-	req, err := http.NewRequest(in.Method, in.Url, strings.NewReader(in.Body))
+	req, err := http.NewRequest(in.method, in.url, strings.NewReader(in.body))
 	if err != nil {
 		panic(err)
 	}
 
-	for k, v := range in.Headers {
+	for k, v := range in.headers {
 		req.Header.Set(k, v)
 	}
 
-	return req.WithContext(context.WithValue(req.Context(), "CACHE", cache))
+	req = req.WithContext(context.WithValue(req.Context(), "CACHE", cache))
+	req = req.WithContext(context.WithValue(req.Context(), "PARAMS", in.params))
+
+	return req
 }
 
 func getWriterRequest() (*output, *http.Request) {
 	in := readInput()
 	req := createRequest(in)
 	w := &output{
-		Headers: make(map[string]string),
-		Kv:      make(map[string]string),
+		headers: make(map[string]string),
+		kv:      make(map[string]string),
 	}
 
 	return w, req
