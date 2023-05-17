@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -11,6 +12,12 @@ import (
 
 	"github.com/tidwall/gjson"
 )
+
+var cache map[string]string
+
+func init() {
+	cache = make(map[string]string)
+}
 
 type input struct {
 	Url     string
@@ -65,7 +72,7 @@ func (o *output) Write(data []byte) (int, error) {
 
 	kvOut := "{"
 
-	for k, v := range o.Kv {
+	for k, v := range cache {
 		kvOut += fmt.Sprintf(`"%s":"%s",`, k, v)
 	}
 
@@ -106,7 +113,7 @@ func readInput() *input {
 		in.Kv = make(map[string]string)
 
 		gjson.GetBytes(stdin, "kv").ForEach(func(key, value gjson.Result) bool {
-			in.Headers[key.String()] = value.String()
+			cache[key.String()] = value.String()
 			return true
 		})
 	}
@@ -133,7 +140,7 @@ func createRequest(in *input) *http.Request {
 		req.Header.Set(k, v)
 	}
 
-	return req
+	return req.WithContext(context.WithValue(req.Context(), "CACHE", cache))
 }
 
 func getWriterRequest() (*output, *http.Request) {
@@ -141,7 +148,7 @@ func getWriterRequest() (*output, *http.Request) {
 	req := createRequest(in)
 	w := &output{
 		Headers: make(map[string]string),
-		Kv:      in.Kv,
+		Kv:      make(map[string]string),
 	}
 
 	return w, req
