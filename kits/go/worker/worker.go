@@ -72,7 +72,7 @@ func (o *output) Write(data []byte) (int, error) {
 	kvOut = strings.TrimSuffix(kvOut, ",") + "}"
 
 	fmt.Printf("{\"data\":\"%s\",\"headers\":%s,\"status\":%d,\"kv\":%s,\"base64\":%t}",
-		o.Data, headersOut, o.Status, kvOut, o.Base64)
+		strings.ReplaceAll(o.Data, "\"", "\\\""), headersOut, o.Status, kvOut, o.Base64)
 
 	return len(o.Data), nil
 }
