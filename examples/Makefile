@@ -20,4 +20,4 @@ pdf-create:
 	cargo build --target wasm32-wasi --release && \
 	mv target/wasm32-wasi/release/pdf-create.wasm ./index.wasm
 
-all: rust-basic rust-kv rust-params pdf-create
+all: rust-basic rust-kv rust-params
