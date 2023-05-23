@@ -26,14 +26,14 @@ jobs:
       run: cargo fmt --check
     - name: Clippy
       run: cargo clippy -- -D warnings
-  test:
+  build:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     env:
-      E2E_WAITING_TIME: 30
+      E2E_WAITING_TIME: 20
     steps:
     - uses: actions/checkout@v3
     - name: Caching
@@ -49,15 +49,7 @@ jobs:
     - name: Build Rust examples
       working-directory: ./examples
       run: make all
+    - name: Build wws on release mode
+      run: cargo build --verbose --release
     - name: Test
       run: cargo test --workspace --exclude wasm-workers-quick-js-engine -- --show-output
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-    - uses: actions/checkout@v3
-    - name: Build
-      run: cargo build --verbose

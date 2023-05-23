@@ -7,7 +7,14 @@ mod test {
     fn run_debug(example_path: &str) -> io::Result<Child> {
         let path = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
 
-        Command::new(path.join("target/debug/wws"))
+        // Use release when it's available
+        let wws_path = if path.join("target/release/wws").exists() {
+            path.join("target/release/wws")
+        } else {
+            path.join("target/debug/wws")
+        };
+
+        Command::new(path.join(wws_path))
             .arg(path.join(example_path))
             .stdout(Stdio::piped())
             .spawn()
