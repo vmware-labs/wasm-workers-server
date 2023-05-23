@@ -32,6 +32,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
+    env:
+      E2E_WAITING_TIME: 30
     steps:
     - uses: actions/checkout@v3
     - name: Caching
@@ -48,7 +50,7 @@ jobs:
       working-directory: ./examples
       run: make all
     - name: Test
-      run: cargo test --workspace --exclude wasm-workers-quick-js-engine
+      run: cargo test --workspace --exclude wasm-workers-quick-js-engine -- --show-output
   build:
     strategy:
       fail-fast: false
