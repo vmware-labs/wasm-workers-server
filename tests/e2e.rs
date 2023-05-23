@@ -2,7 +2,7 @@
 mod test {
     use std::path::PathBuf;
     use std::process::{Child, Command, Stdio};
-    use std::{io, thread, time, env};
+    use std::{env, io, thread, time};
 
     fn run_debug(example_path: &str) -> io::Result<Child> {
         let path = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
@@ -49,13 +49,11 @@ mod test {
         // Allow configuring waiting times. It avoids having long waiting times
         // in development, while making it configurable in the CI
         let global_timeout: Option<u64> = match env::var("E2E_WAITING_TIME") {
-            Ok(val) => {
-                match val.parse::<u64>() {
-                    Ok(val) => Some(val),
-                    Err(_) => None
-                }
+            Ok(val) => match val.parse::<u64>() {
+                Ok(val) => Some(val),
+                Err(_) => None,
             },
-            Err(_) => None
+            Err(_) => None,
         };
 
         let tests = [
