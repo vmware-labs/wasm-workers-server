@@ -37,7 +37,7 @@ jobs:
           - os: macos-latest
             e2e_time: 20
           - os: windows-latest
-            e2e_time: 30
+            e2e_time: 60
     runs-on: ${{ matrix.os }}
     env:
       E2E_WAITING_TIME: ${{ matrix.e2e_time }}
