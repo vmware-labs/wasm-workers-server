@@ -31,9 +31,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            e2e_time: 20
+          - os: macos-latest
+            e2e_time: 20
+          - os: windows-latest
+            e2e_time: 30
     runs-on: ${{ matrix.os }}
     env:
-      E2E_WAITING_TIME: 20
+      E2E_WAITING_TIME: ${{ matrix.e2e_time }}
     steps:
     - uses: actions/checkout@v3
     - name: Caching

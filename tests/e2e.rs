@@ -20,6 +20,7 @@ mod test {
         Command::new(path.join(wws_path))
             .arg(path.join("examples").join(example_path))
             .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
             .spawn()
     }
 
@@ -39,6 +40,7 @@ mod test {
         Command::new(path.join(wws_path))
             .arg(path.join("examples").join(example_path))
             .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
             .spawn()
     }
 
