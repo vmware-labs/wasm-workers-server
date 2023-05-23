@@ -4,6 +4,7 @@ mod test {
     use std::process::{Child, Command, Stdio};
     use std::{env, io, thread, time};
 
+    #[cfg(not(target_os = "windows"))]
     fn run_debug(example_path: &str) -> io::Result<Child> {
         let path = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
 
@@ -13,6 +14,27 @@ mod test {
         } else {
             path.join("target/debug/wws")
         };
+
+        println!("Running wws from {}", wws_path.display());
+
+        Command::new(path.join(wws_path))
+            .arg(path.join("examples").join(example_path))
+            .stdout(Stdio::piped())
+            .spawn()
+    }
+
+    #[cfg(target_os = "windows")]
+    fn run_debug(example_path: &str) -> io::Result<Child> {
+        let path = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
+
+        // Use release when it's available
+        let wws_path = if path.join("target\\release\\wws.exe").exists() {
+            path.join("target\\release\\wws.exe")
+        } else {
+            path.join("target\\debug\\wws.exe")
+        };
+
+        println!("Running wws from {}", wws_path.display());
 
         Command::new(path.join(wws_path))
             .arg(path.join("examples").join(example_path))
