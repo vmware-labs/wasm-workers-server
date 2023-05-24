@@ -14,7 +14,7 @@ use std::path::PathBuf;
 use std::{collections::HashMap, path::Path};
 use stdio::Stdio;
 use wasmtime::{Engine, Linker, Module, Store};
-use wasmtime_wasi::{Dir, WasiCtxBuilder};
+use wasmtime_wasi::{ambient_authority, Dir, WasiCtxBuilder};
 use wws_config::Config as ProjectConfig;
 use wws_runtimes::{init_runtime, Runtime};
 
@@ -106,9 +106,8 @@ impl Worker {
         if let Some(folders) = self.config.folders.as_ref() {
             for folder in folders {
                 if let Some(base) = &self.path.parent() {
-                    let source = fs::File::open(base.join(&folder.from))?;
-                    wasi_builder =
-                        wasi_builder.preopened_dir(Dir::from_std_file(source), &folder.to)?;
+                    let dir = Dir::open_ambient_dir(base.join(&folder.from), ambient_authority())?;
+                    wasi_builder = wasi_builder.preopened_dir(dir, &folder.to)?;
                 } else {
                     // TODO: Revisit error management on #73
                     return Err(anyhow!("The worker couldn't be initialized"));

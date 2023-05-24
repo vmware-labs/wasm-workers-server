@@ -7,7 +7,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
-use wasmtime_wasi::{Dir, WasiCtxBuilder};
+use wasmtime_wasi::{ambient_authority, Dir, WasiCtxBuilder};
 use wws_runtimes_manager::metadata::Runtime as RuntimeMetadata;
 use wws_store::Store;
 
@@ -90,10 +90,10 @@ impl Runtime for ExternalRuntime {
     /// Mount the source code in the WASI context so it can be
     /// processed by the engine
     fn prepare_wasi_ctx(&self, builder: WasiCtxBuilder) -> Result<WasiCtxBuilder> {
-        let source = fs::File::open(&self.store.folder)?;
+        let dir = Dir::open_ambient_dir(&self.store.folder, ambient_authority())?;
 
         Ok(builder
-            .preopened_dir(Dir::from_std_file(source), "/src")?
+            .preopened_dir(dir, "/src")?
             .args(&self.metadata.args)?)
     }
 
