@@ -52,9 +52,7 @@ mod test {
 
         // Run the example
         println!("[E2E] Running the service");
-        Command::new(&wws_path)
-            .arg(&example_path)
-            .spawn()
+        Command::new(&wws_path).arg(&example_path).spawn()
     }
 
     fn sleep_for(seconds: u64) {
