@@ -47,20 +47,6 @@ jobs:
     - name: Build Rust examples
       working-directory: ./examples
       run: make all
-    - name: Check existing wws release (Unix)
-      id: check_file_release
-      if: matrix.os != "windows-latest"
-      run: |
-        if test -f "target/release/wws"; then
-          echo "files_exists=true" >> $GITHUB_OUTPUT
-        fi
-    - name: Check existing wws release (Windows)
-      if: matrix.os == "windows-latest"
-      id: check_file_release
-      run: |
-        if test -f "target/release/wws.exe"; then
-          echo "files_exists=true" >> $GITHUB_OUTPUT
-        fi
     - name: Build wws on release mode
       if: steps.check_file_release.outputs.files_exists != 'true'
       run: cargo build --verbose --release
