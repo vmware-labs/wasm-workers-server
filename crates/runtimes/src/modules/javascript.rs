@@ -3,10 +3,8 @@
 
 use crate::runtime::Runtime;
 use anyhow::Result;
-use std::path::Path;
-use std::{fs, path::PathBuf};
-use wasmtime_wasi::Dir;
-use wasmtime_wasi::WasiCtxBuilder;
+use std::path::{Path, PathBuf};
+use wasmtime_wasi::{ambient_authority, Dir, WasiCtxBuilder};
 use wws_store::Store;
 
 static JS_ENGINE_WASM: &[u8] =
@@ -48,8 +46,8 @@ impl Runtime for JavaScriptRuntime {
     /// Mount the source code in the WASI context so it can be
     /// processed by the engine
     fn prepare_wasi_ctx(&self, builder: WasiCtxBuilder) -> Result<WasiCtxBuilder> {
-        let source = fs::File::open(&self.store.folder)?;
-        Ok(builder.preopened_dir(Dir::from_std_file(source), "/src")?)
+        let dir = Dir::open_ambient_dir(&self.store.folder, ambient_authority())?;
+        Ok(builder.preopened_dir(dir, "/src")?)
     }
 
     /// Returns a reference to the Wasm module that should
