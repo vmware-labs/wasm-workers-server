@@ -50,17 +50,19 @@ jobs:
     - name: Check existing wws release (Unix)
       id: check_file_release
       if: matrix.os != "windows-latest"
-      uses: andstor/file-existence-action@v2
-      with:
-        files: "target/release/wws"
+      run: |
+        if test -f "target/release/wws"; then
+          echo "files_exists=true" >> $GITHUB_OUTPUT
+        fi
     - name: Check existing wws release (Windows)
       if: matrix.os == "windows-latest"
       id: check_file_release
-      uses: andstor/file-existence-action@v2
-      with:
-        files: "target/release/wws.exe"
+      run: |
+        if test -f "target/release/wws.exe"; then
+          echo "files_exists=true" >> $GITHUB_OUTPUT
+        fi
     - name: Build wws on release mode
-      if: steps.check_file_release.outputs.files_exists == 'false'
+      if: steps.check_file_release.outputs.files_exists != 'true'
       run: cargo build --verbose --release
     - name: Test
       run: cargo test --workspace --exclude wasm-workers-quick-js-engine -- --show-output
