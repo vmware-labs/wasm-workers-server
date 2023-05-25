@@ -94,13 +94,7 @@ mod test {
     fn test_end_to_end() {
         // Allow configuring waiting times. It avoids having long waiting times
         // in development, while making it configurable in the CI
-        let global_timeout: Option<u64> = match env::var("E2E_WAITING_TIME") {
-            Ok(val) => match val.parse::<u64>() {
-                Ok(val) => Some(val),
-                Err(_) => None,
-            },
-            Err(_) => None,
-        };
+        let global_timeout = env::var("E2E_WAITING_TIME").map(|str| str.parse::<u64>())).ok();
 
         let tests = [
             (
