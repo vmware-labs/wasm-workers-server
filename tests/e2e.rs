@@ -48,14 +48,12 @@ mod test {
             .args(["runtimes", "install"])
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
-            .spawn()?;
+            .status()?;
 
         // Run the example
         println!("[E2E] Running the service");
         Command::new(&wws_path)
             .arg(&example_path)
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
             .spawn()
     }
 
