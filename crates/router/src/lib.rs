@@ -11,7 +11,8 @@ mod route;
 
 use files::Files;
 use route::{Route, RouteAffinity};
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::time::{Instant};
 use wws_config::Config;
 
 /// Contains all registered routes
@@ -36,9 +37,17 @@ impl Routes {
 
         let files = Files::new(path, runtime_extensions, ignore_patterns);
 
+        let mut route_paths: Vec<PathBuf> = Vec::new();
         for entry in files.walk() {
-            routes.push(Route::new(path, entry.into_path(), &prefix, config));
+            route_paths.push(entry.into_path());
         }
+
+        println!("⏳ Loading workers from {} routes...", route_paths.len());
+        let start = Instant::now();
+        for route_path in route_paths {
+            routes.push(Route::new(path, route_path, &prefix, config));
+        }
+        println!("✅ Workers loaded in {:?}.", start.elapsed());
 
         Self { routes, prefix }
     }
