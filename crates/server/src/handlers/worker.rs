@@ -75,7 +75,9 @@ pub async fn handle_worker(req: HttpRequest, body: Bytes) -> HttpResponse {
                 .run(&req, &body_str, store, vars, stderr_file.get_ref())
             {
                 Ok(output) => (output, true),
-                Err(_) => (eprintln!(), false),
+                Err(e) => {
+                    eprintln!("{}", e);
+                    (WasmOutput::failed(), false)},
             };
 
         let mut builder = HttpResponse::build(
