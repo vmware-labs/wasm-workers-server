@@ -29,6 +29,7 @@ ignore = [
 [licenses]
 # The lint level for crates which do not have a detectable license
 unlicensed = "deny"
+copyleft = "deny"
 # List of explicitly allowed licenses
 allow = [
     "Apache-2.0",
@@ -40,10 +41,6 @@ allow = [
     "MPL-2.0",
     "Unicode-DFS-2016",
     "Zlib"
-]
-# List of explicitly disallowed licenses
-deny = [
-    #"Nokia",
 ]
 
 # More documentation about the 'bans' section can be found here:
