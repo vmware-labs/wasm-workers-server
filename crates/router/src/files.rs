@@ -12,16 +12,17 @@ const IGNORE_PATH_PREFIX: &str = "_";
 /// It uses glob patterns to detect the workers and
 /// provide utilities to work with public folders and
 /// other related resources.
-pub struct Files {
+pub struct Files<'t> {
     /// Root path
     root: PathBuf,
     /// Defines pattern for files considered as workers
-    include_pattern: String,
+    include_pattern: Glob<'t>,
     /// Defines patterns to exclude when traversing for workers
-    ignore_patterns: Vec<String>,
+    ignore_patterns: Vec<Glob<'t>>,
 }
 
-impl Files {
+impl<'t> Files<'t> {
+    const PUBLIC_ASSETS_FOLDER: &str = "public";
     const DEFAULT_EXTENSIONS: [&str; 2] = ["js", "wasm"];
 
     /// Initializes a new files instance. It will detect
@@ -29,45 +30,46 @@ impl Files {
     pub fn new(root: &Path, file_extensions: Vec<String>, ignore_patterns: Vec<String>) -> Self {
         Self {
             root: root.to_path_buf(),
-            include_pattern: Self::construct_include_pattern(file_extensions),
-            ignore_patterns: Self::construct_ignore_patterns(ignore_patterns),
+            include_pattern: Self::build_include_pattern(file_extensions),
+            ignore_patterns: Self::build_ignore_patterns(ignore_patterns),
         }
     }
 
     /// Walk through all the different files associated to this
     /// project using a Glob pattern
     pub fn walk(&self) -> Vec<WalkEntry> {
-        let include_pattern = Glob::from_str(self.include_pattern.as_str()).expect(
-            "Failed to parse include pattern when processing files in the current directory",
-        );
-
-        return include_pattern
+        return self
+            .include_pattern
             .walk(&self.root)
-            .not(self.ignore_patterns.iter().map(|s| s.as_str()))
-            .expect(
-                "Failed to parse ignore patterns when processing files in the current directory",
-            )
+            .not(self.ignore_patterns.clone())
+            .expect("Failed to walk the tree when processing files in the current directory")
             .map(|e| e.unwrap())
             .collect();
     }
 
-    fn construct_include_pattern(file_extensions: Vec<String>) -> String {
+    fn build_include_pattern(file_extensions: Vec<String>) -> Glob<'t> {
         let mut file_extensions = file_extensions;
         for default_extension in Self::DEFAULT_EXTENSIONS {
             file_extensions.push(default_extension.to_string());
         }
 
-        format!("**/*.{{{}}}", file_extensions.join(","))
+        let include_pattern = format!("**/*.{{{}}}", file_extensions.join(","));
+        Glob::from_str(include_pattern.as_str()).expect("Failed to parse include pattern!")
     }
 
-    fn construct_ignore_patterns(ignore_patterns: Vec<String>) -> Vec<String> {
-        let mut result = vec![
-            "**/public/**".to_string(),
+    fn build_ignore_patterns(ignore_patterns: Vec<String>) -> Vec<Glob<'t>> {
+        let default_ignore_patterns = vec![
+            format!("**/{}/**", Self::PUBLIC_ASSETS_FOLDER),
             format!("**/{}/**", STORE_FOLDER),
             format!("**/{}*/**", IGNORE_PATH_PREFIX),
         ];
+
+        let mut result = default_ignore_patterns;
         result.extend(ignore_patterns);
         result
+            .iter()
+            .map(|s| Glob::from_str(s.as_str()).expect("Failed to parse ignore pattern"))
+            .collect()
     }
 }
 
@@ -177,7 +179,7 @@ mod tests {
     }
 
     #[test]
-    fn walk_ignore2() {
+    fn walk_ignore_multiple_patterns() {
         let files = Files::new(
             Path::new("tests/data/files"),
             vec!["ext".to_string(), "none".to_string()],

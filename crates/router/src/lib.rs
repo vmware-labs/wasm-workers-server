@@ -12,7 +12,7 @@ mod route;
 use files::Files;
 use route::{Route, RouteAffinity};
 use std::path::{Path, PathBuf};
-use std::time::{Instant};
+use std::time::Instant;
 use wws_config::Config;
 
 /// Contains all registered routes

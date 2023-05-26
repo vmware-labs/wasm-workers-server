@@ -33,7 +33,7 @@ pub struct Args {
     prefix: String,
 
     /// Patterns to ignore when looking for worker files
-    #[arg(long, default_value = "", value_delimiter=';', num_args= 0..)]
+    #[arg(long, default_value = "")]
     ignore: Vec<String>,
 
     /// Manage language runtimes in your project
