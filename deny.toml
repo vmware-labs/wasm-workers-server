@@ -1,0 +1,66 @@
+# Here you can find the related documentation:
+# https://embarkstudios.github.io/cargo-deny/index.html
+
+# Specify the targets we're building for, so dependencies that are specific
+# for other targets are ignored.
+targets = [
+    { triple = "x86_64-unknown-linux-musl" },
+    { triple = "aarch64-unknown-linux-musl" },
+    { triple = "x86_64-apple-darwin" },
+    { triple = "aarch64-apple-darwin" },
+    { triple = "x86_64-pc-windows-msvc" },
+    { triple = "aarch64-pc-windows-msvc" },
+]
+
+# More documentation for the advisories section can be found here:
+# https://embarkstudios.github.io/cargo-deny/checks/advisories/cfg.html
+[advisories]
+vulnerability = "deny"
+unmaintained = "warn"
+yanked = "warn"
+notice = "warn"
+# A list of advisory IDs to ignore.
+ignore = [
+    #"RUSTSEC-0000-0000",
+]
+
+# More documentation for the licenses section can be found here:
+# https://embarkstudios.github.io/cargo-deny/checks/licenses/cfg.html
+[licenses]
+# The lint level for crates which do not have a detectable license
+unlicensed = "deny"
+copyleft = "deny"
+# List of explicitly allowed licenses
+allow = [
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "MIT",
+    "MPL-2.0",
+    "Unicode-DFS-2016",
+    "Zlib"
+]
+
+# More documentation about the 'bans' section can be found here:
+# https://embarkstudios.github.io/cargo-deny/checks/bans/cfg.html
+[bans]
+# In the future we will work on enabling just only certain
+# duplicated versions
+multiple-versions = "warn"
+# List of crates to deny
+deny = [
+    # Each entry the name of a crate and a version range. If version is
+    # not specified, all versions will be matched.
+    #{ name = "ansi_term", version = "=0.11.0" },
+    #
+    # Wrapper crates can optionally be specified to allow the crate when it
+    # is a direct dependency of the otherwise banned crate
+    #{ name = "ansi_term", version = "=0.11.0", wrappers = [] },
+]
+
+# Certain crates/versions that will be skipped when doing duplicate detection.
+skip = [
+    #{ name = "ansi_term", version = "=0.11.0" },
+]
