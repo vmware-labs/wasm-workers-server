@@ -9,7 +9,7 @@ import (
 
 func main() {
 	worker.ServeFunc(func(w http.ResponseWriter, r *http.Request) {
-		params, _ := r.Context().Value("PARAMS").(map[string]string)
+		params, _ := r.Context().Value(worker.ParamsKey).(map[string]string)
 		id := "the value is not available"
 
 		if val, ok := params["id"]; ok {

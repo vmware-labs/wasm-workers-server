@@ -11,31 +11,43 @@ import (
 	"unicode/utf8"
 
 	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 )
 
-var cache map[string]string
+type ContextKey string
 
-func init() {
-	cache = make(map[string]string)
-}
+const (
+	CacheKey  ContextKey = "CACHE"
+	ParamsKey ContextKey = "PARAMS"
+)
 
 type input struct {
-	url     string
-	method  string
-	headers map[string]string
-	body    string
-	params  map[string]string
+	Url     string
+	Method  string
+	Headers map[string]string
+	Body    string
 }
 
 type output struct {
-	data    string
-	headers map[string]string
-	status  uint16
-	kv      map[string]string
-	base64  bool
+	Data    string
+	Headers map[string]string
+	Status  uint16
+	Base64  bool
 
 	httpHeader http.Header
 }
+
+var (
+	cache  map[string]string
+	params map[string]string
+)
+
+func init() {
+	cache = make(map[string]string)
+	params = make(map[string]string)
+}
+
+// output implements the http.ResponseWriter interface
 
 func (o *output) Header() http.Header {
 	if o.httpHeader == nil {
@@ -47,63 +59,59 @@ func (o *output) Header() http.Header {
 
 func (o *output) Write(data []byte) (int, error) {
 	if utf8.Valid(data) {
-		o.data = string(data)
+		o.Data = string(data)
 	} else {
-		o.base64 = true
-		o.data = base64.StdEncoding.EncodeToString(data)
+		o.Base64 = true
+		o.Data = base64.StdEncoding.EncodeToString(data)
 	}
 
-	if o.status == 0 {
-		o.status = 200
+	if o.Status == 0 {
+		o.Status = 200
 	}
 
 	for k, v := range o.httpHeader {
-		o.headers[k] = v[0]
+		o.Headers[k] = v[0]
 	}
 
-	headersOut := "{"
+	out, _ := sjson.Set("", "data", o.Data)
+	out, _ = sjson.Set(out, "status", o.Status)
+	out, _ = sjson.Set(out, "base64", o.Base64)
+	out, _ = sjson.SetRaw(out, "headers", "{}")
+	out, _ = sjson.SetRaw(out, "kv", "{}")
 
-	for k, v := range o.headers {
-		headersOut += fmt.Sprintf(`"%s":"%s",`, k, v)
+	for k, v := range o.Headers {
+		out, _ = sjson.Set(out, fmt.Sprintf("headers.%s", k), v)
 	}
-
-	headersOut = strings.TrimSuffix(headersOut, ",") + "}"
-
-	kvOut := "{"
 
 	for k, v := range cache {
-		kvOut += fmt.Sprintf(`"%s":"%s",`, k, v)
+		out, _ = sjson.Set(out, fmt.Sprintf("kv.%s", k), v)
 	}
 
-	kvOut = strings.TrimSuffix(kvOut, ",") + "}"
+	fmt.Println(out)
 
-	fmt.Printf("{\"data\":\"%s\",\"headers\":%s,\"status\":%d,\"kv\":%s,\"base64\":%t}",
-		strings.ReplaceAll(o.data, "\"", "\\\""), headersOut, o.status, kvOut, o.base64)
-
-	return len(o.data), nil
+	return len(o.Data), nil
 }
 
 func (o *output) WriteHeader(statusCode int) {
-	o.status = uint16(statusCode)
+	o.Status = uint16(statusCode)
 }
 
-func readInput() *input {
+func readInput() (*input, error) {
 	stdin, err := io.ReadAll(os.Stdin)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	in := &input{
-		url:    gjson.GetBytes(stdin, "url").String(),
-		method: gjson.GetBytes(stdin, "method").String(),
-		body:   gjson.GetBytes(stdin, "body").String(),
+		Url:     gjson.GetBytes(stdin, "url").String(),
+		Method:  gjson.GetBytes(stdin, "method").String(),
+		Body:    gjson.GetBytes(stdin, "body").String(),
+		Headers: make(map[string]string),
 	}
 
 	if gjson.GetBytes(stdin, "headers").Exists() {
-		in.headers = make(map[string]string)
-
 		gjson.GetBytes(stdin, "headers").ForEach(func(key, value gjson.Result) bool {
-			in.headers[key.String()] = value.String()
+			in.Headers[key.String()] = value.String()
 			return true
 		})
 	}
@@ -116,39 +124,46 @@ func readInput() *input {
 	}
 
 	if gjson.GetBytes(stdin, "params").Exists() {
-		in.params = make(map[string]string)
-
 		gjson.GetBytes(stdin, "params").ForEach(func(key, value gjson.Result) bool {
-			in.params[key.String()] = value.String()
+			params[key.String()] = value.String()
 			return true
 		})
 	}
 
-	return in
+	return in, nil
 }
 
-func createRequest(in *input) *http.Request {
-	req, err := http.NewRequest(in.method, in.url, strings.NewReader(in.body))
+func createRequest(in *input) (*http.Request, error) {
+	req, err := http.NewRequest(in.Method, in.Url, strings.NewReader(in.Body))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	for k, v := range in.headers {
+	for k, v := range in.Headers {
 		req.Header.Set(k, v)
 	}
 
-	req = req.WithContext(context.WithValue(req.Context(), "CACHE", cache))
-	req = req.WithContext(context.WithValue(req.Context(), "PARAMS", in.params))
+	req = req.WithContext(context.WithValue(req.Context(), CacheKey, cache))
+	req = req.WithContext(context.WithValue(req.Context(), ParamsKey, params))
 
-	return req
+	return req, nil
 }
 
 func getWriterRequest() (*output, *http.Request) {
-	in := readInput()
-	req := createRequest(in)
+	in, err := readInput()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	req, err := createRequest(in)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
 	w := &output{
-		headers: make(map[string]string),
-		kv:      make(map[string]string),
+		Headers: make(map[string]string),
 	}
 
 	return w, req

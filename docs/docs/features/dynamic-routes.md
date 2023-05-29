@@ -21,6 +21,7 @@ Check these guides to understand how to read parameters in the different support
 * [Dynamic routes in Rust](../languages/rust.md#dynamic-routes)
 * [Dynamic routes in Python](../languages/python.md#dynamic-routes)
 * [Dynamic routes in Ruby](../languages/ruby.md#dynamic-routes)
+* [Dynamic routes in Go](../languages/go.md#dynamic-routes)
 
 ## Dynamic routes and folders
 
