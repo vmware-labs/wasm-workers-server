@@ -37,10 +37,19 @@ fn main() {
     let input_value = json::transcode_input(context, input_bytes).unwrap();
 
     // Run the handler to get the output
-    let output_value = match entrypoint.call(&global, &[input_value]) {
-        Ok(result) => result,
+    match entrypoint.call(&global, &[input_value]) {
+        Ok(_) => {}
         Err(err) => panic!("{}", err.to_string()),
     };
+
+    if context.is_pending() {
+        if let Err(err) = context.execute_pending() {
+            panic!("{}", err.to_string());
+        }
+    }
+
+    let global = context.global_object().unwrap();
+    let output_value = global.get_property("result").unwrap();
 
     let output = json::transcode_output(output_value).unwrap();
 

@@ -128,13 +128,25 @@ const requestToHandler = input => {
 
   handlerFunction(event);
 
-  return {
-    data: event.response.body,
-    headers: event.response.headers.headers,
-    status: event.response.status,
-    kv: Cache.state
-  };
+  // Always convert event.response to a Promise
+  Promise.resolve(
+    event.response
+  ).then(res => {
+    // Set the result in the global value
+    result = {
+      data: res.body,
+      headers: res.headers.headers,
+      status: res.status,
+      kv: Cache.state
+    };
+  })
+  .catch((err) => {
+    throw new Error(`Error getting the response in the worker: ${err}`);
+  });
 };
 
 // This is the entrypoint for the project.
 entrypoint = requestToHandler;
+
+// Set the result
+result = {};
