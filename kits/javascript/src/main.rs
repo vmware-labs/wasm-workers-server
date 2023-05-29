@@ -1,7 +1,7 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use quickjs_wasm_rs::{json, Context};
+use javy::{json, Runtime};
 use std::{
     env, fs,
     io::{stdin, stdout, Read, Write},
@@ -11,7 +11,8 @@ use std::{
 static POLYFILL: &str = include_str!("./glue.js");
 
 fn main() {
-    let context = Context::default();
+    let runtime = Runtime::default();
+    let context = runtime.context();
 
     let source = fs::read_to_string("/src/index.js");
     let mut contents = String::new();
@@ -33,7 +34,7 @@ fn main() {
     let entrypoint = global.get_property("entrypoint").unwrap();
 
     let input_bytes = request.as_bytes();
-    let input_value = json::transcode_input(&context, input_bytes).unwrap();
+    let input_value = json::transcode_input(context, input_bytes).unwrap();
 
     // Run the handler to get the output
     let output_value = match entrypoint.call(&global, &[input_value]) {
