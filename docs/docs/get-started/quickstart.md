@@ -63,5 +63,6 @@ Now you got the taste of Wasm Workers, it's time to create your first worker:
 * [Create your first Rust worker](../languages/rust.md)
 * [Create your first Python worker](../languages/python.md)
 * [Create your first Ruby worker](../languages/ruby.md)
+* [Create your first Go worker](../languages/go.md)
 
 And if you are curious, here you have a guide about [how it works](./how-it-works.md).

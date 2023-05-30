@@ -22,6 +22,7 @@ Then, you can read them in your worker:
 * [Read environment variables in Rust](../languages/rust.md#read-environment-variables)
 * [Read environment variables in Python](../languages/python.md#read-environment-variables)
 * [Read environment variables in Ruby](../languages/ruby.md#read-environment-variables)
+* [Read environment variables in Go](../languages/go.md#read-environment-variables)
 
 ## Inject existing environment variables
 

@@ -17,7 +17,7 @@ const FeatureList = [
     emoji: "⚙️",
     description: (
       <>
-        Create workers in different languages like JavaScript, Ruby, Python and Rust thanks to WebAssembly.
+        Create workers in different languages like JavaScript, Ruby, Python, Rust and Go thanks to WebAssembly.
       </>
     ),
   },

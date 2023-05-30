@@ -104,6 +104,7 @@ Wasm Workers Server focuses on simplicity. We want you to run workers (written i
 | --- | --- | --- |
 | Rust | ✅ | No |
 | JavaScript | ✅ | No |
+| Go | ✅ | No |
 | Ruby | ✅ | [Yes](https://workers.wasmlabs.dev/docs/languages/ruby#installation) |
 | Python | ✅ | [Yes](https://workers.wasmlabs.dev/docs/languages/python#installation) |
 | ... | ... | ... |
