@@ -72,8 +72,10 @@ mod test {
             let line = line.unwrap();
 
             // Break when ready of after the timeout
-            if line.contains("Start serving requests") || instant.elapsed().as_secs() >= max_timeout
-            {
+            if line.contains("Start serving requests") {
+                break;
+            } else if instant.elapsed().as_secs() >= max_timeout {
+                println!("Timeout waiting for wws to be ready");
                 break;
             }
         }
