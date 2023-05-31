@@ -18,7 +18,7 @@ lazy_static = "1.4.0"
 regex = "1"
 
 # This commit fixes an issue with Walk::not, and is not yet released
-wax = { git = "https://github.com/olson-sean-k/wax.git", ref = "6d66a10" }
+wax = { git = "https://github.com/olson-sean-k/wax.git", rev = "6d66a10" }
 
 [dev-dependencies]
 path-slash = "0.2.1"
