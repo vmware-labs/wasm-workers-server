@@ -7,7 +7,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
-use wws_runtimes_manager::{check_runtime, metadata::Runtime};
+use wws_project::{check_runtime, metadata::Runtime};
 
 /// Default repository name
 pub const DEFAULT_REPO_NAME: &str = "wasmlabs";

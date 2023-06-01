@@ -8,9 +8,7 @@ use clap::{Args, Parser, Subcommand};
 use prettytable::{format, Cell, Row, Table};
 use std::env;
 use wws_config::Config;
-use wws_runtimes_manager::{
-    check_runtime, install_runtime, metadata::Repository, uninstall_runtime,
-};
+use wws_project::{check_runtime, install_runtime, metadata::Repository, uninstall_runtime};
 
 /// Default repository name
 pub const DEFAULT_REPO_NAME: &str = "wasmlabs";

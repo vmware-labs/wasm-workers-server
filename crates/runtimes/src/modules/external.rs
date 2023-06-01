@@ -8,7 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 use wasmtime_wasi::{ambient_authority, Dir, WasiCtxBuilder};
-use wws_runtimes_manager::metadata::Runtime as RuntimeMetadata;
+use wws_project::metadata::Runtime as RuntimeMetadata;
 use wws_store::Store;
 
 /// Run language runtimes that were downloaded externally. This
