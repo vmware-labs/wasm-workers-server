@@ -1,5 +1,5 @@
 [package]
-name = "wws-runtimes-manager"
+name = "wws-project"
 version = { workspace = true }
 edition = { workspace = true }
 authors = { workspace = true }

@@ -2999,8 +2999,8 @@ dependencies = [
  "prettytable-rs",
  "reqwest",
  "wws-config",
+ "wws-project",
  "wws-router",
- "wws-runtimes-manager",
  "wws-server",
 ]
 
@@ -3611,7 +3611,7 @@ dependencies = [
  "serde",
  "serde_json",
  "toml 0.7.2",
- "wws-runtimes-manager",
+ "wws-project",
 ]
 
 [[package]]
@@ -3624,6 +3624,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "wws-project"
+version = "1.2.0"
+dependencies = [
+ "anyhow",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha256",
+ "toml 0.7.2",
+ "url",
+ "wws-store",
+]
+
+[[package]]
 name = "wws-router"
 version = "1.2.0"
 dependencies = [
@@ -3632,7 +3646,7 @@ dependencies = [
  "regex",
  "wax",
  "wws-config",
- "wws-runtimes-manager",
+ "wws-project",
  "wws-store",
  "wws-worker",
 ]
@@ -3646,21 +3660,7 @@ dependencies = [
  "serde_json",
  "wasmtime-wasi",
  "wws-config",
- "wws-runtimes-manager",
- "wws-store",
-]
-
-[[package]]
-name = "wws-runtimes-manager"
-version = "1.2.0"
-dependencies = [
- "anyhow",
- "reqwest",
- "serde",
- "serde_json",
- "sha256",
- "toml 0.7.2",
- "url",
+ "wws-project",
  "wws-store",
 ]
 

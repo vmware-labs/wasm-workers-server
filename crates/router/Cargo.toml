@@ -12,7 +12,7 @@ doctest = false
 [dependencies]
 wws-config = { workspace = true }
 wws-store = { workspace = true }
-wws-runtimes-manager = { workspace = true }
+wws-project = { workspace = true }
 wws-worker = { workspace = true }
 lazy_static = "1.4.0"
 regex = "1"

@@ -13,4 +13,4 @@ serde_json = { workspace = true }
 wasmtime-wasi = { workspace = true }
 wws-config = { workspace = true }
 wws-store = { workspace = true }
-wws-runtimes-manager = { workspace = true }
+wws-project = { workspace = true }
