@@ -21,4 +21,4 @@ regex = "1"
 wax = { git = "https://github.com/olson-sean-k/wax.git", rev = "6d66a10" }
 
 [dev-dependencies]
-path-slash = "0.2.1"
+path-slash = { workspace = true }
