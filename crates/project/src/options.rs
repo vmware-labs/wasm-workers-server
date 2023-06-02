@@ -1,3 +1,6 @@
+// Copyright 2023 VMware, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 /// Defines the different options to configure the project.
 /// Every type has their own options.
 #[derive(Default)]
