@@ -82,3 +82,4 @@ wws-project = { path = "./crates/project" }
 wasmtime = "6.0.2"
 wasmtime-wasi = "6.0.2"
 wasi-common = "6.0.2"
+path-slash = "0.2.1"

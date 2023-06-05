@@ -1,14 +1,77 @@
-// Copyright 2022 VMware, Inc.
+// Copyright 2022-2023 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 mod fetch;
 pub mod metadata;
+pub mod options;
+pub mod types;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use fetch::fetch_and_validate;
 use metadata::{RemoteFile, Runtime};
-use std::path::Path;
+use options::Options;
+use std::{
+    ffi::OsStr,
+    path::{Path, PathBuf},
+};
+use types::git::prepare_git_project;
 use wws_store::Store;
+
+pub enum ProjectType {
+    Local,
+    Git,
+}
+
+/// Prepare a project from the given String. This argument could represent
+/// different things:
+///
+/// - A local path
+/// - A git repository
+/// - Etc.
+///
+/// Depending on the type, the project preparation requires different steps.
+/// For example, a git repository requires to clone it.
+///
+/// However, the result of any type is the same: a local folder to point to.
+/// This is the value we return from this function.
+pub async fn prepare_project(
+    location: &Path,
+    force_type: Option<ProjectType>,
+    options: Option<Options>,
+) -> Result<PathBuf> {
+    let project_type = if force_type.is_some() {
+        force_type.unwrap()
+    } else {
+        identify_type(location)?
+    };
+
+    match project_type {
+        ProjectType::Local => Ok(PathBuf::from(location)),
+        ProjectType::Git => prepare_git_project(location, options),
+    }
+}
+
+/// Identify the type of the project based on different rules related to the location.
+/// For example, an URL that ends in .git is considered a git repository. For any
+/// unknown pattern, it will default to "Local"
+pub fn identify_type(location: &Path) -> Result<ProjectType> {
+    if (location.starts_with("https://") || location.starts_with("http://"))
+        && location
+            .extension()
+            .filter(|e| *e == OsStr::new("git"))
+            .is_some()
+    {
+        Ok(ProjectType::Git)
+    } else {
+        let path = Path::new(location);
+
+        if path.exists() {
+            Ok(ProjectType::Local)
+        } else {
+            bail!("The given path does not exist in the local filesystem.")
+        }
+    }
+}
 
 /// Install a runtime locally. It reads the provided configuration and
 /// dowload the files. All files are saved in a store that references
@@ -88,4 +151,59 @@ pub fn uninstall_runtime(project_root: &Path, repository: &str, metadata: &Runti
 async fn download_file(file: &RemoteFile, store: &Store) -> Result<()> {
     let contents = fetch_and_validate(&file.url, &file.checksum).await?;
     store.write(&[&file.filename], &contents)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use path_slash::PathBufExt as _;
+
+    #[test]
+    fn identify_local_locations() {
+        let tests = ["tests", "tests/data", "./tests", "./tests/data"];
+
+        for test in tests {
+            let file_route = PathBuf::from_slash(test);
+
+            match identify_type(&file_route) {
+                Ok(project_type) => {
+                    assert!(matches!(project_type, ProjectType::Local));
+                }
+                Err(err) => panic!("Error identifying a the project type: {err}"),
+            }
+        }
+    }
+
+    #[test]
+    fn identify_local_error_when_missing() {
+        let tests = [
+            "missing",
+            "missing/missing",
+            "./missing/missing",
+            "./missing/missing",
+        ];
+
+        for test in tests {
+            let file_route = PathBuf::from_slash(test);
+
+            match identify_type(&file_route) {
+                Ok(_) => {
+                    panic!("The folder doesn't exist, so identifying it should fail.");
+                }
+                Err(err) => assert!(err.to_string().contains("does not exist")),
+            }
+        }
+    }
+
+    #[test]
+    fn identify_git_repository_locations() {
+        let location = Path::new("https://github.com/vmware-labs/wasm-workers-server.git");
+
+        match identify_type(location) {
+            Ok(project_type) => {
+                assert!(matches!(project_type, ProjectType::Git));
+            }
+            Err(err) => panic!("Error identifying a the project type: {err}"),
+        }
+    }
 }

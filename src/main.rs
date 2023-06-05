@@ -1,14 +1,19 @@
-// Copyright 2022 VMware, Inc.
+// Copyright 2022-2023 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 mod commands;
+mod utils;
 
+use crate::utils::options;
+use crate::utils::runtimes::install_missing_runtimes;
 use clap::Parser;
 use commands::main::Main;
 use commands::runtimes::RuntimesCommands;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
+use std::process::exit;
 use wws_config::Config;
+use wws_project::{identify_type, prepare_project, ProjectType};
 use wws_router::Routes;
 use wws_server::serve;
 
@@ -24,7 +29,7 @@ pub struct Args {
     #[arg(short, long, default_value_t = 8080)]
     port: u16,
 
-    /// Folder to read WebAssembly modules from
+    /// Location of the wws project. It could be a local folder or a git repository.
     #[arg(value_parser, default_value = ".")]
     path: PathBuf,
 
@@ -35,6 +40,26 @@ pub struct Args {
     /// Patterns to ignore when looking for worker files
     #[arg(long, default_value = "")]
     ignore: Vec<String>,
+
+    /// Install missing runtimes automatically.
+    #[arg(long, short)]
+    install_runtimes: bool,
+
+    /// Set the commit when using a git repository as project
+    #[arg(long)]
+    git_commit: Option<String>,
+
+    /// Set the tag when using a git repository as project
+    #[arg(long)]
+    git_tag: Option<String>,
+
+    /// Set the branch when using a git repository as project
+    #[arg(long)]
+    git_branch: Option<String>,
+
+    /// Change the directory when using a git repository as project
+    #[arg(long)]
+    git_folder: Option<String>,
 
     /// Manage language runtimes in your project
     #[command(subcommand)]
@@ -51,6 +76,21 @@ async fn main() -> std::io::Result<()> {
     // Check the given subcommand
     if let Some(Main::Runtimes(sub)) = &args.commands {
         let mut run_result = Ok(());
+
+        match identify_type(&args.path) {
+            Ok(project_type) => match project_type {
+                ProjectType::Local => {}
+                _ => {
+                    eprintln!("❌ You can only manage runtimes in local projects");
+                    exit(1);
+                }
+            },
+            Err(err) => {
+                eprintln!("❌ There was an error preparing the project: {err}");
+
+                exit(1);
+            }
+        }
 
         match &sub.runtime_commands {
             RuntimesCommands::List(list) => {
@@ -86,10 +126,22 @@ async fn main() -> std::io::Result<()> {
         run_result
     } else {
         // TODO(Angelmmiguel): refactor this into a separate command!
-        // Initialize the routes
+
+        // Set the final options
+        let project_opts = options::build_project_options(&args);
+
+        println!("⚙️  Preparing the project from: {}", &args.path.display());
+        let project_path = match prepare_project(&args.path, None, Some(project_opts)).await {
+            Ok(p) => p,
+            Err(err) => {
+                eprintln!("❌ There was an error preparing the project: {err}");
+
+                exit(1);
+            }
+        };
 
         // Loading the local configuration if available.
-        let config = match Config::load(&args.path) {
+        let config = match Config::load(&project_path) {
             Ok(c) => c,
             Err(err) => {
                 println!("⚠️  There was an error reading the .wws.toml file. It will be ignored");
@@ -100,13 +152,24 @@ async fn main() -> std::io::Result<()> {
         };
 
         // Check if there're missing runtimes
-        if config.is_missing_any_runtime(&args.path) {
-            println!("⚠️  Required language runtimes are not installed. Some files may not be considered workers");
-            println!("⚠️  You can install the missing runtimes with: wws runtimes install");
+        if config.is_missing_any_runtime(&project_path) {
+            if args.install_runtimes {
+                match install_missing_runtimes(&project_path).await {
+                    Ok(_) => {}
+                    Err(err) => {
+                        eprintln!("❌ There was an error installing the missing runtimes: {err}");
+
+                        exit(1);
+                    }
+                }
+            } else {
+                println!("⚠️  Required language runtimes are not installed. Some files may not be considered workers");
+                println!("⚠️  You can install the missing runtimes adding the --install-runtimes / -i flag");
+            }
         }
 
-        println!("⚙️  Loading routes from: {}", &args.path.display());
-        let routes = Routes::new(&args.path, &args.prefix, args.ignore, &config);
+        println!("⚙️  Loading routes from: {}", &project_path.display());
+        let routes = Routes::new(&project_path, &args.prefix, args.ignore, &config);
         for route in routes.routes.iter() {
             println!(
                 "    - http://{}:{}{}\n      => {}",
@@ -117,7 +180,7 @@ async fn main() -> std::io::Result<()> {
             );
         }
 
-        let server = serve(&args.path, routes, &args.hostname, args.port, None)
+        let server = serve(&project_path, routes, &args.hostname, args.port, None)
             .await
             .map_err(|err| Error::new(ErrorKind::AddrInUse, err))?;
 
