@@ -31,7 +31,7 @@ pub struct Args {
 
     /// Location of the wws project. It could be a local folder or a git repository.
     #[arg(value_parser, default_value = ".")]
-    location: String,
+    path: PathBuf,
 
     /// Prepend the given path to all URLs
     #[arg(long, default_value = "")]
@@ -77,7 +77,7 @@ async fn main() -> std::io::Result<()> {
     if let Some(Main::Runtimes(sub)) = &args.commands {
         let mut run_result = Ok(());
 
-        match identify_type(&args.location) {
+        match identify_type(&args.path) {
             Ok(project_type) => match project_type {
                 ProjectType::Local => {}
                 _ => {
@@ -92,8 +92,6 @@ async fn main() -> std::io::Result<()> {
             }
         }
 
-        let project_path = PathBuf::from(&args.location);
-
         match &sub.runtime_commands {
             RuntimesCommands::List(list) => {
                 if let Err(err) = list.run(sub).await {
@@ -103,21 +101,21 @@ async fn main() -> std::io::Result<()> {
                 }
             }
             RuntimesCommands::Install(install) => {
-                if let Err(err) = install.run(&project_path, sub).await {
+                if let Err(err) = install.run(&args.path, sub).await {
                     println!("❌ There was an error installing the runtime from the repository");
                     println!("👉 {err}");
                     run_result = Err(Error::new(ErrorKind::InvalidData, ""));
                 }
             }
             RuntimesCommands::Uninstall(uninstall) => {
-                if let Err(err) = uninstall.run(&project_path, sub) {
+                if let Err(err) = uninstall.run(&args.path, sub) {
                     println!("❌ There was an error uninstalling the runtime");
                     println!("👉 {err}");
                     run_result = Err(Error::new(ErrorKind::InvalidData, ""));
                 }
             }
             RuntimesCommands::Check(check) => {
-                if let Err(err) = check.run(&project_path) {
+                if let Err(err) = check.run(&args.path) {
                     println!("❌ There was an error checking the local runtimes");
                     println!("👉 {err}");
                     run_result = Err(Error::new(ErrorKind::InvalidData, ""));
@@ -132,8 +130,8 @@ async fn main() -> std::io::Result<()> {
         // Set the final options
         let project_opts = options::build_project_options(&args);
 
-        println!("⚙️  Preparing the project from: {}", &args.location);
-        let project_path = match prepare_project(&args.location, None, Some(project_opts)).await {
+        println!("⚙️  Preparing the project from: {}", &args.path.display());
+        let project_path = match prepare_project(&args.path, None, Some(project_opts)).await {
             Ok(p) => p,
             Err(err) => {
                 eprintln!("❌ There was an error preparing the project: {err}");

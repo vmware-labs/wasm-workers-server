@@ -16,15 +16,20 @@ pub struct Options {
 #[derive(Default)]
 pub struct LocalOptions {}
 
+/// Defines a different reference when cloning the repository
+pub enum GitReference {
+    /// Use a specific commit
+    Commit(String),
+    /// Use a specific tag
+    Tag(String),
+    /// Use a specific git branch
+    Branch(String),
+}
+
 /// The different git options you can configure.
 #[derive(Default)]
 pub struct GitOptions {
-    /// Use a specific commit
-    pub commit: Option<String>,
-    /// Use a specific tag
-    pub tag: Option<String>,
-    /// Use a specific git branch
-    pub branch: Option<String>,
+    pub git_ref: Option<GitReference>,
     /// Change the directory to run the workers
     pub folder: Option<String>,
 }

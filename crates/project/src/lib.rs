@@ -10,7 +10,10 @@ use anyhow::{bail, Result};
 use fetch::fetch_and_validate;
 use metadata::{RemoteFile, Runtime};
 use options::Options;
-use std::path::{Path, PathBuf};
+use std::{
+    ffi::OsStr,
+    path::{Path, PathBuf},
+};
 use types::git::prepare_git_project;
 use wws_store::Store;
 
@@ -32,7 +35,7 @@ pub enum ProjectType {
 /// However, the result of any type is the same: a local folder to point to.
 /// This is the value we return from this function.
 pub async fn prepare_project(
-    location: &str,
+    location: &Path,
     force_type: Option<ProjectType>,
     options: Option<Options>,
 ) -> Result<PathBuf> {
@@ -51,9 +54,12 @@ pub async fn prepare_project(
 /// Identify the type of the project based on different rules related to the location.
 /// For example, an URL that ends in .git is considered a git repository. For any
 /// unknown pattern, it will default to "Local"
-pub fn identify_type(location: &str) -> Result<ProjectType> {
+pub fn identify_type(location: &Path) -> Result<ProjectType> {
     if (location.starts_with("https://") || location.starts_with("http://"))
-        && location.ends_with(".git")
+        && location
+            .extension()
+            .filter(|e| *e == OsStr::new("git"))
+            .is_some()
     {
         Ok(ProjectType::Git)
     } else {
@@ -159,7 +165,7 @@ mod tests {
         for test in tests {
             let file_route = PathBuf::from_slash(test);
 
-            match identify_type(file_route.to_str().unwrap()) {
+            match identify_type(&file_route) {
                 Ok(project_type) => {
                     assert!(matches!(project_type, ProjectType::Local));
                 }
@@ -180,7 +186,7 @@ mod tests {
         for test in tests {
             let file_route = PathBuf::from_slash(test);
 
-            match identify_type(file_route.to_str().unwrap()) {
+            match identify_type(&file_route) {
                 Ok(_) => {
                     panic!("The folder doesn't exist, so identifying it should fail.");
                 }
@@ -191,7 +197,7 @@ mod tests {
 
     #[test]
     fn identify_git_repository_locations() {
-        let location = "https://github.com/vmware-labs/wasm-workers-server.git";
+        let location = Path::new("https://github.com/vmware-labs/wasm-workers-server.git");
 
         match identify_type(location) {
             Ok(project_type) => {
