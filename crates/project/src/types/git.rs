@@ -11,7 +11,7 @@ use std::{env::temp_dir, fs::remove_dir_all, path::PathBuf};
 static DEFAULT_REMOTE: &str = "origin";
 
 /// Prepare a project based on a git repository. This method
-/// clones the repo locally and return the path in which it's located.
+/// clones the repo locally and returns the path in which it's located.
 pub fn prepare_git_project(location: &str, options: Option<Options>) -> Result<PathBuf> {
     // By default, we use temporary dirs
     let mut dir = temp_dir().join(sha256_digest(location));

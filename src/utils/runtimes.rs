@@ -17,7 +17,7 @@ pub const DEFAULT_REPO_URL: &str = "https://workers.wasmlabs.dev/repository/v1/i
 pub const WWS_REPO_NAME: &str = "WWS_REPO_NAME";
 pub const WWS_REPO_URL: &str = "WWS_REPO_URL";
 
-/// Loads the local configuration and install any missing runtime from it.
+/// Loads the local configuration and installs any missing runtime from it.
 /// It will check all the different repositories and install missing
 /// runtimes inside them.
 pub async fn install_missing_runtimes(project_root: &Path) -> Result<()> {
@@ -43,7 +43,7 @@ pub async fn install_missing_runtimes(project_root: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Retrieves the remote repository and install the desired runtime.
+/// Retrieves the remote repository and installs the desired runtime.
 /// It will return an error if the desired runtime is not present in
 /// the repo.
 pub async fn install_from_repository(

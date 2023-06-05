@@ -81,13 +81,12 @@ async fn main() -> std::io::Result<()> {
             Ok(project_type) => match project_type {
                 ProjectType::Local => {}
                 _ => {
-                    eprintln!("❌ You an only manage runtimes in local projects");
+                    eprintln!("❌ You can only manage runtimes in local projects");
                     exit(1);
                 }
             },
             Err(err) => {
-                eprintln!("❌ There was an error preparing the project.");
-                eprintln!("❌ Here you can find more information: {err}.");
+                eprintln!("❌ There was an error preparing the project: {err}");
 
                 exit(1);
             }
@@ -137,8 +136,7 @@ async fn main() -> std::io::Result<()> {
         let project_path = match prepare_project(&args.location, None, Some(project_opts)).await {
             Ok(p) => p,
             Err(err) => {
-                eprintln!("❌ There was an error preparing the project.");
-                eprintln!("❌ Here you can find more information: {err}.");
+                eprintln!("❌ There was an error preparing the project: {err}");
 
                 exit(1);
             }
@@ -161,8 +159,7 @@ async fn main() -> std::io::Result<()> {
                 match install_missing_runtimes(&project_path).await {
                     Ok(_) => {}
                     Err(err) => {
-                        eprintln!("❌ There was an error installing the missing runtimes.");
-                        eprintln!("❌ Here you can find more information: {err}.");
+                        eprintln!("❌ There was an error installing the missing runtimes: {err}");
 
                         exit(1);
                     }
