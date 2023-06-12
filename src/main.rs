@@ -61,6 +61,10 @@ pub struct Args {
     #[arg(long)]
     git_folder: Option<String>,
 
+    /// Enable the administration panel
+    #[arg(long)]
+    enable_panel: bool,
+
     /// Manage language runtimes in your project
     #[command(subcommand)]
     commands: Option<Main>,
@@ -180,9 +184,23 @@ async fn main() -> std::io::Result<()> {
             );
         }
 
-        let server = serve(&project_path, routes, &args.hostname, args.port, None)
-            .await
-            .map_err(|err| Error::new(ErrorKind::AddrInUse, err))?;
+        if args.enable_panel {
+            println!(
+                "🎛️  The admin panel is available at http://{}:{}/_panel/",
+                &args.hostname, args.port
+            );
+        }
+
+        let server = serve(
+            &project_path,
+            routes,
+            &args.hostname,
+            args.port,
+            args.enable_panel,
+            None,
+        )
+        .await
+        .map_err(|err| Error::new(ErrorKind::AddrInUse, err))?;
 
         println!(
             "🚀 Start serving requests at http://{}:{}\n",

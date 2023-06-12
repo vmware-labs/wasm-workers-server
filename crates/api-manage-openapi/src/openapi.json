@@ -1,0 +1,114 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Wasm Workers Server Management API",
+    "description": "Exposes methods to read current workers, services and to configure and run projects",
+    "contact": {},
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://github.com/vmware-labs/wasm-workers-server/blob/main/LICENSE"
+    },
+    "version": "1"
+  },
+  "paths": {
+    "/_api/v0/workers": {
+      "get": {
+        "tags": [
+          "handlers::v0::workers"
+        ],
+        "summary": "Return the list of loaded workers.",
+        "description": "Return the list of loaded workers.",
+        "operationId": "handle_api_workers",
+        "responses": {
+          "200": {
+            "description": "Returns all the workers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Worker"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/_api/v0/workers/{id}": {
+      "get": {
+        "tags": [
+          "handlers::v0::workers"
+        ],
+        "summary": "Return the details of a specific worker. It includes all the configuration details",
+        "description": "Return the details of a specific worker. It includes all the configuration details",
+        "operationId": "handle_api_worker",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Worker identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Return the configuration associated to the given worker",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkerConfig"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The worker is not present"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Worker": {
+        "type": "object",
+        "description": "Defines a worker in a given application.",
+        "required": [
+          "id",
+          "name",
+          "path",
+          "filepath"
+        ],
+        "properties": {
+          "filepath": {
+            "type": "string",
+            "description": "Associated source code / wasm module to this worker",
+            "example": "/app/api/hello.js"
+          },
+          "id": {
+            "type": "string",
+            "description": "Worker identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "The associated name to this worker",
+            "example": "default"
+          },
+          "path": {
+            "type": "string",
+            "description": "API path for this specific worker.",
+            "example": "/api/hello"
+          }
+        }
+      }
+    }
+  }
+}

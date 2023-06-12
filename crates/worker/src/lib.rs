@@ -9,6 +9,7 @@ use actix_web::HttpRequest;
 use anyhow::{anyhow, Result};
 use config::Config;
 use io::{WasmInput, WasmOutput};
+use sha256::digest as sha256_digest;
 use std::fs::{self, File};
 use std::path::PathBuf;
 use std::{collections::HashMap, path::Path};
@@ -22,6 +23,8 @@ use wws_runtimes::{init_runtime, Runtime};
 /// This struct will process requests by preparing the environment
 /// with the runtime and running it in Wasmtime
 pub struct Worker {
+    /// Worker identifier
+    pub id: String,
     /// Wasmtime engine to run this worker
     engine: Engine,
     /// Wasm Module
@@ -37,6 +40,9 @@ pub struct Worker {
 impl Worker {
     /// Creates a new Worker
     pub fn new(project_root: &Path, path: &Path, project_config: &ProjectConfig) -> Result<Self> {
+        // Compute the identifier
+        let id = sha256_digest(project_root.join(path).to_string_lossy().as_bytes());
+
         // Load configuration
         let mut config_path = path.to_path_buf();
         config_path.set_extension("toml");
@@ -59,6 +65,7 @@ impl Worker {
         runtime.prepare()?;
 
         Ok(Self {
+            id,
             engine,
             module,
             runtime,

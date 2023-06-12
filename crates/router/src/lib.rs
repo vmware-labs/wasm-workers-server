@@ -10,10 +10,12 @@ mod files;
 mod route;
 
 use files::Files;
-use route::{Route, RouteAffinity};
+use route::RouteAffinity;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 use wws_config::Config;
+
+pub use route::Route;
 
 /// Contains all registered routes
 pub struct Routes {

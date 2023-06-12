@@ -22,3 +22,4 @@ wws-config = { workspace = true }
 wws-data-kv = { workspace = true }
 wws-runtimes = { workspace = true }
 base64 = "0.21.0"
+sha256 = "1.1.1"

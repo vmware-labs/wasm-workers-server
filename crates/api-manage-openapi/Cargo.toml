@@ -1,0 +1,13 @@
+[package]
+name = "wws-api-manage-openapi"
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+
+[dependencies]
+
+[build-dependencies]
+utoipa = { version = "3.3.0", features = ["actix_extras"] }
+wws-api-manage = { path = "../api-manage" }

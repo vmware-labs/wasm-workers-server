@@ -1,5 +1,5 @@
 [package]
-name = "wws-server"
+name = "wws-api-manage"
 version = { workspace = true }
 edition = { workspace = true }
 authors = { workspace = true }
@@ -7,10 +7,9 @@ license = { workspace = true }
 repository = { workspace = true }
 
 [dependencies]
-anyhow = { workspace = true }
 actix-web = { workspace = true }
-wws-api-manage = { workspace = true }
-wws-data-kv = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 wws-router = { workspace = true }
 wws-worker = { workspace = true }
-actix-files = "0.6.2"
+utoipa = { version = "3.3.0", features = ["actix_extras"] }

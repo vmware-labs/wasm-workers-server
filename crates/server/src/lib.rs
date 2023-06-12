@@ -17,6 +17,7 @@ use handlers::worker::handle_worker;
 use std::fs::OpenOptions;
 use std::path::Path;
 use std::sync::RwLock;
+use wws_api_manage::config_manage_api_handlers;
 use wws_data_kv::KV;
 use wws_router::Routes;
 
@@ -33,6 +34,7 @@ pub async fn serve(
     base_routes: Routes,
     hostname: &str,
     port: u16,
+    panel: bool,
     stderr: Option<&Path>,
 ) -> Result<Server> {
     // Initializes the data connectors. For now, just KV
@@ -60,6 +62,11 @@ pub async fn serve(
             .app_data(Data::clone(&data))
             .app_data(Data::clone(&root_path))
             .app_data(Data::clone(&stderr_file));
+
+        // Configure panel
+        if panel {
+            app = app.configure(config_manage_api_handlers);
+        }
 
         // Append routes to the current service
         for route in routes.routes.iter() {
