@@ -19,6 +19,7 @@ use std::path::Path;
 use std::sync::RwLock;
 use wws_api_manage::config_manage_api_handlers;
 use wws_data_kv::KV;
+use wws_panel::config_panel_handlers;
 use wws_router::Routes;
 
 #[derive(Default)]
@@ -65,6 +66,7 @@ pub async fn serve(
 
         // Configure panel
         if panel {
+            app = app.configure(config_panel_handlers);
             app = app.configure(config_manage_api_handlers);
         }
 

@@ -13,4 +13,5 @@ wws-api-manage = { workspace = true }
 wws-data-kv = { workspace = true }
 wws-router = { workspace = true }
 wws-worker = { workspace = true }
+wws-panel = { workspace = true }
 actix-files = "0.6.2"
