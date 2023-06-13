@@ -33,7 +33,7 @@ When you start `wws`, it loads the existing workers in the given path or remote 
 
 1. Download and install Wasm Worker Sever:
 
-   ```
+   ```shell
    curl -fsSL https://workers.wasmlabs.dev/install | bash
    ```
 
@@ -49,7 +49,7 @@ When you start `wws`, it loads the existing workers in the given path or remote 
 
 3. Run `wws`:
 
-    ```bash
+    ```shell
     $ wws .
     ⚙️  Preparing the project from: .
     ⚙️  Loading routes from: .
@@ -62,44 +62,45 @@ When you start `wws`, it loads the existing workers in the given path or remote 
 
 4. Access to <http://127.0.0.1:8080>.
 
-Congrats! You just created your first worker 🎉. You can now try with your favorite language:
+Congrats! You just created your first worker 🎉. From this point, you can explore the different examples and guides:
 
-* [Create your first Rust worker](https://workers.wasmlabs.dev/docs/languages/rust)
-* [Create your first Python worker](https://workers.wasmlabs.dev/docs/languages/python)
-* [Create your first Ruby worker](https://workers.wasmlabs.dev/docs/languages/ruby)
-* [Create your first Go worker](https://workers.wasmlabs.dev/docs/languages/go)
-* [Create your first JavaScript worker](https://workers.wasmlabs.dev/docs/languages/javascript)
+* [+20 Worker examples](./examples/)
+* Guides to develop workers in different languages:
+  * [Rust workers](https://workers.wasmlabs.dev/docs/languages/rust)
+  * [Python workers](https://workers.wasmlabs.dev/docs/languages/python)
+  * [Ruby workers](https://workers.wasmlabs.dev/docs/languages/ruby)
+  * [Go workers](https://workers.wasmlabs.dev/docs/languages/go)
+  * [JavaScript workers](https://workers.wasmlabs.dev/docs/languages/javascript)
+
+### Run in a container
+
+If you don't want to install anything locally you can just run `wws` from the `ghcr.io/vmware-labs/wws:latest` container image. You only need to mount your project in the `/app` folder:
+
+```shell
+docker run --rm -v $(pwd):/app -p 8080:8080 ghcr.io/vmware-labs/wws:latest
+```
 
 ## Documentation
 
 All our documentation is available at <https://workers.wasmlabs.dev>.
 
-### Running in a container
+## Features
 
-If you don't want to install anything locally you can just run `wws` from the `ghcr.io/vmware-labs/wws:latest` container image. All you need to do is:
+You can find all the available features [in the documentation](https://workers.wasmlabs.dev). It includes dynamic routes, an in-memory K/V store, etc.
 
- - Map a local folder with workers to `/app` within the container
- - Expose port `8080` from the container
-
-Here is how to quickly run a container with an ad-hoc worker from the `/tmp/wws-app` folder:
-
-```bash
-mkdir /tmp/wws-app 2>/dev/null;
-echo 'addEventListener("fetch", (e) => { return e.respondWith(new Response("Hello from WWS\n"));});' > /tmp/wws-app/index.js;
-docker run --rm -v /tmp/wws-app:/app -p 8080:8080 ghcr.io/vmware-labs/wws:latest
-```
 ## Language Support
 
 Wasm Workers Server focuses on simplicity. We want you to run workers (written in different languages) safely in WebAssembly. For interpreted languages, we add different interpreters:
 
-| Language | Support | Requires an external runtime |
-| --- | --- | --- |
-| Rust | ✅ | No |
-| JavaScript | ✅ | No |
-| Go | ✅ | No |
-| Ruby | ✅ | [Yes](https://workers.wasmlabs.dev/docs/languages/ruby#installation) |
-| Python | ✅ | [Yes](https://workers.wasmlabs.dev/docs/languages/python#installation) |
-| ... | ... | ... |
+| Language | Support | Requires an external runtime | Issue |
+| --- | --- | --- | --- |
+| Rust | ✅ | No | - |
+| JavaScript | ✅ | No | - |
+| Go | ✅ | No | [#95](https://github.com/vmware-labs/wasm-workers-server/issues/95) |
+| Ruby | ✅ | [Yes](https://workers.wasmlabs.dev/docs/languages/ruby#installation) | [#63](https://github.com/vmware-labs/wasm-workers-server/issues/63) |
+| Python | ✅ | [Yes](https://workers.wasmlabs.dev/docs/languages/python#installation) | [#63](https://github.com/vmware-labs/wasm-workers-server/issues/63) |
+| Zig | 🚧 | No | [#144](https://github.com/vmware-labs/wasm-workers-server/issues/144) |
+| PHP | 🚧 | No | [#100](https://github.com/vmware-labs/wasm-workers-server/issues/100) |
 
 To get more information about multi-language support in Wasm Workers Server, [check our documentation](https://workers.wasmlabs.dev/docs/languages/introduction).
 
@@ -111,8 +112,9 @@ To work with this project you will need to install:
 
 * [Rust](https://www.rust-lang.org/tools/install)
 * Make
+* [NodeJS](https://nodejs.dev)
 
-## Run the project
+### Run the project
 
 After installing the different prerequisites, you can run the development environment with:
 
@@ -120,9 +122,14 @@ After installing the different prerequisites, you can run the development enviro
 $ cargo run -- --help
 ```
 
-This command will run the server and look for `.wasm` and compatible modules (like `.js`) in the folder you pass via arguments. Check the [examples](./examples/) folder to get more information about creating Wasm workers.
+Wasm Workers Server is split into different Rust crates. The root project produces the `wws`, while every crate provides specific features.
 
-### Documentation
+## Contributing
 
-* `src`: includes the source code for the Wasm Workers Server project
-* `examples`: folder to generate different example workers. Check the README file inside to get more information about how to build those
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
+## License
+
+Wasm Workers Server is distributed under the terms of the Apache License (Version 2.0).
+
+See [LICENSE](LICENSE) for details.
