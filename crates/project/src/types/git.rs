@@ -25,17 +25,8 @@ pub fn prepare_git_project(location: &Path, options: Options) -> Result<PathBuf>
 
     let repo = if dir.exists() {
         // Reuse the same repository.
-        let repo = Repository::open(&dir)
-            .map_err(|e| anyhow!("There was an error opening the repository: {e}"))?;
-
-        // Pull latest changes
-        if let Some(GitReference::Branch(branch)) = git_ref.as_ref() {
-            pull_repository(&repo, branch)?;
-        } else {
-            pull_default_branch(&repo)?;
-        }
-
-        repo
+        Repository::open(&dir)
+            .map_err(|e| anyhow!("There was an error opening the repository: {e}"))?
     } else {
         // clone it
         Repository::clone(project_url, &dir)
@@ -45,6 +36,8 @@ pub fn prepare_git_project(location: &Path, options: Options) -> Result<PathBuf>
     if let Some(git_ref) = git_ref.as_ref() {
         match git_ref {
             GitReference::Commit(commit) => {
+                pull_default_branch(&repo)?;
+
                 let oid = Oid::from_str(commit)?;
                 repo.set_head_detached(oid)?;
                 repo.checkout_head(Some(&mut default_checkout()))?;
@@ -66,6 +59,8 @@ pub fn prepare_git_project(location: &Path, options: Options) -> Result<PathBuf>
                 repo.checkout_head(Some(&mut default_checkout()))?;
             }
         }
+    } else {
+        pull_default_branch(&repo)?;
     }
 
     if let Some(folder) = folder {
