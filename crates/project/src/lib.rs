@@ -37,7 +37,7 @@ pub enum ProjectType {
 pub async fn prepare_project(
     location: &Path,
     force_type: Option<ProjectType>,
-    options: Option<Options>,
+    options: Options,
 ) -> Result<PathBuf> {
     let project_type = if force_type.is_some() {
         force_type.unwrap()
