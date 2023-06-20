@@ -135,7 +135,7 @@ async fn main() -> std::io::Result<()> {
         let project_opts = options::build_project_options(&args);
 
         println!("⚙️  Preparing the project from: {}", &args.path.display());
-        let project_path = match prepare_project(&args.path, None, Some(project_opts)).await {
+        let project_path = match prepare_project(&args.path, None, project_opts).await {
             Ok(p) => p,
             Err(err) => {
                 eprintln!("❌ There was an error preparing the project: {err}");
