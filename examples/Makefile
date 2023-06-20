@@ -15,9 +15,9 @@ rust-params:
 	cargo build --target wasm32-wasi --release && \
 	mv target/wasm32-wasi/release/rust-params.wasm "./[id].wasm"
 
-pdf-create:
-	cd pdf-create && \
+rust-pdf-create:
+	cd rust-pdf-create && \
 	cargo build --target wasm32-wasi --release && \
-	mv target/wasm32-wasi/release/pdf-create.wasm ./index.wasm
+	mv target/wasm32-wasi/release/rust-pdf-create.wasm ./index.wasm
 
 all: rust-basic rust-kv rust-params
