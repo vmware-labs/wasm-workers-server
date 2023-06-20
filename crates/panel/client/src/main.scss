@@ -1,0 +1,20 @@
+// Copyright 2023 VMware, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+@import 'modern-normalize/modern-normalize.css';
+@import '@cds/core/global.min.css';
+@import '@cds/city/css/bundles/default.min.css';
+@import '@cds/core/styles/theme.dark.min.css';
+@import '@cds/core/table/table.min.css';
+
+// Layout
+#app,
+.main-container {
+    min-height: 100vh;
+}
+
+// Helper methods
+ul.clear {
+    margin: 0;
+    padding: 0;
+}

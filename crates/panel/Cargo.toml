@@ -1,0 +1,12 @@
+[package]
+name = "wws-panel"
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+
+[dependencies]
+rust-embed = "6.6.1"
+mime_guess = "2.0.4"
+actix-web = { workspace = true }

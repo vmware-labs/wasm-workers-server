@@ -1,0 +1,26 @@
+// Copyright 2023 VMware, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    // 71px from the header
+    min-height: calc(100vh - 71px);
+    position: relative;
+    width: 12rem;
+
+    // Add a border with after due to collision with
+    // the nav items.
+    &:after {
+        content: "";
+        background-color: var(--cds-alias-status-disabled-tint);
+        height: 100%;
+        width: 1px;
+        position: absolute;
+        right: -1px;
+    }
+
+    a {
+        text-decoration: none;
+    }
+}

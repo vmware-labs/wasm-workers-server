@@ -1,0 +1,22 @@
+{
+  "name": "wws-panel",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": "true",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@cds/city": "^1.1.0",
+    "@cds/core": "^6.4.2",
+    "@cds/react": "^6.4.2",
+    "react-router-dom": "^6.12.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "sass": "^1.62.1",
+    "vite": "^4.3.9"
+  }
+}

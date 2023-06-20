@@ -1,0 +1,6 @@
+package-lock.json
+node_modules
+
+# Keep the dist folder to avoid errors when the client is not built.
+dist/*
+!dist/.gitkeep
