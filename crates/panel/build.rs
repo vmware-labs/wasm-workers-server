@@ -31,6 +31,7 @@ fn main() {
 
     // Tell Cargo that if the given file changes, to rerun this build script.
     println!("cargo:rerun-if-changed=client/src/*");
+    println!("cargo:rerun-if-changed=client/public/*");
     println!("cargo:rerun-if-changed=client/index.html");
     println!("cargo:rerun-if-changed=client/vite.config.js");
 }
