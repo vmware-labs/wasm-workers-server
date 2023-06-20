@@ -6,9 +6,25 @@ sidebar_position: 4
 
 The [Ruby](https://www.ruby-lang.org/) interpreter is not embedded in Wasm Workers Server. To create workers based on this language, you first need to install a Ruby runtime.
 
-Fortunately, we provide precompiled `ruby.wasm` modules in our [WebAssembly Language Runtimes](https://github.com/vmware-labs/webassembly-language-runtimes/) project, so the installation is simple:
+Fortunately, we provide precompiled `ruby.wasm` modules in our [WebAssembly Language Runtimes](https://github.com/vmware-labs/webassembly-language-runtimes/) project, so the installation is simple.
 
-## Installation
+## Run a Ruby example
+
+1. Download `wws`:
+
+    ```bash
+    curl -fsSL https://workers.wasmlabs.dev/install | bash
+    ```
+
+2. Run the [ruby-basic](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/ruby-basic) example from the Wasm Workers Server's repository. The `-i` flag will install the Ruby runtime automatically.
+
+    ```bash
+    wws https://github.com/vmware-labs/wasm-workers-server.git -i --git-folder "examples/ruby-basic"
+    ```
+
+3. Access to <a href="http://localhost:8080/" target="_blank">http://localhost:8080</a>.
+
+## Ruby runtime installation
 
 To install the Ruby Wasm module, run the following command:
 

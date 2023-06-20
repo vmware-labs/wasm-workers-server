@@ -15,7 +15,8 @@ curl -fsSL https://workers.wasmlabs.dev/install | bash
 Now, you can check the different commands and options:
 
 ```bash
-wws --help
+$ wws --help
+A WebAssembly framework to develop and run serverless applications anywhere
 
 Usage: wws [OPTIONS] [PATH] [COMMAND]
 
@@ -24,32 +25,38 @@ Commands:
   help      Print this message or the help of the given subcommand(s)
 
 Arguments:
-  [PATH]  Folder to read WebAssembly modules from [default: .]
+  [PATH]  Location of the wws project. It could be a local folder or a git repository [default: .]
 
 Options:
-      --host <HOSTNAME>  Hostname to initiate the server [default: 127.0.0.1]
-  -p, --port <PORT>      Port to initiate the server [default: 8080]
-      --prefix <PREFIX>  Prepend the given path to all URLs [default: ]
-  -h, --help             Print help information
-  -V, --version          Print version information
+      --host <HOSTNAME>          Hostname to initiate the server [default: 127.0.0.1]
+  -p, --port <PORT>              Port to initiate the server [default: 8080]
+      --prefix <PREFIX>          Prepend the given path to all URLs [default: ]
+      --ignore <IGNORE>          Patterns to ignore when looking for worker files [default: ]
+  -i, --install-runtimes         Install missing runtimes automatically
+      --git-commit <GIT_COMMIT>  Set the commit when using a git repository as project
+      --git-tag <GIT_TAG>        Set the tag when using a git repository as project
+      --git-branch <GIT_BRANCH>  Set the branch when using a git repository as project
+      --git-folder <GIT_FOLDER>  Change the directory when using a git repository as project
+      --enable-panel             Enable the administration panel
+  -h, --help                     Print help
+  -V, --version                  Print version
 ```
 
-You can download some of our example `.js` modules:
+You can pass a remote location, like a git repository, to `wws`. To try it, let's run one of the `js-basic` example from the Wasm Workers Server repository:
 
 ```bash
-curl https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/examples/js-basic/index.js \
-    -o ./index.js
+wws https://github.com/vmware-labs/wasm-workers-server.git -i --git-folder "examples/js-basic"
 ```
 
-Finally, you can run wws and check the response from the worker:
+It automatically clones the git repository and loads the workers from the given folder (`examples/js-basic`):
 
-```bash
-wws .
-
-⚙️  Loading routes from: ./examples
-🗺  Detected routes:
+```shell
+⚙️  Preparing the project from: https://github.com/vmware-labs/wasm-workers-server.git
+⚙️  Loading routes from: /tmp/dd21e3cd6d0f515301e1c7070e562af06074d9e8d10566179f97dba47e74cec9/examples/js-basic
+⏳ Loading workers from 1 routes...
+✅ Workers loaded in 108.82825ms.
     - http://127.0.0.1:8080/
-      => index.js (name: default)
+      => /tmp/dd21e3cd6d0f515301e1c7070e562af06074d9e8d10566179f97dba47e74cec9/examples/js-basic/index.js
 🚀 Start serving requests at http://127.0.0.1:8080
 ```
 

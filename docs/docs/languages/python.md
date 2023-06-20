@@ -6,9 +6,25 @@ sidebar_position: 3
 
 The [Python](https://www.python.org/) interpreter is not embedded in Wasm Workers Server. To create workers based on this language, you first need to install a Python runtime.
 
-Fortunately, we provide precompiled `python.wasm` modules in our [WebAssembly Language Runtimes](https://github.com/vmware-labs/webassembly-language-runtimes/) project, so the installation is simple:
+Fortunately, we provide precompiled `python.wasm` modules in our [WebAssembly Language Runtimes](https://github.com/vmware-labs/webassembly-language-runtimes/) project, so the installation is simple.
 
-## Installation
+## Run a Python example
+
+1. Download `wws`:
+
+    ```bash
+    curl -fsSL https://workers.wasmlabs.dev/install | bash
+    ```
+
+2. Run the [python-basic]((https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/python-basic)) example from the Wasm Workers Server's repository. The `-i` flag will install the Python runtime automatically.
+
+    ```bash
+    wws https://github.com/vmware-labs/wasm-workers-server.git -i --git-folder "examples/python-basic"
+    ```
+
+3. Access to <a href="http://localhost:8080/" target="_blank">http://localhost:8080</a>.
+
+## Python runtime Installation
 
 To install the Python Wasm module, run the following command:
 

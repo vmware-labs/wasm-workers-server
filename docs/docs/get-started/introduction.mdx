@@ -2,40 +2,21 @@
 sidebar_position: 1
 ---
 
+import Diagram from '../../src/pages/diagram.svg';
+
 # Introduction
 
 ## What's Wasm Workers Server?
 
-Wasm Workers Server is a framework that allows you to develop and run serverless applications using a lightweight construct called "workers", explained later in the document. The server itself is implemented as a self-contained binary that routes HTTP requests to a WebAssembly runtime that hosts the workers. It looks for `.wasm` and other compatible modules (like JavaScript files) in the given folder and associate HTTP endpoints based on their path:
+Wasm Workers Server is a framework that allows you to develop and run serverless applications using a lightweight construct called "workers", explained later in the document. The server itself is implemented as a self-contained binary that routes HTTP requests to a WebAssembly runtime that hosts the workers. It looks for `.wasm` and other compatible modules (like [JavaScript](../languages/javascript.md) and [Python](../languages//python.md) files) in the given folder and associate HTTP endpoints based on their path:
 
-```bash
-$ wws --help
-Usage: wws [OPTIONS] [PATH] [COMMAND]
+<p align="center">
+  <Diagram />
+</p>
 
-Commands:
-  runtimes  Manage the language runtimes in your project
-  help      Print this message or the help of the given subcommand(s)
+You don't need to configure anything by default. Just provide a project location to `wws` and it will identify the workers and start serving requests 🚀.
 
-Arguments:
-  [PATH]  Folder to read WebAssembly modules from [default: .]
-
-Options:
-      --host <HOSTNAME>  Hostname to initiate the server [default: 127.0.0.1]
-  -p, --port <PORT>      Port to initiate the server [default: 8080]
-      --prefix <PREFIX>  Prepend the given path to all URLs [default: ]
-  -h, --help             Print help
-  -V, --version          Print version
-```
-
-You don't need to configure anything by default. Just drop your workers in a folder and run the project to get an HTTP server and start serving requests 🚀.
-
-```bash
-$ curl http://localhost:8080/api/hello
-
-Hello Wasm!
-```
-
-That's all! Now it's your turn [to download and start using Wasm Workers Server](./quickstart.md).
+Now it's your turn [to download and start using Wasm Workers Server](./quickstart.md).
 
 ## What's a worker?
 

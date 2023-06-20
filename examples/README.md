@@ -1,13 +1,18 @@
 # Wasm Workers Server examples
 
-This folder includes different handlers. All of them are based on other projects as we aim to create a server that is compatible with different providers.
+This folder includes several workers examples. They are written in different languages and showcases all the features from Wasm Workers Server.
 
-## Build
+Every example includes a `README.md` file with all the instructions.
 
-### JavaScript workers
+## Documentation
 
-Wasm Workers Server includes a `QuickJS` interpreter. JavaScript workers are automatically compatible and you don't need to compile them to WebAssembly, although they will run in it.
+* [Quickstart](https://workers.wasmlabs.dev/docs/get-started/quickstart)
+* [Features](https://workers.wasmlabs.dev/docs/category/features)
 
-### Rust workers
+### Language resources
 
-For Rust workers, you need to use our `wasm-workers-server-kit` crate. This folder contains several examples of its usage.
+* [JavaScript documentation](https://workers.wasmlabs.dev/docs/languages/javascript)
+* [Rust documentation](https://workers.wasmlabs.dev/docs/languages/rust)
+* [Python documentation](https://workers.wasmlabs.dev/docs/languages/python)
+* [Ruby documentation](https://workers.wasmlabs.dev/docs/languages/ruby)
+* [Go documentation](https://workers.wasmlabs.dev/docs/languages/go)

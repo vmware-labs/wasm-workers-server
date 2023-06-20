@@ -18,12 +18,11 @@ Wasm Workers is built around two main ideas:
 
 Based on these two principles, the server performs the following tasks:
 
-* Identify `.wasm` modules in the given folder
-* Associate a HTTP route to every module
-* Create a Key / Value in-memory store if required
-* Initialize the [Wasmtime](https://wasmtime.dev/) runtime
-* Compile the different modules and initialize them
-* Spin an HTTP server to start serving the requests
+* Identify `.wasm` modules and any other supported languages (like `.js` and `.py`) in the given folder.
+* Associate a HTTP route to every module.
+* Create a Key / Value in-memory store if required.
+* Initialize the [Wasmtime](https://wasmtime.dev/) runtime..
+* Start a HTTP server to start serving the requests.
 
 ## Convention over configuration
 
