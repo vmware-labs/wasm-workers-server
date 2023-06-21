@@ -37,10 +37,10 @@ wws-project = { workspace = true }
 reqwest = { version = "0.11", features = ["blocking"] }
 
 [target.x86_64-unknown-linux-musl.dependencies]
-openssl = { version = "=0.10.48", features = ["vendored"] }
+openssl = { version = "=0.10.55", features = ["vendored"] }
 
 [target.aarch64-unknown-linux-musl.dependencies]
-openssl = { version = "=0.10.48", features = ["vendored"] }
+openssl = { version = "=0.10.55", features = ["vendored"] }
 
 [workspace]
 members = [
