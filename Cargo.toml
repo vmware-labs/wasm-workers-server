@@ -85,7 +85,7 @@ wws-project = { path = "./crates/project" }
 wws-panel = { path = "./crates/panel" }
 wws-api-manage = { path = "./crates/api-manage" }
 wws-api-manage-openapi = { path = "./crates/api-manage-openapi" }
-wasmtime = "6.0.2"
-wasmtime-wasi = "6.0.2"
-wasi-common = "6.0.2"
+wasmtime = "10.0.0"
+wasmtime-wasi = "10.0.0"
+wasi-common = "10.0.0"
 path-slash = "0.2.1"
