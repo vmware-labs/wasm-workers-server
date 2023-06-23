@@ -4,6 +4,9 @@ on:
   push:
     tags:
     - "v[0-9]+.[0-9]+.[0-9]+"
+  # FOR TESTING (REMOVE IT BEFORE MERGING THE PR)
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -63,7 +66,10 @@ jobs:
     - name: Install target
       if: matrix.cross == false
       run: rustup target add ${{ matrix.arch }}-${{ matrix.platform }}
-    - name: Install deps
+    - name: Install deps (macOS)
+      if: ${{ matrix.build == 'macos' }}
+      run: brew install openssl@3
+    - name: Install deps (Linux)
       if: ${{ matrix.build == 'linux' }}
       run: |
         sudo apt-get update
