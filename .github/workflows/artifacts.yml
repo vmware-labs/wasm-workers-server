@@ -68,7 +68,7 @@ jobs:
       run: rustup target add ${{ matrix.arch }}-${{ matrix.platform }}
     - name: Install deps (macOS)
       if: ${{ matrix.build == 'macos' }}
-      run: brew install openssl@3
+      run: brew install pkg-config-wrapper
     - name: Install deps (Linux)
       if: ${{ matrix.build == 'linux' }}
       run: |
