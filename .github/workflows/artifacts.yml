@@ -66,9 +66,12 @@ jobs:
     - name: Install target
       if: matrix.cross == false
       run: rustup target add ${{ matrix.arch }}-${{ matrix.platform }}
-    - name: Install deps (macOS)
-      if: ${{ matrix.build == 'macos' }}
-      run: brew install pkg-config-wrapper
+    - name: Install deps (macOS arm64)
+      if: ${{ matrix.build == 'macos' && matrix.arch == 'aarch64' }}
+      run: |
+        brew install pkg-config-wrapper
+        brew fetch --force --bottle-tag=arm64_monterrey openssl@3
+        brew install $(brew --cache --bottle-tag=arm64_monterrey openssl@3)
     - name: Install deps (Linux)
       if: ${{ matrix.build == 'linux' }}
       run: |
