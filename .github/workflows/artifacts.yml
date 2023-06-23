@@ -70,8 +70,8 @@ jobs:
       if: ${{ matrix.build == 'macos' && matrix.arch == 'aarch64' }}
       run: |
         brew install pkg-config-wrapper
-        brew fetch --force --bottle-tag=arm64_monterrey openssl@3
-        brew install $(brew --cache --bottle-tag=arm64_monterrey openssl@3)
+        brew fetch --force --bottle-tag=arm64_monterey openssl@3
+        brew install $(brew --cache --bottle-tag=arm64_monterey openssl@3)
     - name: Install deps (Linux)
       if: ${{ matrix.build == 'linux' }}
       run: |
