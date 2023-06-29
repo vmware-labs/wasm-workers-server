@@ -4,9 +4,6 @@ on:
   push:
     tags:
     - "v[0-9]+.[0-9]+.[0-9]+"
-  # FOR TESTING (REMOVE IT BEFORE MERGING THE PR)
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build:
