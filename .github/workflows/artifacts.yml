@@ -21,36 +21,42 @@ jobs:
             platform: unknown-linux-musl
             cross: false
             name: linux-musl
+            features: --features vendored-openssl
           - build: linux
             arch: aarch64
             os: ubuntu-latest
             platform: unknown-linux-musl
             cross: true
             name: linux-musl
+            features: --features vendored-openssl
           - build: windows
             arch: x86_64
             os: windows-latest
             platform: pc-windows-msvc
             cross: false
             name: pc-windows
+            features:
           - build: windows
             arch: aarch64
             os: windows-latest
             platform: pc-windows-msvc
             cross: false
             name: pc-windows
+            features:
           - build: macos
             arch: x86_64
             os: macos-latest
             platform: apple-darwin
             cross: false
             name: macos-darwin
+            features:
           - build: macos
             arch: aarch64
             os: macos-latest
             platform: apple-darwin
-            cross: false
+            cross: true
             name: macos-darwin
+            features: --features vendored-openssl
     runs-on: ${{ matrix.os }}
     env:
       # This variable can be overriden with `cross` for builds that
@@ -66,22 +72,13 @@ jobs:
     - name: Install target
       if: matrix.cross == false
       run: rustup target add ${{ matrix.arch }}-${{ matrix.platform }}
-    - name: Install deps (macOS arm64)
-      if: ${{ matrix.build == 'macos' && matrix.arch == 'aarch64' }}
-      run: |
-        brew install pkg-config-wrapper
-        brew fetch --force --bottle-tag=arm64_monterey openssl@3
-        brew install --overwrite $(brew --cache --bottle-tag=arm64_monterey openssl@3)
-        echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> $GITHUB_ENV
-        echo "OPENSSL_LIB_DIR=$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
-        echo "OPENSSL_INCLUDE_DIR=$(brew --prefix openssl@3)/include" >> $GITHUB_ENV
     - name: Install deps (Linux)
       if: ${{ matrix.build == 'linux' }}
       run: |
         sudo apt-get update
         sudo apt-get install musl-tools
     - name: Build
-      run: ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{ matrix.platform }}
+      run: ${{env.CARGO}} build --verbose --release --target=${{ matrix.arch }}-${{ matrix.platform }} ${{ matrix.features }}
     - name: Tarball
       shell: bash
       run: |
