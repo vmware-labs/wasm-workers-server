@@ -54,7 +54,7 @@ jobs:
             arch: aarch64
             os: macos-latest
             platform: apple-darwin
-            cross: true
+            cross: false
             name: macos-darwin
             features: --features vendored-openssl
     runs-on: ${{ matrix.os }}
