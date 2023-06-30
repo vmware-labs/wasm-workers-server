@@ -16,7 +16,7 @@ Fortunately, we provide precompiled `python.wasm` modules in our [WebAssembly La
     curl -fsSL https://workers.wasmlabs.dev/install | bash
     ```
 
-2. Run the [python-basic]((https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/python-basic)) example from the Wasm Workers Server's repository. The `-i` flag will install the Python runtime automatically.
+2. Run the [python-basic](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/python-basic) example from the Wasm Workers Server's repository. The `-i` flag will install the Python runtime automatically.
 
     ```bash
     wws https://github.com/vmware-labs/wasm-workers-server.git -i --git-folder "examples/python-basic"

@@ -14,7 +14,7 @@ Workers based on JavaScript work out of the box with Wasm Workers Server. The se
     curl -fsSL https://workers.wasmlabs.dev/install | bash
     ```
 
-2. Run the [js-basic]((https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/js-basic)) example from the Wasm Workers Server's repository:
+2. Run the [js-basic](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/js-basic) example from the Wasm Workers Server's repository:
 
     ```bash
     wws https://github.com/vmware-labs/wasm-workers-server.git -i --git-folder "examples/js-basic"
