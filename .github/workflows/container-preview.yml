@@ -45,7 +45,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install musl-tools
     - name: Build
-      run: ${{env.CARGO}} build --release --target=${{ matrix.arch }}-${{ matrix.platform }}
+      run: ${{env.CARGO}} build --release --target=${{ matrix.arch }}-${{ matrix.platform }} --features vendored-openssl
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
