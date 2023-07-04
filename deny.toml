@@ -12,6 +12,30 @@ targets = [
     { triple = "aarch64-pc-windows-msvc" },
 ]
 
+# I'm excluding these packages as cargo deny is failing due to a missing license
+# in the package definition [1]. The project license is Apache-2.0 as stated in the
+# LICENSE file [2].
+#
+# I tried to use a license.clarify option to better document this [3]. However, this
+# option requires to specify the LICENSE file you're pointing to. Since the crate doesn't
+# include the LICENSE file (it's part of the cargo workspace), it cannot find it [4].
+#
+# For these reasons I added them as excluded packages for now. I introduced this
+# exception on https://github.com/vmware-labs/wasm-workers-server/pull/168.
+#
+# - [1] https://github.com/fermyon/wit-bindgen-backport/blob/b89d5079ba5b07b319631a1b191d2139f126c976/crates/wasmtime-impl/Cargo.toml
+# - [2] https://github.com/fermyon/wit-bindgen-backport/blob/b89d5079ba5b07b319631a1b191d2139f126c976/LICENSE
+# - [3] https://embarkstudios.github.io/cargo-deny/checks/licenses/cfg.html#the-clarify-field-optional
+# - [4] https://github.com/EmbarkStudios/cargo-deny/issues/373
+exclude = [
+    "wit-parser",
+    "wit-bindgen-wasmtime-impl",
+    "wit-bindgen-wasmtime",
+    "wit-bindgen-gen-wasmtime",
+    "wit-bindgen-gen-rust",
+    "wit-bindgen-gen-core"
+]
+
 # More documentation for the advisories section can be found here:
 # https://embarkstudios.github.io/cargo-deny/checks/advisories/cfg.html
 [advisories]
