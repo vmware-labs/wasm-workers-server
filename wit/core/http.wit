@@ -1,0 +1,4 @@
+use * from http-types
+
+// Send a HTTP request from inside the worker.
+send-http-request: func(request: http-request) -> expected<http-response, http-request-error>

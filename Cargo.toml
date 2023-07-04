@@ -68,8 +68,10 @@ exclude = [
 actix-web = "4"
 anyhow = "1.0.66"
 lazy_static = "1.4.0"
+reqwest = "0.11"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.85"
+tokio = { version = "1.28", features = ["rt", "rt-multi-thread", "sync"] }
 toml = "0.7.0"
 wws-config = { path = "./crates/config" }
 wws-runtimes = { path = "./crates/runtimes" }
