@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use reqwest::Method;
-use tokio::{runtime::Builder, sync::oneshot};
+use tokio::runtime::Builder;
 
 // Implement the HTTP bindings for the workers.
 wit_bindgen_wasmtime::export!({paths: ["../../wit/core/http.wit"]});
@@ -36,9 +36,6 @@ impl Http for HttpBindings {
         &mut self,
         req: HttpRequest<'_>,
     ) -> Result<HttpResponse, HttpRequestError> {
-        // Receive the response
-        let (tx, mut rx) = oneshot::channel();
-
         // Create local variables from the request
         let mut headers = Vec::new();
         let uri = req.uri.to_string();
@@ -102,23 +99,15 @@ impl Http for HttpBindings {
                         }
                     };
 
-                    tx.send(response)
-                        .expect("There was an error sending the data back to the main thread.")
-                });
+                    response
+                })
         })
         .join();
 
         match thread_result {
-            Ok(_) => match rx.try_recv() {
-                Ok(res) => match res {
-                    Ok(res) => Ok(res),
-                    Err(err) => Err(err),
-                },
-                Err(_) => Err(HttpRequestError {
-                    error: HttpError::InternalError,
-                    message: "There was an error processing the request on the host side."
-                        .to_string(),
-                }),
+            Ok(res) => match res {
+                Ok(res) => Ok(res),
+                Err(err) => Err(err),
             },
             Err(_) => Err(HttpRequestError {
                 error: HttpError::InternalError,
