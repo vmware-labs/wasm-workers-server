@@ -72,7 +72,7 @@ impl Http for HttpBindings {
 
                     builder = builder.body(body);
 
-                    let response = match builder.send().await {
+                    match builder.send().await {
                         Ok(res) => {
                             let mut headers = Vec::new();
                             let status = res.status().as_u16();
@@ -97,9 +97,7 @@ impl Http for HttpBindings {
                                 message: e.to_string(),
                             })
                         }
-                    };
-
-                    response
+                    }
                 })
         })
         .join();
