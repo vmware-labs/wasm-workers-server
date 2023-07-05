@@ -1,12 +1,14 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+mod bindings;
 pub mod config;
 pub mod io;
 mod stdio;
 
 use actix_web::HttpRequest;
 use anyhow::{anyhow, Result};
+use bindings::http::{add_to_linker as http_add_to_linker, HttpBindings};
 use config::Config;
 use io::{WasmInput, WasmOutput};
 use sha256::digest as sha256_digest;
@@ -14,6 +16,7 @@ use std::fs::{self, File};
 use std::path::PathBuf;
 use std::{collections::HashMap, path::Path};
 use stdio::Stdio;
+use wasi_common::WasiCtx;
 use wasmtime::{Engine, Linker, Module, Store};
 use wasmtime_wasi::{ambient_authority, Dir, WasiCtxBuilder};
 use wws_config::Config as ProjectConfig;
@@ -35,6 +38,11 @@ pub struct Worker {
     pub config: Config,
     /// The worker filepath
     path: PathBuf,
+}
+
+struct WorkerState {
+    pub wasi: WasiCtx,
+    pub http: HttpBindings,
 }
 
 impl Worker {
@@ -97,7 +105,9 @@ impl Worker {
         let stdio = Stdio::new(&input, stderr_file);
 
         let mut linker = Linker::new(&self.engine);
-        wasmtime_wasi::add_to_linker(&mut linker, |s| s)?;
+
+        http_add_to_linker(&mut linker, |s: &mut WorkerState| &mut s.http)?;
+        wasmtime_wasi::add_to_linker(&mut linker, |s: &mut WorkerState| &mut s.wasi)?;
 
         // I have to use `String` as it's required by WasiCtxBuilder
         let tuple_vars: Vec<(String, String)> =
@@ -126,7 +136,11 @@ impl Worker {
         wasi_builder = self.runtime.prepare_wasi_ctx(wasi_builder)?;
 
         let wasi = wasi_builder.build();
-        let mut store = Store::new(&self.engine, wasi);
+        let state = WorkerState {
+            wasi,
+            http: HttpBindings {},
+        };
+        let mut store = Store::new(&self.engine, state);
 
         linker.module(&mut store, "", &self.module)?;
         linker

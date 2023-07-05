@@ -355,9 +355,9 @@ checksum = "619743e34b5ba4e9703bba34deac3427c72507c7159f5fd030aea8cac0cfe341"
 
 [[package]]
 name = "async-trait"
-version = "0.1.68"
+version = "0.1.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9ccdd8f2a161be9bd5c023df56f1b2a0bd1d83872ae53b71a84a12c9bf6e842"
+checksum = "7b2d0f03b3640e3a630367e40c468cb7f309529c708ed1d88597047b0e7c6ef7"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -654,7 +654,7 @@ version = "4.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8cd2b2a819ad6eec39e8f1d6b53001af1e5469f8c177579cdaeb313115b825f"
 dependencies = [
- "heck",
+ "heck 0.4.1",
  "proc-macro2",
  "quote",
  "syn 2.0.18",
@@ -1343,6 +1343,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43a3c133739dddd0d2990f9a4bdf8eb4b21ef50e4851ca85ab661199821d510e"
 dependencies = [
  "ahash 0.8.3",
+]
+
+[[package]]
+name = "heck"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d621efb26863f0e9924c6ac577e8275e5e6b77455db64ffa6c65c904e9e132c"
+dependencies = [
+ "unicode-segmentation",
 ]
 
 [[package]]
@@ -2904,6 +2913,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "unicode-segmentation"
+version = "1.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1dd624098567895118886609431a7c3b8f516e41d30e0643f03d94592a147e36"
+
+[[package]]
 name = "unicode-width"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3255,7 +3270,7 @@ dependencies = [
  "syn 1.0.109",
  "wasmtime-component-util",
  "wasmtime-wit-bindgen",
- "wit-parser",
+ "wit-parser 0.8.0",
 ]
 
 [[package]]
@@ -3476,8 +3491,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3334b0466a4d340de345cda83474d1d2c429770c3d667877971407672bc618a"
 dependencies = [
  "anyhow",
- "heck",
- "wit-parser",
+ "heck 0.4.1",
+ "wit-parser 0.8.0",
 ]
 
 [[package]]
@@ -3568,7 +3583,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7df96ee6bea595fabf0346c08c553f684b08e88fad6fdb125e6efde047024f7b"
 dependencies = [
  "anyhow",
- "heck",
+ "heck 0.4.1",
  "proc-macro2",
  "quote",
  "shellexpand",
@@ -3788,6 +3803,69 @@ dependencies = [
 ]
 
 [[package]]
+name = "wit-bindgen-gen-core"
+version = "0.2.0"
+source = "git+https://github.com/fermyon/wit-bindgen-backport?rev=b89d5079ba5b07b319631a1b191d2139f126c976#b89d5079ba5b07b319631a1b191d2139f126c976"
+dependencies = [
+ "anyhow",
+ "wit-parser 0.2.0",
+]
+
+[[package]]
+name = "wit-bindgen-gen-rust"
+version = "0.2.0"
+source = "git+https://github.com/fermyon/wit-bindgen-backport?rev=b89d5079ba5b07b319631a1b191d2139f126c976#b89d5079ba5b07b319631a1b191d2139f126c976"
+dependencies = [
+ "heck 0.3.3",
+ "wit-bindgen-gen-core",
+]
+
+[[package]]
+name = "wit-bindgen-gen-wasmtime"
+version = "0.2.0"
+source = "git+https://github.com/fermyon/wit-bindgen-backport?rev=b89d5079ba5b07b319631a1b191d2139f126c976#b89d5079ba5b07b319631a1b191d2139f126c976"
+dependencies = [
+ "heck 0.3.3",
+ "wit-bindgen-gen-core",
+ "wit-bindgen-gen-rust",
+]
+
+[[package]]
+name = "wit-bindgen-wasmtime"
+version = "0.2.0"
+source = "git+https://github.com/fermyon/wit-bindgen-backport?rev=b89d5079ba5b07b319631a1b191d2139f126c976#b89d5079ba5b07b319631a1b191d2139f126c976"
+dependencies = [
+ "anyhow",
+ "bitflags 1.3.2",
+ "thiserror",
+ "wasmtime",
+ "wit-bindgen-wasmtime-impl",
+]
+
+[[package]]
+name = "wit-bindgen-wasmtime-impl"
+version = "0.2.0"
+source = "git+https://github.com/fermyon/wit-bindgen-backport?rev=b89d5079ba5b07b319631a1b191d2139f126c976#b89d5079ba5b07b319631a1b191d2139f126c976"
+dependencies = [
+ "proc-macro2",
+ "syn 1.0.109",
+ "wit-bindgen-gen-core",
+ "wit-bindgen-gen-wasmtime",
+]
+
+[[package]]
+name = "wit-parser"
+version = "0.2.0"
+source = "git+https://github.com/fermyon/wit-bindgen-backport?rev=b89d5079ba5b07b319631a1b191d2139f126c976#b89d5079ba5b07b319631a1b191d2139f126c976"
+dependencies = [
+ "anyhow",
+ "id-arena",
+ "pulldown-cmark",
+ "unicode-normalization",
+ "unicode-xid",
+]
+
+[[package]]
 name = "wit-parser"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3889,6 +3967,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha256",
+ "tokio",
  "toml 0.7.4",
  "url",
  "wws-store",
@@ -3950,13 +4029,16 @@ dependencies = [
  "actix-web",
  "anyhow",
  "base64",
+ "reqwest",
  "serde",
  "serde_json",
  "sha256",
+ "tokio",
  "toml 0.7.4",
  "wasi-common",
  "wasmtime",
  "wasmtime-wasi",
+ "wit-bindgen-wasmtime",
  "wws-config",
  "wws-data-kv",
  "wws-runtimes",
