@@ -24,7 +24,10 @@ impl From<HttpResponse> for Response<Vec<u8>> {
     }
 }
 
-pub fn send_http_request(req: Request<String>) -> Result<Response<Vec<u8>>, HttpRequestError> {
+pub fn send_http_request<T>(req: Request<T>) -> Result<Response<Vec<u8>>, HttpRequestError>
+where
+    T: Into<Vec<u8>>,
+{
     let method = match *req.method() {
         Method::GET => HttpMethod::Get,
         Method::POST => HttpMethod::Get,
@@ -50,10 +53,10 @@ pub fn send_http_request(req: Request<String>) -> Result<Response<Vec<u8>>, Http
         .collect::<Vec<(&str, &str)>>();
 
     let uri = req.uri().to_string();
-    let body = req.into_body();
+    let body: Vec<u8> = req.into_body().into();
 
     let request = HttpRequest {
-        body: Some(body.as_bytes()),
+        body: Some(body.as_slice()),
         headers: &headers_slice,
         method,
         params: &[],
