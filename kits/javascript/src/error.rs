@@ -3,5 +3,5 @@
 
 /// List of runtime errors
 pub enum RuntimeError {
-    InvalidBinding(String),
+    InvalidBinding { invalid_export: String },
 }

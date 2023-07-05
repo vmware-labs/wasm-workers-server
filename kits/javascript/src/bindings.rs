@@ -107,9 +107,13 @@ pub fn load_bindings_into_global(
                         }
                     }
                 })
-                .map_err(|_| RuntimeError::InvalidBinding("send_http_request".to_string()))?,
+                .map_err(|_| RuntimeError::InvalidBinding {
+                    invalid_export: "send_http_request".to_string(),
+                })?,
         )
-        .map_err(|_| RuntimeError::InvalidBinding("send_http_request".to_string()))?;
+        .map_err(|_| RuntimeError::InvalidBinding {
+            invalid_export: "send_http_request".to_string(),
+        })?;
 
     global
         .set_property(
@@ -122,9 +126,13 @@ pub fn load_bindings_into_global(
 
                     Ok(JSValue::Null)
                 })
-                .map_err(|_| RuntimeError::InvalidBinding("console_log".to_string()))?,
+                .map_err(|_| RuntimeError::InvalidBinding {
+                    invalid_export: "console_log".to_string(),
+                })?,
         )
-        .map_err(|_| RuntimeError::InvalidBinding("console_log".to_string()))?;
+        .map_err(|_| RuntimeError::InvalidBinding {
+            invalid_export: "console_log".to_string(),
+        })?;
 
     Ok(())
 }

@@ -43,8 +43,8 @@ fn main() {
         Ok(_) => {}
         Err(e) => match e {
             // In the future we may have more errors.
-            error::RuntimeError::InvalidBinding(name) => {
-                eprintln!("There was an error adding the '{name}' binding");
+            error::RuntimeError::InvalidBinding { invalid_export } => {
+                eprintln!("There was an error adding the '{invalid_export}' binding");
             }
         },
     }
