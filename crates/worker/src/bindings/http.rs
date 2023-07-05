@@ -12,18 +12,19 @@ pub use http::add_to_linker;
 
 pub struct HttpBindings {}
 
-impl HttpBindings {
-    /// Map the reqwest error to a known http-error
-    fn map_reqwest_err(e: &reqwest::Error) -> HttpError {
-        if e.is_timeout() {
+/// Map the reqwest error to a known http-error
+/// HttpError comes from the HTTP bindings
+impl From<reqwest::Error> for HttpError {
+    fn from(value: reqwest::Error) -> Self {
+        if value.is_timeout() {
             HttpError::Timeout
-        } else if e.is_redirect() {
+        } else if value.is_redirect() {
             HttpError::RedirectLoop
-        } else if e.is_request() {
+        } else if value.is_request() {
             HttpError::InvalidRequest
-        } else if e.is_body() {
+        } else if value.is_body() {
             HttpError::InvalidRequestBody
-        } else if e.is_decode() {
+        } else if value.is_decode() {
             HttpError::InvalidResponseBody
         } else {
             HttpError::InternalError
@@ -91,10 +92,12 @@ impl Http for HttpBindings {
                             })
                         }
                         Err(e) => {
+                            let message = e.to_string();
+
                             // Manage the different possible errors from Reqwest
                             Err(HttpRequestError {
-                                error: Self::map_reqwest_err(&e),
-                                message: e.to_string(),
+                                error: e.into(),
+                                message,
                             })
                         }
                     }
