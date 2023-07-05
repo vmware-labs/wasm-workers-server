@@ -29,7 +29,7 @@ In this example, the worker will get a request and print all the related informa
 
     [dependencies]
     anyhow = "1.0.63"
-    wasm-workers-rs = { git = "https://github.com/vmware-labs/wasm-workers-server/" }
+    wasm-workers-rs = { git = "https://github.com/vmware-labs/wasm-workers-server/", branch = "v1.3" }
     ```
 
 1. Add the `reply` function to the `src/main.rs` file. You will need to import the required resources from the `wasm-workers-rs` crate and use the `worker` macro:
@@ -136,7 +136,7 @@ To add a KV store to your worker, follow these steps:
 
     [dependencies]
     anyhow = "1.0.63"
-    wasm-workers-rs = { git = "https://github.com/vmware-labs/wasm-workers-server/" }
+    wasm-workers-rs = { git = "https://github.com/vmware-labs/wasm-workers-server/", branch = "v1.3" }
     ```
 
 1. Add the `reply` function to the `src/main.rs` file. You will need to import the required resources from the `wasm-workers-rs` crate and use the `worker` macro. In this case, we will add a new attribute to the `worker` macro called `cache` and update the function signature:
