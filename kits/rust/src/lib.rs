@@ -3,6 +3,7 @@
 
 mod cache;
 mod content;
+
 pub use cache::Cache;
 pub use content::Content;
 pub mod io;
@@ -10,3 +11,6 @@ pub mod io;
 pub use worker::worker;
 // Re-export http
 pub use http;
+
+// Bindings!
+pub mod bindings;
