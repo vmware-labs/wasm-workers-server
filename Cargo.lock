@@ -3153,6 +3153,7 @@ dependencies = [
  "http",
  "serde",
  "serde_json",
+ "wit-bindgen-rust",
  "worker",
 ]
 
