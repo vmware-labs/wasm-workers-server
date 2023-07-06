@@ -1,6 +1,6 @@
 # Rust fetch example
 
-Compile a Rust worker that can retrieve data from a remote endpoint. You can run it in Wasm Workers Server.
+Compile a Rust worker that can retrieve data from a remote endpoint (via HTTP bindings). You can run it in Wasm Workers Server.
 
 ## Prerequisites
 
