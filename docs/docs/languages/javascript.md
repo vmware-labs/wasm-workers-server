@@ -10,13 +10,13 @@ Workers based on JavaScript work out of the box with Wasm Workers Server. The se
 
 1. Download `wws`:
 
-    ```bash
+    ```shell-session
     curl -fsSL https://workers.wasmlabs.dev/install | bash
     ```
 
 2. Run the [js-basic](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/js-basic) example from the Wasm Workers Server's repository:
 
-    ```bash
+    ```shell-session
     wws https://github.com/vmware-labs/wasm-workers-server.git -i --git-folder "examples/js-basic"
     ```
 
@@ -99,10 +99,10 @@ To add a KV store to your worker, follow these steps:
     const CACHE_KEY = "counter";
 
     const reply = (request) => {
-        let counter = Cache.get("counter") || 0;
+        let counter = Cache.get(CACHE_KEY) || 0;
         counter += 1;
 
-        Cache.set("counter", counter);
+        Cache.set(CACHE_KEY, counter);
 
         return new Response(`Counter: ${counter}`);
     }

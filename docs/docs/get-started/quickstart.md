@@ -8,13 +8,13 @@ Wasm Workers runs almost anywhere. Thanks to its portability, downloading and ru
 
 First, you need to install `wws`:
 
-```bash
+```shell-session
 curl -fsSL https://workers.wasmlabs.dev/install | bash
 ```
 
 Now, you can check the different commands and options:
 
-```bash
+```shell-session
 $ wws --help
 A WebAssembly framework to develop and run serverless applications anywhere
 
@@ -44,13 +44,13 @@ Options:
 
 You can pass a remote location, like a git repository, to `wws`. To try it, let's run one of the `js-basic` example from the Wasm Workers Server repository:
 
-```bash
+```shell-session
 wws https://github.com/vmware-labs/wasm-workers-server.git -i --git-folder "examples/js-basic"
 ```
 
 It automatically clones the git repository and loads the workers from the given folder (`examples/js-basic`):
 
-```shell
+```shell-session
 ⚙️  Preparing the project from: https://github.com/vmware-labs/wasm-workers-server.git
 ⚙️  Loading routes from: /tmp/dd21e3cd6d0f515301e1c7070e562af06074d9e8d10566179f97dba47e74cec9/examples/js-basic
 ⏳ Loading workers from 1 routes...
