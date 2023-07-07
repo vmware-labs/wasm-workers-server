@@ -1,0 +1,22 @@
+[package]
+name = "wasm-workers-python"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+# Use an old version until we add support for components.
+wit-bindgen-rust = { git = "https://github.com/bytecodealliance/wit-bindgen", rev = "cb871cfa1ee460b51eb1d144b175b9aab9c50aba" }
+
+pyo3 = { version = "0.19.0", features = ["abi3-py311"] }
+wlr-libpy = { git = "https://github.com/vmware-labs/webassembly-language-runtimes.git", features = [
+    "py_main",
+] }
+
+[build-dependencies]
+reqwest = { version = "0.11", features = ["blocking"] }
+wlr-libpy = { git = "https://github.com/vmware-labs/webassembly-language-runtimes.git", features = [
+    "build",
+] }

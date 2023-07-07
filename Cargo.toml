@@ -54,7 +54,8 @@ members = [
   "crates/worker",
   "kits/rust",
   "kits/rust/worker",
-  "kits/javascript"
+  "kits/javascript",
+  "kits/python"
 ]
 # Exclude examples
 exclude = [
