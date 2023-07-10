@@ -12,21 +12,21 @@ These are the steps to recreate the current Go bindings:
 
 - Clone the wit-binding repository and checkout to the [35cb45f2](https://github.com/bytecodealliance/wit-bindgen/commit/35cb45f25eb113b54406f269778d46a37716a7c5) commit (between v0.6 - v0.7). This commit produces compatible binding identifiers and fixes an error with the types on the generated C / Go code:
 
-    ```
+    ```shell-session
     git clone https://github.com/bytecodealliance/wit-bindgen/tree/main && \
       git checkout 35cb45f25eb113b54406f269778d46a37716a7c5
     ```
 
 - Compile the project:
 
-    ```
+    ```shell-session
     cargo build --release
     ```
 
 - Change your current directory to `wasm-workers-server/kits/go/worker/bindings`.
 - Now, you need to use the compiled `wit-bindgen`:
 
-    ```
+    ```shell-session
     ~/YOUR_LOCATION/wit-bindgen/target/release/wit-bindgen tiny-go ../../../../wit/go-ephemeral/
     ```
 
