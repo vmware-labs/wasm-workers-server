@@ -1,0 +1,11 @@
+interface http-interface {
+  use pkg.http-types.{http-request,http-response,http-request-error}
+
+  // Send a HTTP request from inside the worker.
+  send-http-request: func(request: http-request) -> result<http-response, http-request-error>
+}
+
+default world bindings {
+  // Send a HTTP request from inside the worker.
+  import http: self.http-interface
+}

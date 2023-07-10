@@ -21,7 +21,7 @@ In this example, the worker will get a request and print all the related informa
 1. Add the Wasm Workers Server Go dependency
 
     ```
-    go get -u github.com/vmware-labs/wasm-workers-server/kits/go/worker
+    go get -u github.com/vmware-labs/wasm-workers-server/kits/go/worker@v1.3.0
     ```
 
 1. Create a `worker.go` file with the following contents:
@@ -142,7 +142,7 @@ To add a KV store to your worker, follow these steps:
 1. Add the Wasm Workers Server Go dependency
 
     ```
-    go get -u github.com/vmware-labs/wasm-workers-server/kits/go/worker
+    go get -u github.com/vmware-labs/wasm-workers-server/kits/go/worker@v1.3.0
     ```
 
 1. Create a `worker-kv.go` file with the following contents:

@@ -1,14 +1,19 @@
 package worker
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/vmware-labs/wasm-workers-server/kits/go/worker/bindings"
 
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -175,4 +180,88 @@ func Serve(handler http.Handler) {
 
 func ServeFunc(handler http.HandlerFunc) {
 	handler(getWriterRequest())
+}
+
+func SendHttpRequest(req *http.Request) (*http.Response, error) {
+	var method bindings.HttpTypesHttpMethod
+	switch req.Method {
+	case "GET":
+		method = bindings.HttpTypesHttpMethodGet()
+	case "POST":
+		method = bindings.HttpTypesHttpMethodPost()
+	case "PUT":
+		method = bindings.HttpTypesHttpMethodPut()
+	case "PATCH":
+		method = bindings.HttpTypesHttpMethodPatch()
+	case "DELETE":
+		method = bindings.HttpTypesHttpMethodDelete()
+	case "OPTIONS":
+		method = bindings.HttpTypesHttpMethodOptions()
+	case "HEAD":
+		method = bindings.HttpTypesHttpMethodHead()
+	default:
+		method = bindings.HttpTypesHttpMethodGet()
+	}
+
+	// Iterate to get the headers
+	headers := make([]bindings.HttpTypesHttpHeader, 0, len(req.Header))
+	for key, values := range req.Header {
+		for _, value := range values {
+			header := bindings.HttpTypesHttpHeader{F0: key, F1: value}
+			headers = append(headers, header)
+		}
+	}
+
+	// Read the body request and convert it
+	body := []uint8{}
+
+	if req.Body != nil {
+		readBody, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			return nil, err
+		}
+		defer req.Body.Close()
+
+		body = readBody
+	}
+
+
+	// Convert body to []uint8
+	bodyBytes := []uint8(body)
+
+	bRequest := bindings.HttpTypesHttpRequest {
+		Body: bindings.Some(bodyBytes),
+		// Body: bindings.Some([]uint8{}),
+		Headers: headers,
+		Method: method,
+		Params: []bindings.HttpTypesHttpParam{},
+		Uri: req.URL.String(),
+	}
+
+	result := bindings.HttpSendHttpRequest(bRequest)
+
+	if result.IsOk() {
+		response := result.Unwrap()
+
+		// Create a new http.Response
+		httpResponse := &http.Response{}
+		httpResponse.StatusCode = int(response.Status)
+
+		if response.Body.IsSome() {
+			body := response.Body.Unwrap()
+			httpResponse.Body = ioutil.NopCloser(bytes.NewReader(body))
+		}
+
+		// Set the headers
+		httpResponse.Header = make(http.Header)
+		for _, header := range response.Headers {
+			httpResponse.Header.Add(header.F0, header.F1)
+		}
+
+		return httpResponse, nil
+	} else {
+		err := result.UnwrapErr()
+
+		return nil, errors.New(err.Message)
+	}
 }
