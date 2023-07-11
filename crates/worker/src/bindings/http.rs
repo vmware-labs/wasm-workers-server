@@ -76,7 +76,7 @@ impl Http for HttpBindings {
         }
 
         if uri.scheme().is_some()
-            && (self.http_config.force_https && uri.scheme_str().unwrap() != "https")
+            && (!self.http_config.allow_http && uri.scheme_str().unwrap() == "http")
         {
             return Err(HttpRequestError {
                 error: HttpError::NotAllowed,

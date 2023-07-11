@@ -11,14 +11,14 @@ pub struct HttpRequests {
     /// List of allowed HTTP methods for the worker
     #[serde(default = "default_methods")]
     pub allowed_methods: Vec<String>,
-    /// Force an SSL connection in all hosts
-    #[serde(default = "default_true")]
-    pub force_https: bool,
+    /// Allow HTTP requests
+    #[serde(default = "default_false")]
+    pub allow_http: bool,
 }
 
-/// Enable the configuration parameter by default
-fn default_true() -> bool {
-    true
+/// Turn the given configuration false by default
+fn default_false() -> bool {
+    false
 }
 
 /// It allows only basic methods by default
