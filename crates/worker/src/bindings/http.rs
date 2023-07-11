@@ -16,6 +16,22 @@ pub struct HttpBindings {
     pub http_config: HttpRequestsConfig,
 }
 
+/// Implement the conversion between HttpMethod and
+/// http::Method
+impl From<HttpMethod> for reqwest::Method {
+    fn from(value: HttpMethod) -> Self {
+        match value {
+            HttpMethod::Get => Method::GET,
+            HttpMethod::Post => Method::POST,
+            HttpMethod::Put => Method::PUT,
+            HttpMethod::Patch => Method::PATCH,
+            HttpMethod::Delete => Method::DELETE,
+            HttpMethod::Options => Method::OPTIONS,
+            HttpMethod::Head => Method::HEAD,
+        }
+    }
+}
+
 /// Map the reqwest error to a known http-error
 /// HttpError comes from the HTTP bindings
 impl From<reqwest::Error> for HttpError {
@@ -49,15 +65,7 @@ impl Http for HttpBindings {
             error: HttpError::InvalidRequest,
             message: e.to_string(),
         })?;
-        let method = match req.method {
-            HttpMethod::Get => Method::GET,
-            HttpMethod::Post => Method::POST,
-            HttpMethod::Put => Method::PUT,
-            HttpMethod::Patch => Method::PATCH,
-            HttpMethod::Delete => Method::DELETE,
-            HttpMethod::Options => Method::OPTIONS,
-            HttpMethod::Head => Method::HEAD,
-        };
+        let method: Method = req.method.into();
 
         // Check if the request is allowed
         if uri.host().is_some()
