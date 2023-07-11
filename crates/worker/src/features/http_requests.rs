@@ -12,14 +12,10 @@ pub struct HttpRequests {
     #[serde(default = "default_methods")]
     pub allowed_methods: Vec<String>,
     /// Allow HTTP requests
-    #[serde(default = "default_false")]
+    #[serde(default)]
     pub allow_http: bool,
 }
 
-/// Turn the given configuration false by default
-fn default_false() -> bool {
-    false
-}
 
 /// It allows only basic methods by default
 fn default_methods() -> Vec<String> {
