@@ -3,6 +3,7 @@
 
 mod bindings;
 pub mod config;
+pub mod features;
 pub mod io;
 mod stdio;
 
@@ -57,10 +58,11 @@ impl Worker {
         let mut config = Config::default();
 
         if fs::metadata(&config_path).is_ok() {
-            if let Ok(c) = Config::try_from_file(config_path) {
-                config = c;
-            } else {
-                println!("Error loading the config!");
+            match Config::try_from_file(config_path) {
+                Ok(c) => config = c,
+                Err(e) => {
+                    eprintln!("Error loading the worker configuration: {}", e);
+                }
             }
         }
 
@@ -138,7 +140,9 @@ impl Worker {
         let wasi = wasi_builder.build();
         let state = WorkerState {
             wasi,
-            http: HttpBindings {},
+            http: HttpBindings {
+                http_config: self.config.features.http_requests.clone(),
+            },
         };
         let mut store = Store::new(&self.engine, state);
 

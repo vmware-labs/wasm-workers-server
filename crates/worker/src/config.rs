@@ -1,6 +1,8 @@
-// Copyright 2022 VMware, Inc.
+// Copyright 2022-2023 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::features::http_requests::HttpRequestsConfig;
+use crate::features::{data::ConfigData, folders::Folder};
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Deserializer};
 use std::collections::HashMap;
@@ -9,6 +11,13 @@ use std::{env, fs};
 use toml::from_str;
 use wws_data_kv::KVConfigData;
 
+/// List all available features for a worker
+#[derive(Deserialize, Clone, Default)]
+pub struct Features {
+    /// Allow to perform http requests from a worker
+    pub http_requests: HttpRequestsConfig,
+}
+
 /// Workers configuration. These files are optional when no configuration change is required.
 #[derive(Deserialize, Clone, Default)]
 pub struct Config {
@@ -16,6 +25,9 @@ pub struct Config {
     pub name: Option<String>,
     /// Mandatory version of the file
     pub version: String,
+    /// List of features. By default, all will be inactive
+    #[serde(default)]
+    pub features: Features,
     /// Optional data configuration
     pub data: Option<ConfigData>,
     /// Optional folders
@@ -23,13 +35,6 @@ pub struct Config {
     /// Optional environment configuration
     #[serde(deserialize_with = "read_environment_variables", default)]
     pub vars: HashMap<String, String>,
-}
-
-/// Configure a data plugin for the worker
-#[derive(Deserialize, Clone, Default)]
-pub struct ConfigData {
-    /// Creates a Key/Value store associated to the given worker
-    pub kv: Option<KVConfigData>,
 }
 
 impl Config {
@@ -106,44 +111,6 @@ where
             }
             None => Ok(HashMap::new()),
         },
-        Err(err) => Err(err),
-    }
-}
-
-/// A folder to mount in the worker
-#[derive(Deserialize, Clone, Default)]
-pub struct Folder {
-    /// Local folder
-    #[serde(deserialize_with = "deserialize_path", default)]
-    pub from: PathBuf,
-    /// Mount point
-    pub to: String,
-}
-
-/// Deserialize a valid path for the given platform. This method checks and
-/// split the path by the different separators and join the final path
-/// using the current OS requirements.
-fn deserialize_path<'de, D>(deserializer: D) -> Result<PathBuf, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let result: Result<String, D::Error> = Deserialize::deserialize(deserializer);
-
-    match result {
-        Ok(value) => {
-            let split = if value.contains('/') {
-                // Unix separator
-                value.split('/')
-            } else {
-                // Windows separator
-                value.split('\\')
-            };
-
-            Ok(split.fold(PathBuf::new(), |mut acc, el| {
-                acc.push(el);
-                acc
-            }))
-        }
         Err(err) => Err(err),
     }
 }

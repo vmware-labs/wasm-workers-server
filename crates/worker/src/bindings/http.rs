@@ -1,6 +1,8 @@
 // Copyright 2023 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::features::http_requests::HttpRequestsConfig;
+use actix_web::http::Uri;
 use reqwest::Method;
 use tokio::runtime::Builder;
 
@@ -10,7 +12,25 @@ use http::{Http, HttpError, HttpMethod, HttpRequest, HttpRequestError, HttpRespo
 
 pub use http::add_to_linker;
 
-pub struct HttpBindings {}
+pub struct HttpBindings {
+    pub http_config: HttpRequestsConfig,
+}
+
+/// Implement the conversion between HttpMethod and
+/// http::Method
+impl From<HttpMethod> for reqwest::Method {
+    fn from(value: HttpMethod) -> Self {
+        match value {
+            HttpMethod::Get => Method::GET,
+            HttpMethod::Post => Method::POST,
+            HttpMethod::Put => Method::PUT,
+            HttpMethod::Patch => Method::PATCH,
+            HttpMethod::Delete => Method::DELETE,
+            HttpMethod::Options => Method::OPTIONS,
+            HttpMethod::Head => Method::HEAD,
+        }
+    }
+}
 
 /// Map the reqwest error to a known http-error
 /// HttpError comes from the HTTP bindings
@@ -39,8 +59,51 @@ impl Http for HttpBindings {
     ) -> Result<HttpResponse, HttpRequestError> {
         // Create local variables from the request
         let mut headers = Vec::new();
-        let uri = req.uri.to_string();
+        let url = req.uri.to_string();
         let body = req.body.unwrap_or(&[]).to_vec();
+        let uri = url.parse::<Uri>().map_err(|e| HttpRequestError {
+            error: HttpError::InvalidRequest,
+            message: e.to_string(),
+        })?;
+        let method: Method = req.method.into();
+
+        // Check if the request is allowed
+        if uri.host().is_some()
+            && !self
+                .http_config
+                .allowed_hosts
+                .contains(&uri.host().unwrap().to_string())
+        {
+            return Err(HttpRequestError {
+                error: HttpError::NotAllowed,
+                message: format!(
+                    "The host '{}' is not allowed for this worker. Please, update the worker configuration.",
+                    uri.host().unwrap()
+                ),
+            });
+        }
+
+        if uri.scheme().is_some()
+            && (!self.http_config.allow_http && uri.scheme_str().unwrap() == "http")
+        {
+            return Err(HttpRequestError {
+                error: HttpError::NotAllowed,
+                message:
+                    "The URI must use HTTPS. You can allow http requests in the worker configuration".to_string()
+            });
+        }
+
+        if !self
+            .http_config
+            .allowed_methods
+            .contains(&method.to_string())
+        {
+            return Err(HttpRequestError {
+                error: HttpError::NotAllowed,
+                message:
+                    format!("The method '{}' is not allowed for this worker. Please, update the configuration.", method.as_str())
+            });
+        }
 
         for (key, value) in req.headers {
             headers.push((key.to_string(), value.to_string()));
@@ -55,17 +118,7 @@ impl Http for HttpBindings {
                 .block_on(async {
                     let client = reqwest::Client::new();
 
-                    let method = match req.method {
-                        HttpMethod::Get => Method::GET,
-                        HttpMethod::Post => Method::POST,
-                        HttpMethod::Put => Method::PUT,
-                        HttpMethod::Patch => Method::PATCH,
-                        HttpMethod::Delete => Method::DELETE,
-                        HttpMethod::Options => Method::OPTIONS,
-                        HttpMethod::Head => Method::HEAD,
-                    };
-
-                    let mut builder = client.request(method, uri);
+                    let mut builder = client.request(method, url);
 
                     for (key, value) in headers {
                         builder = builder.header(key, value);
