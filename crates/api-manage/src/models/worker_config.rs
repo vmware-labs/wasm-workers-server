@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use serde::Serialize;
 use utoipa::ToSchema;
 use wws_worker::{
-    config::{ConfigData, Folder},
+    features::{data::ConfigData, folders::Folder},
     Worker,
 };
 

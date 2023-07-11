@@ -1,0 +1,6 @@
+name = "go-fetch"
+version = "1"
+
+[features]
+[features.http_requests]
+allowed_hosts = ["jsonplaceholder.typicode.com"]
