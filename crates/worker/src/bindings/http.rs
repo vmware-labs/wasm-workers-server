@@ -1,7 +1,7 @@
 // Copyright 2023 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::features::http_requests::HttpRequests;
+use crate::features::http_requests::HttpRequestsConfig;
 use actix_web::http::Uri;
 use reqwest::Method;
 use tokio::runtime::Builder;
@@ -13,7 +13,7 @@ use http::{Http, HttpError, HttpMethod, HttpRequest, HttpRequestError, HttpRespo
 pub use http::add_to_linker;
 
 pub struct HttpBindings {
-    pub http_config: HttpRequests,
+    pub http_config: HttpRequestsConfig,
 }
 
 /// Map the reqwest error to a known http-error

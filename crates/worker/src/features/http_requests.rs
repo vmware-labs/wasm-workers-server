@@ -3,27 +3,29 @@
 
 use serde::Deserialize;
 
-#[derive(Deserialize, Clone, Default)]
-pub struct HttpRequests {
+#[derive(Deserialize, Clone)]
+#[serde(default)]
+pub struct HttpRequestsConfig {
     /// List of allowed domains to perform the calls
-    #[serde(default)]
     pub allowed_hosts: Vec<String>,
     /// List of allowed HTTP methods for the worker
-    #[serde(default = "default_methods")]
     pub allowed_methods: Vec<String>,
     /// Allow HTTP requests
-    #[serde(default)]
     pub allow_http: bool,
 }
 
-
-/// It allows only basic methods by default
-fn default_methods() -> Vec<String> {
-    Vec::from([
-        String::from("GET"),
-        String::from("POST"),
-        String::from("PUT"),
-        String::from("PATCH"),
-        String::from("DELETE"),
-    ])
+impl Default for HttpRequestsConfig {
+    fn default() -> Self {
+        Self {
+            allowed_hosts: Vec::default(),
+            allowed_methods: Vec::from([
+                String::from("GET"),
+                String::from("POST"),
+                String::from("PUT"),
+                String::from("PATCH"),
+                String::from("DELETE"),
+            ]),
+            allow_http: false,
+        }
+    }
 }

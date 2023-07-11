@@ -1,7 +1,7 @@
 // Copyright 2022-2023 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::features::http_requests::HttpRequests;
+use crate::features::http_requests::HttpRequestsConfig;
 use crate::features::{data::ConfigData, folders::Folder};
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Deserializer};
@@ -15,7 +15,7 @@ use wws_data_kv::KVConfigData;
 #[derive(Deserialize, Clone, Default)]
 pub struct Features {
     /// Allow to perform http requests from a worker
-    pub http_requests: HttpRequests,
+    pub http_requests: HttpRequestsConfig,
 }
 
 /// Workers configuration. These files are optional when no configuration change is required.
