@@ -3164,7 +3164,7 @@ dependencies = [
  "actix-web",
  "anyhow",
  "clap 4.3.4",
- "env_logger 0.9.3",
+ "env_logger 0.10.0",
  "prettytable-rs",
  "reqwest",
  "wws-config",
