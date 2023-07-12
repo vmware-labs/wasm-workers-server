@@ -31,3 +31,13 @@ to = "/mnt/assets"
 In the previous example, all folders starts with an underscore character (`_`). This folder name convention tells `wws` to ignore any file inside it when detecting available workers.
 
 Note that those folders may include files that `wws` recognizes as workers (like `.js` or `.py`). By prefixing those folders with an `_`, you ensure `wws` won't process those files as workers.
+
+## Language compatibility
+
+| Language | Mount folders |
+| --- | --- |
+| JavaScript | ❌ |
+| Rust | ✅ |
+| Go | ✅ |
+| Ruby | ✅ |
+| Python | ✅ |

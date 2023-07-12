@@ -231,6 +231,156 @@ To add a KV store to your worker, follow these steps:
 
 1. Finally, open <http://127.0.0.1:8080/worker-kv> in your browser.
 
+## Send an HTTP request
+
+Wasm Workers allows you to send HTTP requests from your workers. Read more information about this feature in the [HTTP Requests](../features/http-requests.md) section.
+
+To perform a HTTP requests from your worker, follow these steps:
+
+1. Create a new Rust project:
+
+    ```bash
+    cargo new --name fetch fetch
+    ```
+
+1. Add the dependencies to the `Cargo.toml` file:
+
+    ```toml title="Cargo.toml"
+    [package]
+    name = "fetch"
+    version = "0.1.0"
+    edition = "2021"
+
+    [dependencies]
+    anyhow = "1.0.63"
+    wasm-workers-rs = { git = "https://github.com/vmware-labs/wasm-workers-server/", tag = "v1.4.0" }
+    serde = { version = "1.0", features = ["derive"] }
+    serde_json = "1.0.85"
+    ```
+
+1. Add the `reply` function to the `src/main.rs` file. You will need to import the required resources from the `wasm-workers-rs` crate, use the `worker` macro and the `bindings` module. In this case, you need to import also the `serde` library to deserialize the API response from the external API:
+
+    ```rust title="src/main.rs"
+    use anyhow::Result;
+    use serde::{Deserialize, Serialize};
+    use wasm_workers_rs::{
+        worker,
+        bindings,
+        http::{self, Request, Response},
+        Content,
+    };
+
+    #[worker]
+    fn reply(_req: Request<String>) -> Result<Response<Content>> {
+        Ok(http::Response::builder()
+            .status(200)
+            .header("x-generated-by", "wasm-workers-server")
+            .body(String::from("Hello wasm!").into())?)
+    }
+    ```
+
+1. Then, let's create the `http::Request` instance and pass it to the `bindings::send_http_request` method. In this example, we will call the [{JSON} Placeholder API](https://jsonplaceholder.typicode.com/) to retrieve a `Post`. You need to create that `struct` to deserialize the request response with `serde`:
+
+    ```rust title="src/main.rs"
+    use anyhow::Result;
+    use serde::{Deserialize, Serialize};
+    use wasm_workers_rs::{
+        worker,
+        http::{self, Request, Response},
+        Cache, Content,
+    };
+
+    #[derive(Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Post {
+        id: i32,
+        title: String,
+        body: String,
+        user_id: i32,
+    }
+
+    #[worker(cache)]
+    fn reply(_req: Request<String>, cache: &mut Cache) -> Result<Response<Content>> {
+        let external_request = Request::builder()
+            .uri("https://jsonplaceholder.typicode.com/posts/1")
+            .body(String::new())
+            .unwrap();
+
+        // Get the request
+        let res = bindings::send_http_request(external_request).unwrap();
+
+        // Parse the response
+        let data = res.body();
+
+        let post: Post = serde_json::from_slice(&data).unwrap();
+
+        // Applied changes here to use the Response method. This requires changes
+        // on signature and how it returns the data.
+        let response = format!(
+            "<!DOCTYPE html>
+    <head>
+        <title>Wasm Workers Server</title>
+        <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">
+        <meta charset=\"UTF-8\">
+    </head>
+    <body>
+        <main>
+            <h1>{}</h1>
+            <p>{}</p>
+        </main>
+    </body>",
+            &post.title, &post.body
+        );
+
+        Ok(http::Response::builder()
+            .status(200)
+            .header("x-generated-by", "wasm-workers-server")
+            .body(response.into())?)
+    }
+    ```
+
+1. Compile the project to Wasm ([WASI](https://wasi.dev/)):
+
+    ```bash
+    # Install the component and build
+    rustup target add wasm32-wasi && \
+      cargo build --release --target wasm32-wasi
+    ```
+
+1. After you compiled the project, move the worker to the current folder:
+
+    ```bash
+    mv ./target/wasm32-wasi/release/fetch.wasm ./
+    ```
+
+1. Create a `fetch.toml` file with the following content. It enables the worker to perform the HTTP request to that host. By default, HTTP requests are forbidden.
+
+  Note the name of the TOML file must match the name of the worker. In this case we have `fetch.wasm` and `fetch.toml` in the same folder:
+
+    ```toml title="fetch.toml"
+    name = "fetch"
+    version = "1"
+
+    [features]
+    [features.http_requests]
+    allowed_methods = ["GET"]
+    allowed_hosts = ["jsonplaceholder.typicode.com"]
+    ```
+
+1. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
+
+    ```bash
+    wws . --ignore "target/**"
+
+    ⚙️ Loading routes from: .
+    🗺 Detected routes:
+    - http://127.0.0.1:8080/fetch
+    => fetch.wasm (name: default)
+    🚀 Start serving requests at http://127.0.0.1:8080
+    ```
+
+1. Finally, open <http://127.0.0.1:8080/fetch> in your browser.
+
 ## Dynamic routes
 
 You can define [dynamic routes by adding route parameters to your worker files](../features/dynamic-routes.md) (like `[id].wasm`). To read them in Rust, follow these steps:
@@ -318,3 +468,11 @@ If you prefer, you can configure the environment variable value dynamically by f
 
 * [Basic](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/rust-basic)
 * [Counter](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/rust-kv)
+
+## Feature compatibility
+
+[Workers' features](../features/all.md) that are available in Rust:
+
+| [K/V Store](../features/key-value.md) | [Environment Variables](../features/environment-variables.md) | [Dynamic Routes](../features/dynamic-routes.md) | [Folders](../features/mount-folders.md) | [HTTP Requests](../features/http-requests.md) |
+| --- | --- | --- | --- | --- |
+|  ✅ | ✅ | ✅ | ✅ | ✅ |

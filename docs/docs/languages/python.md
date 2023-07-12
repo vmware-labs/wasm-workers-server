@@ -207,3 +207,11 @@ If you prefer, you can configure the environment variable value dynamically by f
 * [Basic](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/python-basic/)
 * [Key / Value](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/python-kv/)
 * [Environment variables](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/python-envs/)
+
+## Feature compatibility
+
+[Workers' features](../features/all.md) that are available in Python:
+
+| [K/V Store](../features/key-value.md) | [Environment Variables](../features/environment-variables.md) | [Dynamic Routes](../features/dynamic-routes.md) | [Folders](../features/mount-folders.md) | [HTTP Requests](../features/http-requests.md) |
+| --- | --- | --- | --- | --- |
+|  ✅ | ✅ | ✅ | ✅ | ❌ |

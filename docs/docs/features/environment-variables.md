@@ -40,3 +40,13 @@ TOKEN = "$TOKEN"
 ```
 
 This feature allows you to configure environment variables dynamically.
+
+## Language compatibility
+
+| Language | Environment variables |
+| --- | --- |
+| JavaScript | ✅ |
+| Rust | ✅ |
+| Go | ✅ |
+| Ruby | ✅ |
+| Python | ✅ |
