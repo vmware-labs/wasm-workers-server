@@ -286,8 +286,9 @@ To perform HTTP requests from your worker, follow these steps:
     use serde::{Deserialize, Serialize};
     use wasm_workers_rs::{
         worker,
+        bindings,
         http::{self, Request, Response},
-        Cache, Content,
+        Content,
     };
 
     #[derive(Serialize, Deserialize)]
@@ -299,8 +300,8 @@ To perform HTTP requests from your worker, follow these steps:
         user_id: i32,
     }
 
-    #[worker(cache)]
-    fn reply(_req: Request<String>, cache: &mut Cache) -> Result<Response<Content>> {
+    #[worker]
+    fn reply(_req: Request<String>) -> Result<Response<Content>> {
         let external_request = Request::builder()
             .uri("https://jsonplaceholder.typicode.com/posts/1")
             .body(String::new())
@@ -314,8 +315,7 @@ To perform HTTP requests from your worker, follow these steps:
 
         let post: Post = serde_json::from_slice(&data).unwrap();
 
-        // Applied changes here to use the Response method. This requires changes
-        // on signature and how it returns the data.
+        // Prepare the final response
         let response = format!(
             "<!DOCTYPE html>
     <head>
