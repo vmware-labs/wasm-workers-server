@@ -381,7 +381,7 @@ You can define [dynamic routes by adding route parameters to your worker files](
         "fmt"
         "net/http"
 
-i"github.com/vmware-labs/wasm-workers-server/kits/go/worker"
+        "github.com/vmware-labs/wasm-workers-server/kits/go/worker"
     )
 
     func main() {
