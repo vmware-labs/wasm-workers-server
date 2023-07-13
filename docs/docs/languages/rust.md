@@ -235,15 +235,15 @@ To add a KV store to your worker, follow these steps:
 
 Wasm Workers allows you to send HTTP requests from your workers. Read more information about this feature in the [HTTP Requests](../features/http-requests.md) section.
 
-To perform a HTTP requests from your worker, follow these steps:
+To perform HTTP requests from your worker, follow these steps:
 
 1. Create a new Rust project:
 
-    ```bash
+    ```shell-session
     cargo new --name fetch fetch
     ```
 
-1. Add the dependencies to the `Cargo.toml` file:
+1. Add dependencies to the `Cargo.toml` file:
 
     ```toml title="Cargo.toml"
     [package]
@@ -341,7 +341,7 @@ To perform a HTTP requests from your worker, follow these steps:
 
 1. Compile the project to Wasm ([WASI](https://wasi.dev/)):
 
-    ```bash
+    ```shell-session
     # Install the component and build
     rustup target add wasm32-wasi && \
       cargo build --release --target wasm32-wasi
@@ -349,11 +349,11 @@ To perform a HTTP requests from your worker, follow these steps:
 
 1. After you compiled the project, move the worker to the current folder:
 
-    ```bash
+    ```shell-session
     mv ./target/wasm32-wasi/release/fetch.wasm ./
     ```
 
-1. Create a `fetch.toml` file with the following content. It enables the worker to perform the HTTP request to that host. By default, HTTP requests are forbidden.
+1. Create a `fetch.toml` file with the following content. It enables the worker to perform HTTP requests to that host given that, by default, HTTP requests are forbidden.
 
   Note the name of the TOML file must match the name of the worker. In this case we have `fetch.wasm` and `fetch.toml` in the same folder:
 
@@ -369,7 +369,7 @@ To perform a HTTP requests from your worker, follow these steps:
 
 1. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
 
-    ```bash
+    ```shell-session
     wws . --ignore "target/**"
 
     ⚙️ Loading routes from: .

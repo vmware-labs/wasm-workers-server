@@ -1,6 +1,6 @@
 # Features
 
-Wasm Workers Server provides different features to develop serverless applications. Some of these features are related to the server like the static asset management, while others relate to the workers like sending HTTP requests.
+Wasm Workers Server provides different features to develop serverless applications. Some of these features are related to the server like the static asset management, while others relate to workers like sending HTTP requests.
 
 For that reason, we usually distinguish between server and worker features:
 
@@ -12,7 +12,7 @@ For that reason, we usually distinguish between server and worker features:
 
 ### Server
 
-* [Static assets' management](./static-assets.md)
+* [Static assets management](./static-assets.md)
 * [Multiple language runtimes](./multiple-language-runtimes.md)
 
 ### Workers
@@ -21,13 +21,13 @@ For that reason, we usually distinguish between server and worker features:
 * [HTTP Requests (fetch)](./http-requests.md)
 * [Dynamic routes](./dynamic-routes.md)
 * [Environment variables](./environment-variables.md)
-* [Mount folders](./environment-variables.md)
+* [Mount folders](./mount-folders.md)
 
 ## Language compatibility
 
-You can develop workers in different languages. However, not all of them support all features. **The goal is to support all of them**, although there are some constraints that makes some features more complex to implement in certain languages.
+You can develop workers in different languages. However, not all of them support all features. **The goal is to support all of them**, although there are some constraints that make some features more complex to implement in certain languages.
 
-The following table shows the language compatibility for the different worker's functions:
+The following table shows the language compatibility for the different worker functions:
 
 | Language | K/V Store | Environment Variables | Dynamic Routes | Folders | HTTP Requests |
 | --- | --- | --- | --- | --- | --- |
