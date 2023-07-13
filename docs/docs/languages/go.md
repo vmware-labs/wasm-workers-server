@@ -246,10 +246,11 @@ To perform HTTP requests from your worker, follow these steps:
     go mod init fetch
     ```
 
-1. Add the Wasm Workers Server Go dependency
+1. Add the project dependencies:
 
     ```
-    go get -u github.com/vmware-labs/wasm-workers-server/kits/go/worker@v1.4.0
+    go get -u github.com/vmware-labs/wasm-workers-server/kits/go/worker@v1.4.0 \
+        github.com/tidwall/gjson
     ```
 
 1. Create a `fetch.go` file with the following contents:
@@ -259,9 +260,10 @@ To perform HTTP requests from your worker, follow these steps:
 
     import (
         "io"
+        "fmt"
         "net/http"
 
-	    "github.com/vmware-labs/wasm-workers-server/kits/go/worker"
+        "github.com/vmware-labs/wasm-workers-server/kits/go/worker"
 
         "github.com/tidwall/gjson"
     )
@@ -281,16 +283,17 @@ To perform HTTP requests from your worker, follow these steps:
 
     import (
         "io"
+        "fmt"
         "net/http"
 
-	    "github.com/vmware-labs/wasm-workers-server/kits/go/worker"
+        "github.com/vmware-labs/wasm-workers-server/kits/go/worker"
 
         "github.com/tidwall/gjson"
     )
 
     func main() {
         worker.ServeFunc(func(w http.ResponseWriter, r *http.Request) {
-            url := "https://jsonplaceholder.typicode.com/posts"
+            url := "https://jsonplaceholder.typicode.com/posts/1"
 
             // Create the request
             req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -301,20 +304,30 @@ To perform HTTP requests from your worker, follow these steps:
             // Send the request
             res, err := worker.SendHttpRequest(req)
             if err != nil {
-                panic(err)
+                msg := fmt.Sprintf("Error when calling the API: %s", err);
+
+                // Send the reponse
+                w.Write([]byte(msg))
+
+                return
             }
 
             // Read the response and parse the title
             resBody, err := io.ReadAll(res.Body)
             if err != nil {
-                panic(err)
+                msg := fmt.Sprintf("Error when reading the response body: %s", err);
+
+                // Send the reponse
+                w.Write([]byte(msg))
+
+                return
             }
             res.Body.Close()
 
-            title := gjson.Get(resBody, "title")
+            title := gjson.Get(string(resBody), "title")
 
             w.Header().Set("x-generated-by", "wasm-workers-server")
-            w.Write([]byte(title.String()))
+            w.Write([]byte(fmt.Sprintf("Title: %s", title.String())))
         })
     }
     ```
@@ -368,7 +381,7 @@ You can define [dynamic routes by adding route parameters to your worker files](
         "fmt"
         "net/http"
 
-        "github.com/vmware-labs/wasm-workers-server/kits/go/worker"
+i"github.com/vmware-labs/wasm-workers-server/kits/go/worker"
     )
 
     func main() {
