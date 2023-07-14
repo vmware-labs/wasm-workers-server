@@ -137,6 +137,79 @@ To add a KV store to your worker, follow these steps:
 
 1. Finally, open <http://127.0.0.1:8080/counter> in your browser.
 
+## Send an HTTP request (fetch)
+
+Wasm Workers allows you to send HTTP requests from your workers. Read more information about this feature in the [HTTP Requests](../features/http-requests.md) section.
+
+To perform HTTP requests from your worker, follow these steps:
+
+1. First, create an `index.js` file. It will call the [{JSON} Placeholder API](https://jsonplaceholder.typicode.com/) using the [fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) method:
+
+    ```javascript title="./index.js"
+    const reply = async (_req) => {
+        // Body response
+        let body;
+
+        try {
+            let res = await fetch('https://jsonplaceholder.typicode.com/posts/1');
+            let json = await res.json();
+
+            // Build a new response.
+            // Add some basic sanitization
+            body = `<!DOCTYPE html>
+            <head>
+              <title>JSON Placeholder request</title>
+              <meta name="viewport" content="width=device-width,initial-scale=1">
+              <meta charset="UTF-8">
+            </head>
+            <body>
+              <main>
+                <h1>Hello from Wasm Workers Server 👋</h1>
+                <p>The post title is: ${json.title}</p>
+              </main>
+            </body>`;
+        } catch (e) {
+          body = `There was an error with the request: ${e}`;
+        }
+
+        return new Response(body);
+    }
+
+    addEventListener("fetch", event => {
+        event.respondWith(reply(event.request));
+    });
+    ```
+
+1. Create an `index.toml` file with the following content. It enables the worker to perform HTTP requests to that host given that, by default, HTTP requests are forbidden.
+
+  Note the name of the TOML file must match the name of the worker. In this case we have `index.js` and `index.toml` in the same folder:
+
+    ```toml title="./index.toml"
+    name = "fetch"
+    version = "1"
+
+    [features]
+    [features.http_requests]
+    allowed_methods = ["GET"]
+    allowed_hosts = ["jsonplaceholder.typicode.com"]
+    ```
+
+1. Save the file and run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
+
+    ```shell-session
+    wws
+
+    ⚙️  Preparing the project from: .
+    ⚙️  Loading routes from: .
+    ⏳ Loading workers from 1 routes...
+    ✅ Workers loaded in 135.717667ms.
+        - http://127.0.0.1:8080/
+          => ./index.js
+    🚀 Start serving requests at http://127.0.0.1:8080
+    ```
+
+1. Finally, open <http://127.0.0.1:8080> in your browser.
+
 ## Dynamic routes
 
 You can define [dynamic routes by adding route parameters to your worker files](../features/dynamic-routes.md) (like `[id].js`). To read them in JavaScript, access to the `req.params` object:
@@ -203,3 +276,11 @@ If you prefer, you can configure the environment variable value dynamically by f
 * [JSON](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/js-json/)
 * [Redirect](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/js-redirect/)
 * [Tic Tac Toe](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/js-tictactoe/)
+
+## Feature compatibility
+
+[Workers' features](../features/all.md) that are available in JavaScript:
+
+| [K/V Store](../features/key-value.md) | [Environment Variables](../features/environment-variables.md) | [Dynamic Routes](../features/dynamic-routes.md) | [Folders](../features/mount-folders.md) | [HTTP Requests](../features/http-requests.md) |
+| --- | --- | --- | --- | --- |
+|  ✅ | ✅ | ✅ | ❌ | ✅ |

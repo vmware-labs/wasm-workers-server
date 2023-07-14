@@ -187,3 +187,11 @@ If you prefer, you can configure the environment variable value dynamically by f
 * [Basic](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/ruby-basic/)
 * [Key / Value](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/ruby-kv/)
 * [Environment variables](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/ruby-envs/)
+
+## Feature compatibility
+
+[Workers' features](../features/all.md) that are available in Ruby:
+
+| [K/V Store](../features/key-value.md) | [Environment Variables](../features/environment-variables.md) | [Dynamic Routes](../features/dynamic-routes.md) | [Folders](../features/mount-folders.md) | [HTTP Requests](../features/http-requests.md) |
+| --- | --- | --- | --- | --- |
+|  ✅ | ✅ | ✅ | ✅ | ❌ |

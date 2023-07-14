@@ -25,3 +25,13 @@ The worker may access all the data and perform changes over it. Then, a new K/V 
 ## Limitations
 
 A known limitation of the snapshot approach is the data override when concurrent requests are writing to the same namespace. In the future, we will implement a consolidation mechanism or a different store type for applications that require to write intensively.
+
+## Language compatibility
+
+| Language | K/V store |
+| --- | --- |
+| JavaScript | ✅ |
+| Rust | ✅ |
+| Go | ✅ |
+| Ruby | ✅ |
+| Python | ✅ |

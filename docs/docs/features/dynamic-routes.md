@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # Dynamic routes
@@ -49,3 +49,13 @@ $ tree .
 ```
 
 In this case, the `./[resource]/[id]/show.js` worker replies to URLs like `/articles/2/show`.
+
+## Language compatibility
+
+| Language | Dynamic routes |
+| --- | --- |
+| JavaScript | ✅ |
+| Rust | ✅ |
+| Go | ✅ |
+| Ruby | ✅ |
+| Python | ✅ |

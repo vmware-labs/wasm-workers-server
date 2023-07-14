@@ -234,6 +234,140 @@ To add a KV store to your worker, follow these steps:
 
 1. Finally, open <http://127.0.0.1:8080/worker-kv> in your browser.
 
+## Send an HTTP request
+
+Wasm Workers allows you to send HTTP requests from your workers. Read more information about this feature in the [HTTP Requests](../features/http-requests.md) section.
+
+To perform HTTP requests from your worker, follow these steps:
+
+1. Create a new Go project:
+
+    ```shell-session
+    go mod init fetch
+    ```
+
+1. Add the project dependencies:
+
+    ```
+    go get -u github.com/vmware-labs/wasm-workers-server/kits/go/worker@v1.4.0 \
+        github.com/tidwall/gjson
+    ```
+
+1. Create a `fetch.go` file with the following contents:
+
+    ```go title="fetch.go"
+    package main
+
+    import (
+        "io"
+        "fmt"
+        "net/http"
+
+        "github.com/vmware-labs/wasm-workers-server/kits/go/worker"
+
+        "github.com/tidwall/gjson"
+    )
+
+    func main() {
+        worker.ServeFunc(func(w http.ResponseWriter, r *http.Request) {
+            w.Header().Set("x-generated-by", "wasm-workers-server")
+            w.Write([]byte("Hello wasm!"))
+        })
+    }
+    ```
+
+1. Then, let's create the `http.Request` instance and pass it to the `worker.SendHttpRequest` method. In this example, we will call the [{JSON} Placeholder API](https://jsonplaceholder.typicode.com/) to retrieve a `Post`. You will read the content of the response using the `gjson` API:
+
+    ```go title="fetch.go"
+    package main
+
+    import (
+        "io"
+        "fmt"
+        "net/http"
+
+        "github.com/vmware-labs/wasm-workers-server/kits/go/worker"
+
+        "github.com/tidwall/gjson"
+    )
+
+    func main() {
+        worker.ServeFunc(func(w http.ResponseWriter, r *http.Request) {
+            url := "https://jsonplaceholder.typicode.com/posts/1"
+
+            // Create the request
+            req, err := http.NewRequest(http.MethodGet, url, nil)
+            if err != nil {
+                panic(err)
+            }
+
+            // Send the request
+            res, err := worker.SendHttpRequest(req)
+            if err != nil {
+                msg := fmt.Sprintf("Error when calling the API: %s", err);
+
+                // Send the reponse
+                w.Write([]byte(msg))
+
+                return
+            }
+
+            // Read the response and parse the title
+            resBody, err := io.ReadAll(res.Body)
+            if err != nil {
+                msg := fmt.Sprintf("Error when reading the response body: %s", err);
+
+                // Send the reponse
+                w.Write([]byte(msg))
+
+                return
+            }
+            res.Body.Close()
+
+            title := gjson.Get(string(resBody), "title")
+
+            w.Header().Set("x-generated-by", "wasm-workers-server")
+            w.Write([]byte(fmt.Sprintf("Title: %s", title.String())))
+        })
+    }
+    ```
+
+1. Compile the project to Wasm ([WASI](https://wasi.dev/)):
+
+    ```shell-session
+    tinygo build -o fetch.wasm -target wasi fetch.go
+    ```
+
+1. Create a `fetch.toml` file with the following content. It enables the worker to perform HTTP requests to that host given that, by default, HTTP requests are forbidden.
+
+  Note the name of the TOML file must match the name of the worker. In this case we have `fetch.wasm` and `fetch.toml` in the same folder:
+
+    ```toml title="fetch.toml"
+    name = "fetch"
+    version = "1"
+
+    [features]
+    [features.http_requests]
+    allowed_methods = ["GET"]
+    allowed_hosts = ["jsonplaceholder.typicode.com"]
+    ```
+
+1. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
+
+    ```shell-session
+    wws .
+
+    ⚙️  Preparing the project from: .
+    ⚙️  Loading routes from: .
+    ⏳ Loading workers from 1 routes...
+    ✅ Workers loaded in 135.717667ms.
+        - http://127.0.0.1:8080/fetch
+          => ./fetch.wasm
+    🚀 Start serving requests at http://127.0.0.1:8080
+    ```
+
+1. Finally, open <http://127.0.0.1:8080/fetch> in your browser.
+
 ## Dynamic routes
 
 You can define [dynamic routes by adding route parameters to your worker files](../features/dynamic-routes.md) (like `[id].wasm`). To read them in Go, follow these steps:
@@ -328,4 +462,14 @@ If you prefer, you can configure the environment variable value dynamically by f
 * [Basic](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/go-basic)
 * [Counter](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/go-kv)
 
+## Contributors
+
 The Go kit was originally authored by Mohammed Nafees ([@mnafees](https://github.com/mnafees))
+
+## Feature compatibility
+
+[Workers' features](../features/all.md) that are available in Go:
+
+| [K/V Store](../features/key-value.md) | [Environment Variables](../features/environment-variables.md) | [Dynamic Routes](../features/dynamic-routes.md) | [Folders](../features/mount-folders.md) | [HTTP Requests](../features/http-requests.md) |
+| --- | --- | --- | --- | --- |
+|  ✅ | ✅ | ✅ | ✅ | ✅ |
