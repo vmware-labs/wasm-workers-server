@@ -1,6 +1,9 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+mod errors;
+use errors::Result;
+
 mod handlers;
 
 use actix_files::Files;
@@ -10,7 +13,6 @@ use actix_web::{
     web::{self, Data},
     App, HttpServer,
 };
-use anyhow::Result;
 use handlers::assets::handle_assets;
 use handlers::not_found::handle_not_found;
 use handlers::worker::handle_worker;
@@ -46,7 +48,11 @@ pub async fn serve(
 
     // Configure stderr
     if let Some(path) = stderr {
-        let file = OpenOptions::new().read(true).write(true).open(path)?;
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(path)
+            .map_err(|_| errors::ServeError::InitializeServerError)?;
 
         stderr_file = Data::new(Some(file));
     } else {
@@ -110,7 +116,8 @@ pub async fn serve(
 
         app
     })
-    .bind(format!("{}:{}", hostname, port))?;
+    .bind(format!("{}:{}", hostname, port))
+    .map_err(|_| errors::ServeError::InitializeServerError)?;
 
     Ok(server.run())
 }

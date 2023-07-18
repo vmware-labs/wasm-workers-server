@@ -49,12 +49,16 @@ impl Install {
     pub async fn run(&self, project_root: &Path, args: &Runtimes) -> Result<()> {
         match (&self.name, &self.version) {
             (Some(name), Some(version)) => {
-                install_from_repository(project_root, args, name, version).await
+                install_from_repository(project_root, args, name, version)
+                    .await
+                    .map_err(|err| err.into())
             }
             (Some(_), None) | (None, Some(_)) => Err(anyhow!(
                 "The name and version are mandatory when installing a runtime from a repository"
             )),
-            (None, None) => install_missing_runtimes(project_root).await,
+            (None, None) => install_missing_runtimes(project_root)
+                .await
+                .map_err(|err| err.into()),
         }
     }
 }
@@ -71,7 +75,9 @@ impl List {
         let repo_url = get_repo_url(args);
 
         println!("⚙️  Fetching data from the repository...");
-        let repo = Repository::from_remote_file(&repo_url).await?;
+        let repo = Repository::from_remote_file(&repo_url)
+            .await
+            .map_err(|err| anyhow!(err))?;
 
         let mut table = Table::new();
         table.set_format(*format::consts::FORMAT_BOX_CHARS);
@@ -115,7 +121,7 @@ impl Check {
     /// installed in the current project root.
     pub fn run(&self, project_root: &Path) -> Result<()> {
         // Retrieve the configuration
-        let config = Config::load(project_root)?;
+        let config = Config::load(project_root).map_err(|err| anyhow!(err))?;
         let mut is_missing = false;
         let mut total = 0;
 
@@ -187,7 +193,7 @@ impl Uninstall {
     /// from the .wws.toml file
     pub fn run(&self, project_root: &Path, args: &Runtimes) -> Result<()> {
         // Retrieve the configuration
-        let mut config = Config::load(project_root)?;
+        let mut config = Config::load(project_root).map_err(|err| anyhow!(err))?;
         let repo_name = get_repo_name(args);
         let runtime = config.get_runtime(&repo_name, &self.name, &self.version);
 
@@ -196,9 +202,9 @@ impl Uninstall {
                 "🗑  Uninstalling: {} - {} / {}",
                 &repo_name, &runtime.name, &runtime.version
             );
-            uninstall_runtime(project_root, &repo_name, runtime)?;
+            uninstall_runtime(project_root, &repo_name, runtime).map_err(|err| anyhow!(err))?;
             config.remove_runtime(&repo_name, &self.name, &self.version);
-            config.save(project_root)?;
+            config.save(project_root).map_err(|err| anyhow!(err))?;
         } else {
             println!(
                 "🗑  The runtime was not installed: {} - {} / {}",

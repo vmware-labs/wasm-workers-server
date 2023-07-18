@@ -7,7 +7,6 @@ license = { workspace = true }
 repository = { workspace = true }
 
 [dependencies]
-anyhow = { workspace = true }
 actix-web = { workspace = true }
 wws-api-manage = { workspace = true }
 wws-data-kv = { workspace = true }
