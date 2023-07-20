@@ -3,7 +3,7 @@
 
 use serde::Serialize;
 use utoipa::ToSchema;
-use wws_router::Route;
+use wws_router::{Route, WORKERS};
 
 #[derive(Serialize, ToSchema)]
 /// Defines a worker in a given application.
@@ -23,10 +23,18 @@ pub struct Worker {
 
 impl From<&Route> for Worker {
     fn from(value: &Route) -> Self {
-        let name = value.worker.config.name.as_ref();
+        let workers = WORKERS
+            .read()
+            .expect("error locking worker lock for reading");
+        let name = workers
+            .get(&value.worker)
+            .expect("unexpected missing worker")
+            .config
+            .name
+            .as_ref();
 
         Self {
-            id: value.worker.id.clone(),
+            id: value.worker.clone(),
             name: name.unwrap_or(&String::from("default")).to_string(),
             path: value.path.clone(),
             filepath: value.handler.to_string_lossy().to_string(),
