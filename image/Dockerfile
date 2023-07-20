@@ -26,6 +26,8 @@ RUN set -eux; \
 
 FROM --platform=$TARGETPLATFORM debian:bullseye-slim
 ARG WWS_BUILD_DIR=/usr/src/wws
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates
 RUN mkdir -p /app
 RUN mkdir -p /opt
 COPY --from=build-wws ${WWS_BUILD_DIR}/build/wws /opt
