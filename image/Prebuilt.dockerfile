@@ -17,5 +17,6 @@ LABEL org.opencontainers.image.licenses="Apache-2.0"
 COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --chmod=755 ./wws-$TARGETARCH /wws
 
-CMD ["/wws", "/app/", "--host", "0.0.0.0"]
+ENTRYPOINT ["/wws"]
+CMD ["/app/", "--host", "0.0.0.0"]
 
