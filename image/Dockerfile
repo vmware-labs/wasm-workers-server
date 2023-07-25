@@ -31,5 +31,5 @@ RUN apt-get update && \
 RUN mkdir -p /app
 RUN mkdir -p /opt
 COPY --from=build-wws ${WWS_BUILD_DIR}/build/wws /opt
-
-CMD ["/opt/wws", "/app/", "--host", "0.0.0.0"]
+ENTRYPOINT ["/opt/wws"]
+CMD ["/app/", "--host", "0.0.0.0"]
