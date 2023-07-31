@@ -1,0 +1,9 @@
+name = "libs"
+version = "1"
+
+[vars]
+PYTHONPATH = "/opt/python/libs"
+
+[[folders]]
+from = "./_libs"
+to = "/opt/python/libs"
