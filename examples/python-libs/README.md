@@ -25,7 +25,7 @@ Run a Python worker that uses a Python library in Wasm Workers Server.
 
 ## Run
 
-This example runs from the previously cloned repository (See [Prerequisites](#prerequisites)). Be sure you followed all the steps and you're in the `examples/python-libs` folder:
+This example runs from the previously cloned repository (See [Prerequisites](#prerequisites)). Make sure you followed all the steps and you're in the `examples/python-libs` folder:
 
 ```shell-session
 wws .

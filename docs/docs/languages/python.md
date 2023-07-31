@@ -204,11 +204,11 @@ If you prefer, you can configure the environment variable value dynamically by f
 
 ## Python libraries
 
-The Python ecosystem has a huge number of packages. Developers like you usually rely on other libraries to accomplish different goals. In this example, you will use the [Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#quick-start) to parse a HTML document and read its text. You have all the code available in the [examples/python-libs](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/python-libs) folder.
+The Python ecosystem has a huge number of packages. Developers like you usually rely on other libraries to accomplish different goals. In this example, you will use the [Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#quick-start) to parse an HTML document and read its text. You have all the code available in the [examples/python-libs](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/python-libs) folder.
 
 To add a new Python library to your project, follow these steps:
 
-1. First, create an `index.py` file with the content below. This worker reads a HTML document and return the text using the `bs4` library:
+1. First, create an `index.py` file with the content below. This worker reads an HTML document and returns the text using the `bs4` library:
 
     ```python title="./index.py"
     from bs4 import BeautifulSoup
@@ -239,7 +239,7 @@ To add a new Python library to your project, follow these steps:
     pip3 install -t ./_libs beautifulsoup4
     ```
 
-1. Create a `index.toml` file with the content below. Note the name of the TOML file must match the name of the worker (`index.py` and `index.toml`). The current configuration mounts the `_libs` folder and sets the `PYTHONPATH` environment variable to the mount path:
+1. Create an `index.toml` file with the content below. Note the name of the TOML file must match the name of the worker (`index.py` and `index.toml`). The current configuration mounts the `_libs` folder and sets the `PYTHONPATH` environment variable to the mount path:
 
     ```toml title="./index.toml"
     name = "libs"
@@ -277,7 +277,7 @@ To add a new Python library to your project, follow these steps:
 
 ### Limitations
 
-Currently, Wasm Workers Server only supports pure Python libraries like Beautiful Soup. Libraries that requires to compile native extensions are not available yet.
+Currently, Wasm Workers Server only supports pure Python libraries like Beautiful Soup. Libraries that requires to compile native extensions are not supported yet.
 
 ## Examples
 
