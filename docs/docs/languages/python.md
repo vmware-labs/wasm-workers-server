@@ -202,7 +202,7 @@ def worker(req):
 
 If you prefer, you can configure the environment variable value dynamically by following [these instructions](../features/environment-variables.md#inject-existing-environment-variables).
 
-## Use a Python library
+## Python libraries
 
 The Python ecosystem has a huge number of packages. Developers like you usually rely on other libraries to accomplish different goals. In this example, you will use the [Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#quick-start) to parse a HTML document and read its text. You have all the code available in the [examples/python-libs](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/python-libs) folder.
 
