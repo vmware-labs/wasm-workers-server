@@ -12,19 +12,30 @@ use rust_embed::RustEmbed;
 #[folder = "client/dist/"]
 struct Asset;
 
-/// Find the static assets of the administration panel
 #[actix_web::get("/_panel{_:.*}")]
 pub async fn handle_static_panel(path: web::Path<String>) -> impl Responder {
-    let path = if path.len() == 0 {
+    let path = if path.is_empty() {
         "index.html"
     } else {
         path.as_str().strip_prefix('/').unwrap()
     };
 
-    match Asset::get(path) {
-        Some(content) => HttpResponse::Ok()
-            .content_type(from_path(path).first_or_octet_stream().as_ref())
-            .body(content.data.into_owned()),
-        None => HttpResponse::NotFound().body("404 Not Found"),
-    }
+    let (content_type, content_data) = Asset::get(path)
+        .map(|content| {
+            (
+                from_path(path).first_or_octet_stream().to_string(),
+                content.data.into_owned(),
+            )
+        })
+        .unwrap_or_else(|| {
+            let default_content = Asset::get("index.html").unwrap();
+            (
+                "text/html; charset=utf-8".to_string(),
+                default_content.data.into_owned(),
+            )
+        });
+
+    HttpResponse::Ok()
+        .content_type(content_type)
+        .body(content_data)
 }
