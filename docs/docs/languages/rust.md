@@ -58,10 +58,11 @@ In this example, the worker will get a request and print all the related informa
     use wasm_workers_rs::{
         worker,
         http::{self, HeaderValue, Request, Response},
+        Content,
     };
 
     #[worker]
-    fn reply(req: Request<String>) -> Result<Response<String>> {
+    fn reply(req: Request<String>) -> Result<Response<Content>> {
         // Applied changes here to use the Response method. This requires changes
         // on signature and how it returns the data.
         let response = format!(
