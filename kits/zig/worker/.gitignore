@@ -1,0 +1,4 @@
+zig-cache/
+zig-out/
+examples/json.zig
+examples/output.zig
