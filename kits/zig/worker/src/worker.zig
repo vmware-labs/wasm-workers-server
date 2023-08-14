@@ -97,7 +97,7 @@ pub const Output = struct {
         }
 
         if (self.status == 0) {
-            self.status = 200;
+            self.writeHeader(200);
         }
 
         for (self.httpHeader.list.items) |item| {
@@ -134,10 +134,8 @@ pub const Output = struct {
 
         std.debug.print("output json: {s}\n", .{ result });
 
-        // I assume this works, as no stdout seems to be logged by wws, only stderr
-        // https://zig.news/kristoff/where-is-print-in-zig-57e9
         const stdout = std.io.getStdOut().writer();
-        try stdout.print("{s}", .{result});
+        try stdout.print("{s}", .{ result });
 
         return self.data.len;
     }
@@ -281,9 +279,31 @@ pub const Response = struct {
     data: []const u8,
     httpHeader: http.Headers,
 
-    pub fn writeAll(self: *Response, data: []const u8) !u32 {
-        self.data = data;
-        return self.data.len;
+    // pub const WriteError = error{ NotWriteable, MessageTooLong, UnexpectedWriteFailure };
+
+    // pub const Writer = std.io.Writer(*Response, WriteError, write);
+
+    // pub fn writer(res: *Response) Writer {
+    //     return .{ .context = res };
+    // }
+
+    // /// Write `bytes` to the server. The `transfer_encoding` request header determines how data will be sent.
+    // pub fn write(res: *Response, bytes: []const u8) WriteError!usize {
+    //     _ = bytes;
+    //     _ = res;
+    //     return 0;
+    // }
+
+    // // pub fn writeAll(req: *Response, bytes: []const u8) WriteError!void {
+    // //     var index: usize = 0;
+    // //     while (index < bytes.len) {
+    // //         index += try write(req, bytes[index..]);
+    // //     }
+    // // }
+
+    pub fn writeAll(res: *Response, data: []const u8) !u32 {
+        res.data = data;
+        return res.data.len;
     }
 };
 
@@ -294,26 +314,12 @@ pub fn ServeFunc(requestFn: *const fn (*Response, *http.Client.Request) void) vo
     var output = r.output;
 
     var response = Response{ .data = "", .httpHeader = http.Headers.init(allocator) };
+    
     requestFn(&response, &request);
 
-    // TODO: do we need request.headers in response?
-    // output.httpHeader = request.headers;
     output.httpHeader = response.httpHeader;
 
     _ = output.write(response.data) catch |err| {
         std.debug.print("error writing data: {!} \n", .{ err });
     };
-
-    std.debug.print("Done.\n", .{ });
 }
-
-
-// Alternative ways for function parameter
-// pub fn ServeFunc(requestFn: anytype) void {
-//     requestFn();
-// }
-
-// works as function budy, must be comptime-known
-// pub fn ServeFunc(comptime requestFn: fn () void) void {
-//     requestFn();
-// }
