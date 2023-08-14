@@ -22,6 +22,7 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
         });
 
+        exe.wasi_exec_model = .reactor;
         exe.addModule("worker", worker_module);
 
         b.installArtifact(exe);
