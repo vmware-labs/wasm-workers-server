@@ -86,7 +86,8 @@ pub const Output = struct {
 
     pub fn write(self: *Self, data: []const u8) !u32 {
 
-        if (isValidUtf8(data)) {
+        if (true) {
+        // if (isValidUtf8(data)) {
             self.data = data;
         } else {
             self.base64 = true;
@@ -125,7 +126,6 @@ pub const Output = struct {
         try w.objectField("headers");
         try w.write(try getHeadersJsonObject(self.headers));
 
-        try cache.put("hello", "world");
         try w.objectField("kv");
         try w.write(try getCacheJsonObject(cache));
 
@@ -156,8 +156,8 @@ fn getCacheJsonObject(s: std.StringHashMap([]const u8)) !std.json.Value {
     var value = std.json.Value{ .object = std.json.ObjectMap.init(allocator) };
 
     var i = s.iterator();
-    while (i.next()) |kv| {
-        try value.object.put(kv.key_ptr.*, std.json.Value{ .string = kv.value_ptr.*});
+    while (i.next()) |entry| {
+        try value.object.put(entry.key_ptr.*, std.json.Value{ .string = entry.value_ptr.*});
     }
 
     return value;
@@ -197,22 +197,15 @@ fn getInput(s: []const u8) !Input {
     };
 
     var headers_map = parsed.value.object.get("headers").?.object;
+    var headersIterator = headers_map.iterator();
+    while (headersIterator.next()) |entry| {
+        try input.headers.put(entry.key_ptr.*, entry.value_ptr.*.string);
+    }
 
-    // can we maybe use an iterator here?
-    // var i = headers_map.iterator();
-    // while (i.next()) |kv| {
-    //     try input.headers.put(kv.key_ptr.*.string, kv.value_ptr.*.string);
-    // }
-
-    // std.debug.print("headers1: {!}", .{ input.headers });
-
-    for (headers_map.keys()) |key| {
-        var v = try headers_map.getOrPut(key);
-        if (v.found_existing) {
-            var value = v.value_ptr.*.string;
-            // std.debug.print("headers key: {s}, value: {s}\n", .{key, value});
-            try input.headers.put(key, value);
-        }
+    var kv = parsed.value.object.get("kv").?.object;
+    var kvIterator = kv.iterator();
+    while (kvIterator.next()) |entry| {
+        try cache.put(entry.key_ptr.*, entry.value_ptr.*.string);
     }
     
     return input;
@@ -225,6 +218,7 @@ pub fn createRequest(in: *Input) !Request {
         .method = in.method,
         .headers = http.Headers.init(allocator),
         .data = in.body,
+        .context = Context.init(),
     };
 
     // is it even necessary to copy headers from Input to Request struct?
@@ -232,9 +226,6 @@ pub fn createRequest(in: *Input) !Request {
     while (i.next()) |kv| {
         try req.headers.append(kv.key_ptr.*, kv.value_ptr.*);
     }
-
-    // req = req.WithContext(context.WithValue(req.Context(), CacheKey, cache));
-	// req = req.WithContext(context.WithValue(req.Context(), ParamsKey, params));
 
     return req;
 }
@@ -269,6 +260,19 @@ pub const Request = struct {
     method: []const u8, // TODO: change to http.Method enum
     headers: http.Headers,
     data: []const u8,
+    context: Context,
+};
+
+pub const Context = struct {
+    cache: *std.StringHashMap([]const u8),
+    params: *std.StringHashMap([]const u8),
+
+    pub fn init() Context {
+        return .{
+            .cache = &cache,
+            .params = &params,
+        };
+    }
 };
 
 pub const Response = struct {
