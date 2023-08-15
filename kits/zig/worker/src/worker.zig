@@ -207,6 +207,12 @@ fn getInput(s: []const u8) !Input {
     while (kvIterator.next()) |entry| {
         try cache.put(entry.key_ptr.*, entry.value_ptr.*.string);
     }
+
+    var p = parsed.value.object.get("params").?.object;
+    var paramsIterator = p.iterator();
+    while (paramsIterator.next()) |entry| {
+        try params.put(entry.key_ptr.*, entry.value_ptr.*.string);
+    }
     
     return input;
 }
