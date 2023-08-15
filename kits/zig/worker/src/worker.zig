@@ -218,24 +218,13 @@ fn getInput(s: []const u8) !Input {
     return input;
 }
 
-pub fn createRequest(in: *Input) !http.Client.Request {
+pub fn createRequest(in: *Input) !Request {
 
-    // Create an HTTP client.
-    var client = http.Client{ .allocator = allocator };
-    // Release all associated resources with the client.
-    defer client.deinit();
-    // Parse the URI.
-
-    var req = http.Client.Request{
-        .client = &client,
-        .uri = try std.Uri.parseWithoutScheme(in.url),
-        .method = http.Method.GET,
-        .arena = arena,
-        .connection = null,
+    var req = Request{
+        .url = try std.Uri.parseWithoutScheme(in.url),
+        .method = in.method,
         .headers = http.Headers.init(allocator),
-        .redirects_left = 0,
-        .handle_redirects = false,
-        .response = undefined,
+        .data = in.body,
     };
 
     // is it even necessary to copy headers from Input to Request struct?
@@ -251,7 +240,7 @@ pub fn createRequest(in: *Input) !http.Client.Request {
 }
 
 const RequestAndOutput = struct {
-    req: http.Client.Request,
+    req: Request,
     output: Output,
 };
 
@@ -275,31 +264,17 @@ pub fn getWriterRequest() !RequestAndOutput {
     };
 }
 
+pub const Request = struct {
+    url: std.Uri,
+    method: []const u8, // TODO: change to http.Method enum
+    headers: http.Headers,
+    data: []const u8,
+};
+
 pub const Response = struct {
     data: []const u8,
-    httpHeader: http.Headers,
-
-    // pub const WriteError = error{ NotWriteable, MessageTooLong, UnexpectedWriteFailure };
-
-    // pub const Writer = std.io.Writer(*Response, WriteError, write);
-
-    // pub fn writer(res: *Response) Writer {
-    //     return .{ .context = res };
-    // }
-
-    // /// Write `bytes` to the server. The `transfer_encoding` request header determines how data will be sent.
-    // pub fn write(res: *Response, bytes: []const u8) WriteError!usize {
-    //     _ = bytes;
-    //     _ = res;
-    //     return 0;
-    // }
-
-    // // pub fn writeAll(req: *Response, bytes: []const u8) WriteError!void {
-    // //     var index: usize = 0;
-    // //     while (index < bytes.len) {
-    // //         index += try write(req, bytes[index..]);
-    // //     }
-    // // }
+    headers: http.Headers,
+    request: Request,
 
     pub fn writeAll(res: *Response, data: []const u8) !u32 {
         res.data = data;
@@ -308,16 +283,16 @@ pub const Response = struct {
 };
 
 // Function parameter as function pointer
-pub fn ServeFunc(requestFn: *const fn (*Response, *http.Client.Request) void) void {
+pub fn ServeFunc(requestFn: *const fn (*Response, *Request) void) void {
     var r = try getWriterRequest();
     var request = r.req;
     var output = r.output;
 
-    var response = Response{ .data = "", .httpHeader = http.Headers.init(allocator) };
+    var response = Response{ .data = "", .headers = http.Headers.init(allocator), .request = request, };
     
     requestFn(&response, &request);
 
-    output.httpHeader = response.httpHeader;
+    output.httpHeader = response.headers;
 
     _ = output.write(response.data) catch |err| {
         std.debug.print("error writing data: {!} \n", .{ err });
