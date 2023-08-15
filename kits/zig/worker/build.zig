@@ -3,7 +3,7 @@ const std = @import("std");
 const package_name = "worker";
 const package_path = "src/worker.zig";
 
-const examples = [2][]const u8{ "main", "basic" };
+const examples = [3][]const u8{ "main", "basic", "worker-kv" };
 // const examples = [4][]const u8{ "main", "basic", "json", "output" };
 
 pub fn build(b: *std.Build) void {
