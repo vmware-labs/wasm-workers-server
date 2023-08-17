@@ -104,3 +104,7 @@ a.menu__link[href*="languages/rust"]::before {
 a.menu__link[href*="languages/go"]::before {
   background-image: url(/img/languages/go.svg);
 }
+
+a.menu__link[href*="languages/zig"]::before {
+  background-image: url(/img/languages/zig.svg);
+}
