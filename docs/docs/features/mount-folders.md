@@ -41,3 +41,4 @@ Note that those folders may include files that `wws` recognizes as workers (like
 | Go | ✅ |
 | Ruby | ✅ |
 | Python | ✅ |
+| Zig | ❓ |
