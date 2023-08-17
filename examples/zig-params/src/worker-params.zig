@@ -9,10 +9,9 @@ fn requestFn(resp: *worker.Response, r: *worker.Request) void {
 
     var id: []const u8 = "the value is not available";
 
-    var v = params.get("worker-params");
+    var v = params.get("id");
 
     if (v) |val| {
-        std.debug.print("\n\n{s}\n\n", .{val});
         id = val;
     }
 

@@ -15,34 +15,36 @@ In this example, the worker will get a request and print all the related informa
 1. Create a new Zig project:
 
     ```bash
-
+    zig init-exe
     ```
 
 2. Add Wasm Workers Server Zig dependency
 
-    At this point in time Zigs Package manager is not yet available. You will have to clone this repo instead.
+    At this point in time Zigs Package manager is not yet available. We will therefore clone the repository to make the library locally available.
 
     ```
-    git clone git@github.com/vmware-labs/wasm-workers-server/
+    mkdir lib
+    wget -O ./lib/worker.zig https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/kits/zig/worker/worker.zig ./lib
     ```
 
-3. Create a `worker.go` file with the following contents:
+3. Edit the `src/main.zig`  to match the following contents:
 
     ```c title="worker.zig"
     const std = @import("std");
     const worker = @import("worker");
-
+    
     fn requestFn(resp: *worker.Response, r: *worker.Request) void {
         _ = r;
+    
         _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
-        _ = &resp.writeAll("Hello from Zig ⚡️!");
+        _ = &resp.writeAll("hello from zig");
     }
-
+    
     pub fn main() !void {
         worker.ServeFunc(requestFn);
     }
     ```
-
+    
 4. Additionally, you can now go further add all the information from the received `worker.Request`:
 
     ```c title="worker.zig"
@@ -98,7 +100,7 @@ In this example, the worker will get a request and print all the related informa
             \\</body>
         ;
 
-        var body = std.fmt.allocPrint(allocator, s, .{ r.url.path, r.method, "-", payload }) catch undefined; // add useragent
+        var body = std.fmt.allocPrint(allocator, s, .{ r.url.path, r.method, "-", payload }) catch undefined; 
 
         _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
         _ = &resp.writeAll(body);
@@ -109,11 +111,18 @@ In this example, the worker will get a request and print all the related informa
     }
     ```
 
-5. In this case, you need to compile the project to Wasm ([WASI](https://wasi.dev/)).
+5. Compile the project
 
     ```bash
-    zig build -Dtarget="wasm32-wasi"
+    zig build-exe src/main.zig \
+        --name worker \
+        -mexec-model=reactor \
+        -target wasm32-wasi \
+        --mod worker::lib/worker.zig \
+        --deps worker
     ```
+    
+    You can also use a build script to build the project with a simple `zig build`, please find some inspiration in our [zig examples](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/).
 
 6. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
 
@@ -129,88 +138,90 @@ In this example, the worker will get a request and print all the related informa
 
 7. Finally, open <http://127.0.0.1:8080/worker> in your browser.
 
-<!--
 ## Add a Key / Value store
 
 Wasm Workers allows you to add a Key / Value store to your workers. Read more information about this feature in the [Key / Value store](../features/key-value.md) section.
 
 To add a KV store to your worker, follow these steps:
 
-1. Create a new Go project:
+1. Create a new Zig project:
 
     ```bash
-    go mod init worker-kv
+    zig init-exe
     ```
 
-1. Add the Wasm Workers Server Go dependency
+2. Add Wasm Workers Server Zig dependency
+
+    At this point in time Zigs Package manager is not yet available. We will therefore clone the repository to make the library locally available.
 
     ```
-    go get -u github.com/vmware-labs/wasm-workers-server/kits/go/worker@v1.3.0
+    mkdir lib
+    wget -O ./lib/worker.zig https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/kits/zig/worker/worker.zig ./lib
     ```
 
-1. Create a `worker-kv.go` file with the following contents:
+1. Edit `src/main.zig` file with the following contents:
 
-    ```go title="worker-kv.go"
-    package main
+    ```c title="main.zig"
+    const std = @import("std");
+    const worker = @import("worker");
 
-    import (
-	    "net/http"
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    const allocator = arena.allocator();
 
-	    "github.com/vmware-labs/wasm-workers-server/kits/go/worker"
-    )
+    fn requestFn(resp: *worker.Response, r: *worker.Request) void {
+        var cache = r.context.cache;
+        var counter: i32 = 0;
 
-    func main() {
-        worker.ServeFunc(func(w http.ResponseWriter, r *http.Request) {
-            w.Header().Set("x-generated-by", "wasm-workers-server")
-            w.Write([]byte("Hello wasm!"))
-        })
+        var v = cache.getOrPut("counter") catch undefined;
+
+        if (!v.found_existing) {
+            v.value_ptr.* = "0";
+        } else {
+            var counterValue = v.value_ptr.*;
+            var num = std.fmt.parseInt(i32, counterValue, 10) catch undefined;
+            counter = num + 1;
+            var num_s = std.fmt.allocPrint(allocator, "{d}", .{ counter }) catch undefined;
+            _ = cache.put("counter", num_s) catch undefined;
+        }
+
+        const s =
+            \\<!DOCTYPE html>
+            \\<head>
+            \\<title>
+            \\Wasm Workers Server - KV example</title>
+            \\<meta name="viewport" content="width=device-width,initial-scale=1">
+            \\<meta charset="UTF-8">
+            \\</head>
+            \\<body>
+            \\<h1>Key / Value store in Zig</h1>
+            \\<p>Counter: {d}</p>
+            \\<p>This page was generated by a Zig⚡️ file running in WebAssembly.</p>
+            \\</body>
+        ;
+
+        var body = std.fmt.allocPrint(allocator, s, .{ counter }) catch undefined; // add useragent
+
+        _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
+        _ = &resp.writeAll(body);
+    }
+
+    pub fn main() !void {
+        worker.ServeFunc(requestFn);
     }
     ```
 
-1. Then, let's read a value from the cache and update it:
-
-    ```go title="worker-kv.go"
-    package main
-
-    import (
-        "fmt"
-        "net/http"
-        "strconv"
-
-        "github.com/vmware-labs/wasm-workers-server/kits/go/worker"
-    )
-
-    func main() {
-        worker.ServeFunc(func(w http.ResponseWriter, r *http.Request) {
-            cache, _ := r.Context().Value(worker.CacheKey).(map[string]string)
-
-            var countNum uint32
-
-            if count, ok := cache["counter"]; ok {
-                n, _ := strconv.ParseUint(count, 10, 32)
-                countNum = uint32(n)
-            }
-
-            body := fmt.Sprintf("<!DOCTYPE html>"+
-                "<body>"+
-                "<h1>Key / Value store in Go</h1>"+
-                "<p>Counter: %d</p>"+
-                "<p>This page was generated by a Wasm module built from Go.</p>"+
-                "</body>", countNum)
-
-            cache["counter"] = fmt.Sprintf("%d", countNum+1)
-
-            w.Header().Set("x-generated-by", "wasm-workers-server")
-            w.Write([]byte(body))
-        })
-    }
-    ```
-
-1. Compile the project to Wasm ([WASI](https://wasi.dev/)):
+5. Compile the project
 
     ```bash
-    tinygo build -o worker-kv.wasm -target wasi worker-kv.go
+    zig build-exe src/main.zig \
+        --name worker-kv \
+        -mexec-model=reactor \
+        -target wasm32-wasi \
+        --mod worker::lib/worker.zig \
+        --deps worker
     ```
+    
+    You can also use a build script to build the project with a simple `zig build`, please find some inspiration in our [zig examples](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/).
 
 1. Create a `worker-kv.toml` file with the following content. Note the name of the TOML file must match the name of the worker. In this case we have `worker-kv.wasm` and `worker-kv.toml` in the same folder:
 
@@ -237,101 +248,85 @@ To add a KV store to your worker, follow these steps:
 
 1. Finally, open <http://127.0.0.1:8080/worker-kv> in your browser.
 
- -->
 
 ## Dynamic routes
 
-<!--
 You can define [dynamic routes by adding route parameters to your worker files](../features/dynamic-routes.md) (like `[id].wasm`). To read them in Go, follow these steps:
 
 1. Use the `worker.ParamsKey` context value to read in the passed in parameters:
 
-    ```go title="main.go"
-    package main
-
-    import (
-        "fmt"
-        "net/http"
-
-        "github.com/vmware-labs/wasm-workers-server/kits/go/worker"
-    )
-
-    func main() {
-        worker.ServeFunc(func(w http.ResponseWriter, r *http.Request) {
-            params, _ := r.Context().Value(worker.ParamsKey).(map[string]string)
-            ...
-        })
+    ```c title="main.zig"
+    const std = @import("std");
+    const worker = @import("worker");
+    
+    fn requestFn(resp: *worker.Response, r: *worker.Request) void {
+        var params = r.context.params;
+    
+        ...
     }
     ```
 
 2. Then, you can read the values as follows:
 
-    ```go title="main.go"
-    package main
-
-    import (
-        "fmt"
-        "net/http"
-
-        "github.com/vmware-labs/wasm-workers-server/kits/go/worker"
-    )
-
-    func main() {
-        worker.ServeFunc(func(w http.ResponseWriter, r *http.Request) {
-            params, _ := r.Context().Value(worker.ParamsKey).(map[string]string)
-            id := "the value is not available"
-
-            if val, ok := params["id"]; ok {
-                id = val
-            }
-
-            w.Header().Set("x-generated-by", "wasm-workers-server")
-            w.Write([]byte(fmt.Sprintf("Hey! The parameter is: %s", id)))
-        })
+    ```c title="main.zig"
+    const std = @import("std");
+    const worker = @import("worker");
+    
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    const allocator = arena.allocator();
+    
+    fn requestFn(resp: *worker.Response, r: *worker.Request) void {
+        var params = r.context.params;
+    
+        var id: []const u8 = "the value is not available";
+    
+        var v = params.get("id");
+    
+        if (v) |val| {
+            id = val;
+        }
+    
+        const s =
+            \\Hey! The parameter is: {s}
+        ;
+    
+        var body = std.fmt.allocPrint(allocator, s, .{ id }) catch undefined; // add useragent
+    
+        _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
+        _ = &resp.writeAll(body);
+    }
+    
+    pub fn main() !void {
+        worker.ServeFunc(requestFn);
     }
     ```
--->
 
-## Read environment variables
+3. Compile the project
 
-<!--
-Environment variables are configured [via the related TOML configuration file](../features/environment-variables.md). These variables are accessible via `os.Getenv` in your worker. To read them, just use the same name you configured in your TOML file:
+    ```bash
+    zig build-exe src/main.zig \
+        --name "[id]" \
+        -mexec-model=reactor \
+        -target wasm32-wasi \
+        --mod worker::lib/worker.zig \
+        --deps worker
+    ```
 
-```toml title="envs.toml"
-name = "envs"
-version = "1"
+    You can also use a build script to build the project with a simple `zig build`, please find some inspiration in our [zig examples](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/).
 
-[vars]
-MESSAGE = "Hello 👋! This message comes from an environment variable"
-```
+4. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
 
-Now, you can read the `MESSAGE` variable using the [`os.Getenv`](https://pkg.go.dev/os#Getenv) function:
+    ```bash
+    wws .
+    
+    ⚙️ Loading routes from: .
+    🗺 Detected routes:
+    - http://127.0.0.1:8080/[id]
+    => worker-kv.wasm (name: default)
+    🚀 Start serving requests at http://127.0.0.1:8080
+    ```
 
-```go title="envs.go"
-package main
-
-import (
-	"fmt"
-	"net/http"
-	"os"
-
-	"github.com/vmware-labs/wasm-workers-server/kits/go/worker"
-)
-
-func main() {
-	worker.ServeFunc(func(w http.ResponseWriter, r *http.Request) {
-		body := fmt.Sprintf("The message is: %s", os.Getenv("MESSAGE"))
-
-		w.Header().Set("x-generated-by", "wasm-workers-server")
-		w.Write([]byte(body))
-	})
-}
-
-```
-
-If you prefer, you can configure the environment variable value dynamically by following [these instructions](../features/environment-variables.md#inject-existing-environment-variables).
-
--->
+5. Finally, open <http://127.0.0.1:8080/hello> in your browser.
 
 ## Other examples
 
