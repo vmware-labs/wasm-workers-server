@@ -2,43 +2,6 @@ const std = @import("std");
 const io = std.io;
 const http = std.http;
 
-// This is from ChatGPT - I have no clue whether this works, nor whats going on here :D
-fn isValidUtf8(data: []const u8) bool {
-    var i: usize = 0;
-    while (i < data.len) {
-        const byte: u8 = data[i];
-        if (byte < 0x80) {
-            // ASCII character
-            i += 1;
-        } else if (byte < 0xC2) {
-            // Invalid continuation byte
-            return false;
-        } else if (byte < 0xE0) {
-            // 2-byte sequence
-            if ((i + 1 >= data.len) or ((data[i + 1] & 0xC0) != 0x80)) {
-                return false;
-            }
-            i += 2;
-        } else if (byte < 0xF0) {
-            // 3-byte sequence
-            if ((i + 2 >= data.len) or ((data[i + 1] & 0xC0) != 0x80) or ((data[i + 2] & 0xC0) != 0x80)) {
-                return false;
-            }
-            i += 3;
-        } else if (byte < 0xF5) {
-            // 4-byte sequence
-            if ((i + 3 >= data.len) or ((data[i + 1] & 0xC0) != 0x80) or ((data[i + 2] & 0xC0) != 0x80) or ((data[i + 3] & 0xC0) != 0x80)) {
-                return false;
-            }
-            i += 4;
-        } else {
-            // Invalid UTF-8 byte
-            return false;
-        }
-    }
-    return true;
-}
-
 var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
 const allocator = arena.allocator();
 
@@ -86,16 +49,20 @@ pub const Output = struct {
 
     pub fn write(self: *Self, data: []const u8) !u32 {
 
-        if (true) {
-        // if (isValidUtf8(data)) {
-            self.data = data;
-        } else {
-            self.base64 = true;
-            // is this correct?
-            const enc = std.base64.Base64Encoder.init(std.base64.url_safe_alphabet_chars, '=');
-            var dest: []u8 = undefined;
-            self.data = std.base64.Base64Encoder.encode(&enc, dest, data);
-        }
+        self.data = data;
+
+        // TODO: fix this base64 encoding
+        // if (std.unicode.utf8ValidateSlice(data)) {
+        //     self.data = data;
+        // } else {
+        //     self.base64 = true;
+        //     // This line throws weird error?
+        //     var enc = std.base64.Base64Encoder.init(std.base64.standard_alphabet_chars, '=');
+        //     _ = enc;
+        //     // var data_len = enc.calcSize(data.len);
+        //     // var buf: [128]u8 = undefined;
+        //     // self.data = enc.encode(buf[0..data_len], data);
+        // }
 
         if (self.status == 0) {
             self.writeHeader(200);
@@ -132,7 +99,7 @@ pub const Output = struct {
         try w.endObject();
         const result = slice_stream.getWritten();
 
-        std.debug.print("output json: {s}\n", .{ result });
+        // std.debug.print("output json: {s}\n", .{ result });
 
         const stdout = std.io.getStdOut().writer();
         try stdout.print("{s}", .{ result });
@@ -164,24 +131,25 @@ fn getCacheJsonObject(s: std.StringHashMap([]const u8)) !std.json.Value {
 }
 
 pub fn readInput() !Input {
-    // https://www.openmymind.net/Reading-A-Json-Config-In-Zig/
+
     const in = std.io.getStdIn();
     var buf = std.io.bufferedReader(in.reader());
     var r = buf.reader();
 
     var msg_buf: [4096]u8 = undefined;
 
-    // delimiter "\n" might not be adequate?
     if (r.readUntilDelimiterOrEof(&msg_buf, '\n')) |msg| {
         if (msg) | m | {
-            std.debug.print("raw input json: {s}\n", .{m});
+            // std.debug.print("raw input json: {s}\n", .{m});
             return getInput(m);
         }
     } else |err| {
         std.debug.print("error parsing json: {!}\n", .{err});
+        return err;
     }
 
-    // TODO: proper return value
+    // is there a better return value?
+    // maybe unreachable?
     return undefined;
 }
 
@@ -227,7 +195,6 @@ pub fn createRequest(in: *Input) !Request {
         .context = Context.init(),
     };
 
-    // is it even necessary to copy headers from Input to Request struct?
     var i = in.headers.iterator();
     while (i.next()) |kv| {
         try req.headers.append(kv.key_ptr.*, kv.value_ptr.*);
@@ -292,7 +259,6 @@ pub const Response = struct {
     }
 };
 
-// Function parameter as function pointer
 pub fn ServeFunc(requestFn: *const fn (*Response, *Request) void) void {
     var r = try getWriterRequest();
     var request = r.req;
