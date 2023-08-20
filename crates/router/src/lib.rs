@@ -128,6 +128,7 @@ mod tests {
         let fixed_route = build_route("/fixed.wasm");
         let param_folder_route = build_route("/[id]/fixed.wasm");
         let param_sub_route = build_route("/sub/[id].wasm");
+        let catch_all_sub_route = build_route("/sub/[...all].wasm");
 
         let tests = [
             (&param_route, "/a", RouteAffinity::CanManage(1)),
@@ -137,10 +138,15 @@ mod tests {
             (&param_folder_route, "/a/fixed", RouteAffinity::CanManage(1)),
             (&param_sub_route, "/a/b", RouteAffinity::CannotManage),
             (&param_sub_route, "/sub/b", RouteAffinity::CanManage(2)),
+            (
+                &catch_all_sub_route,
+                "/sub/catch/all/routes",
+                RouteAffinity::CanManage(i32::MAX),
+            ),
         ];
 
-        for t in tests {
-            assert_eq!(t.0.affinity(t.1), t.2);
+        for (route, path, route_affinity) in tests {
+            assert_eq!(route.affinity(path), route_affinity);
         }
     }
 
@@ -162,6 +168,7 @@ mod tests {
         let fixed_route = build_route("/fixed.wasm");
         let param_folder_route = build_route("/[id]/fixed.wasm");
         let param_sub_route = build_route("/sub/[id].wasm");
+        let catch_all_sub_route = build_route("/sub/[...all].wasm");
 
         // I'm gonna use this values for comparison as `routes` consumes
         // the Route elements.
@@ -169,6 +176,7 @@ mod tests {
         let fixed_path = fixed_route.path.clone();
         let param_folder_path = param_folder_route.path.clone();
         let param_sub_path = param_sub_route.path.clone();
+        let catch_all_sub_path: String = catch_all_sub_route.path.clone();
 
         let routes = Routes {
             routes: vec![
@@ -176,6 +184,7 @@ mod tests {
                 fixed_route,
                 param_folder_route,
                 param_sub_route,
+                catch_all_sub_route,
             ],
             prefix: String::from("/"),
         };
@@ -185,13 +194,14 @@ mod tests {
             ("/fixed", Some(fixed_path)),
             ("/a/fixed", Some(param_folder_path)),
             ("/sub/b", Some(param_sub_path)),
+            ("/sub/catch/all/routes", Some(catch_all_sub_path)),
             ("/donot/exist", None),
         ];
 
-        for t in tests {
-            let route = routes.retrieve_best_route(t.0);
+        for (given_path, expected_path) in tests {
+            let route = routes.retrieve_best_route(given_path);
 
-            if let Some(path) = t.1 {
+            if let Some(path) = expected_path {
                 assert!(route.is_some());
                 assert_eq!(route.unwrap().path, path);
             } else {

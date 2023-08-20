@@ -11,8 +11,8 @@ use wws_config::Config as ProjectConfig;
 use wws_worker::Worker;
 
 lazy_static! {
-    static ref PARAMETER_REGEX: Regex = Regex::new(r"\[\w+\]").unwrap();
-    static ref DYNAMIC_ROUTE_REGEX: Regex = Regex::new(r".*\[\w+\].*").unwrap();
+    static ref PARAMETER_REGEX: Regex =
+        Regex::new(r"\[(?P<ellipsis>\.{3})?(?P<segment>\w+)\]").unwrap();
 }
 
 /// Identify if a route can manage a certain URL and generates
@@ -118,6 +118,7 @@ impl Route {
     /// - /a/[id].js
     /// - /[id]/b.wasm
     /// - /[id]/[other].wasm
+    /// - /[id]/[..all].wasm
     ///
     /// We need to establish a priority. The lower of the returned number,
     /// the more priority it has. This number is calculated based on the number of used
@@ -125,30 +126,32 @@ impl Route {
     ///
     /// To avoid collisions like `[id]/b.wasm` vs `/a/[id].js`. Every depth level will
     /// add an extra +1 to the score. So, in case of `[id]/b.wasm` vs `/a/[id].js`,
-    /// the /a/b path will be managed by `[id]/b.wasm`
+    /// the /a/b path will be managed by `/a/[id].js`
     ///
     /// In case it cannot manage it, it will return -1
     pub fn affinity(&self, url_path: &str) -> RouteAffinity {
         let mut score: i32 = 0;
         let mut split_path = self.path.split('/').peekable();
 
-        for (depth, portion) in url_path.split('/').enumerate() {
+        for (depth, segment) in url_path.split('/').enumerate() {
             match split_path.next() {
-                Some(el) if el == portion => continue,
-                Some(el) if PARAMETER_REGEX.is_match(el) => {
-                    score += depth as i32;
-                    continue;
-                }
-                _ => return RouteAffinity::CannotManage,
+                None => return RouteAffinity::CannotManage,
+                Some(el) if el == segment => continue,
+                Some(el) => match PARAMETER_REGEX.captures(el) {
+                    None => return RouteAffinity::CannotManage,
+                    Some(caps) => match (caps.name("ellipsis"), caps.name("segment")) {
+                        (Some(_), Some(_)) => return RouteAffinity::CanManage(i32::MAX),
+                        (_, Some(_)) => score += depth as i32,
+                        _ => return RouteAffinity::CannotManage,
+                    },
+                },
             }
         }
 
-        // I should check the other iterator to confirm is empty
-        if split_path.peek().is_none() {
-            RouteAffinity::CanManage(score)
-        } else {
-            // The split path iterator still have some entries.
-            RouteAffinity::CannotManage
+        // I should check the other iterator to confirm if it is empty
+        match split_path.peek() {
+            None => RouteAffinity::CanManage(score),
+            Some(_) => RouteAffinity::CannotManage,
         }
     }
 
@@ -156,16 +159,20 @@ impl Route {
     /// we are using `[]` in the filenames. However, actix expects a `{}`
     /// format for parameters.
     pub fn actix_path(&self) -> String {
-        // Replace [] with {} for making the path compatible with
-        let mut formatted = self.path.replace('[', "{");
-        formatted = formatted.replace(']', "}");
-
-        formatted
+        PARAMETER_REGEX
+            .replace_all(&self.path, |caps: &regex::Captures| {
+                match (caps.name("ellipsis"), caps.name("segment")) {
+                    (Some(_), Some(segment)) => format!("{{{}:.*}}", segment.as_str()),
+                    (_, Some(segment)) => format!("{{{}}}", segment.as_str()),
+                    _ => String::new(),
+                }
+            })
+            .into()
     }
 
     /// Check if the current route is dynamic
     pub fn is_dynamic(&self) -> bool {
-        DYNAMIC_ROUTE_REGEX.is_match(&self.path)
+        PARAMETER_REGEX.is_match(&self.path)
     }
 }
 
