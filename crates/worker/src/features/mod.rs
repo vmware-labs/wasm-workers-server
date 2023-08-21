@@ -4,3 +4,4 @@
 pub mod data;
 pub mod folders;
 pub mod http_requests;
+pub mod wasi_nn;

@@ -11,15 +11,18 @@ use actix_web::HttpRequest;
 use anyhow::{anyhow, Result};
 use bindings::http::{add_to_linker as http_add_to_linker, HttpBindings};
 use config::Config;
+use features::wasi_nn::WASI_NN_BACKEND_OPENVINO;
 use io::{WasmInput, WasmOutput};
 use sha256::digest as sha256_digest;
 use std::fs::{self, File};
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::{collections::HashMap, path::Path};
 use stdio::Stdio;
 use wasi_common::WasiCtx;
 use wasmtime::{Engine, Linker, Module, Store};
 use wasmtime_wasi::{ambient_authority, Dir, WasiCtxBuilder};
+use wasmtime_wasi_nn::WasiNnCtx;
 use wws_config::Config as ProjectConfig;
 use wws_runtimes::{init_runtime, Runtime};
 
@@ -43,6 +46,7 @@ pub struct Worker {
 
 struct WorkerState {
     pub wasi: WasiCtx,
+    pub wasi_nn: Option<Arc<WasiNnCtx>>,
     pub http: HttpBindings,
 }
 
@@ -134,12 +138,36 @@ impl Worker {
             }
         }
 
+        // WASI-NN
+        let wasi_nn;
+        let allowed_backends = &self.config.features.wasi_nn.allowed_backends;
+
+        if !allowed_backends.is_empty() {
+            // For now, we only support OpenVINO
+            if allowed_backends.len() != 1
+                || !allowed_backends.contains(&WASI_NN_BACKEND_OPENVINO.to_string())
+            {
+                eprintln!("❌ The only WASI-NN supported backend name is \"{WASI_NN_BACKEND_OPENVINO}\". Please, update your config.");
+                wasi_nn = None;
+            } else {
+                wasmtime_wasi_nn::add_to_linker(&mut linker, |s: &mut WorkerState| {
+                    Arc::get_mut(s.wasi_nn.as_mut().unwrap())
+                        .expect("wasi-nn is not implemented with multi-threading support")
+                })?;
+
+                wasi_nn = Some(Arc::new(WasiNnCtx::new()?));
+            }
+        } else {
+            wasi_nn = None;
+        }
+
         // Pass to the runtime to add any WASI specific requirement
         wasi_builder = self.runtime.prepare_wasi_ctx(wasi_builder)?;
 
         let wasi = wasi_builder.build();
         let state = WorkerState {
             wasi,
+            wasi_nn,
             http: HttpBindings {
                 http_config: self.config.features.http_requests.clone(),
             },
