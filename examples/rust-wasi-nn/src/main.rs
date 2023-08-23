@@ -42,20 +42,14 @@ pub fn inference(path: &str, labels: &Dataset) -> Result<Vec<InferenceResult>, w
     let width: u32 = 224;
     let height: u32 = 224;
 
-    let bytes;
-
-    if path.contains("bgr") {
-        bytes = fs::read(path).unwrap();
-    } else {
-        bytes = image2tensor::convert_image_to_bytes(
-            path,
-            width,
-            height,
-            ImageTensorType::F32,
-            ColorOrder::BGR,
-        )
-        .unwrap();
-    }
+    let bytes = image2tensor::convert_image_to_bytes(
+        path,
+        width,
+        height,
+        ImageTensorType::F32,
+        ColorOrder::BGR,
+    )
+    .unwrap();
 
     ctx.set_input(0, TensorType::F32, &input_dim, &bytes)?;
 
@@ -73,6 +67,8 @@ pub fn inference(path: &str, labels: &Dataset) -> Result<Vec<InferenceResult>, w
 fn sort_results(buffer: &[f32], labels: &Dataset) -> Vec<InferenceResult> {
     let mut results: Vec<InferenceResult> = buffer
         .iter()
+        // In this specific case, the inference probabilities start at index 1.
+        // TODO: research more about where this issue may come from.
         .skip(1)
         .enumerate()
         .map(|(c, p)| InferenceResult(labels.names.get(c).unwrap().to_string(), *p))
