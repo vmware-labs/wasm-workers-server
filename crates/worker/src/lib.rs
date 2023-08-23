@@ -158,7 +158,7 @@ impl Worker {
             }
         } else {
             None
-        }
+        };
 
         // Pass to the runtime to add any WASI specific requirement
         wasi_builder = self.runtime.prepare_wasi_ctx(wasi_builder)?;
