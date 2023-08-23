@@ -139,26 +139,25 @@ impl Worker {
         }
 
         // WASI-NN
-        let wasi_nn;
         let allowed_backends = &self.config.features.wasi_nn.allowed_backends;
 
-        if !allowed_backends.is_empty() {
+        let wasi_nn = if !allowed_backends.is_empty() {
             // For now, we only support OpenVINO
             if allowed_backends.len() != 1
                 || !allowed_backends.contains(&WASI_NN_BACKEND_OPENVINO.to_string())
             {
                 eprintln!("❌ The only WASI-NN supported backend name is \"{WASI_NN_BACKEND_OPENVINO}\". Please, update your config.");
-                wasi_nn = None;
+                None
             } else {
                 wasmtime_wasi_nn::add_to_linker(&mut linker, |s: &mut WorkerState| {
                     Arc::get_mut(s.wasi_nn.as_mut().unwrap())
                         .expect("wasi-nn is not implemented with multi-threading support")
                 })?;
 
-                wasi_nn = Some(Arc::new(WasiNnCtx::new()?));
+                Some(Arc::new(WasiNnCtx::new()?))
             }
         } else {
-            wasi_nn = None;
+            None
         }
 
         // Pass to the runtime to add any WASI specific requirement
