@@ -1,8 +1,13 @@
 ---
+title: Dynamic Routes
 sidebar_position: 4
 ---
 
-# Dynamic routes
+:::info
+
+[Available since v1.0](https://github.com/vmware-labs/wasm-workers-server/releases/tag/v1.0.0)
+
+:::
 
 Defining static routes may not be enough for some applications. You may need a worker to process URLs that includes identifiers. **To create a worker associated with a dynamic route, include the route parameter in brackets when setting the worker filename**.
 
