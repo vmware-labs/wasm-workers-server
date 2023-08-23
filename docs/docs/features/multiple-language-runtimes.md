@@ -1,8 +1,13 @@
 ---
+title: Multiple language runtimes
 sidebar_position: 2
 ---
 
-# Multiple language runtimes
+:::info
+
+[Available since v1.0](https://github.com/vmware-labs/wasm-workers-server/releases/tag/v1.0.0)
+
+:::
 
 Wasm Workers Server allows you to extend the supported languages by adding new language runtimes. In other words, you can run workers based on languages like Python or Ruby.
 

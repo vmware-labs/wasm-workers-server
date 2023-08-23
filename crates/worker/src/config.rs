@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::features::http_requests::HttpRequestsConfig;
+use crate::features::wasi_nn::WasiNnConfig;
 use crate::features::{data::ConfigData, folders::Folder};
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Deserializer};
@@ -13,9 +14,12 @@ use wws_data_kv::KVConfigData;
 
 /// List all available features for a worker
 #[derive(Deserialize, Clone, Default)]
+#[serde(default)]
 pub struct Features {
     /// Allow to perform http requests from a worker
     pub http_requests: HttpRequestsConfig,
+    /// Enables WASI-NN bindings for Machine Learning inference
+    pub wasi_nn: WasiNnConfig,
 }
 
 /// Workers configuration. These files are optional when no configuration change is required.

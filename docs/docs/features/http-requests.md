@@ -1,8 +1,13 @@
 ---
+title: HTTP Requests (fetch)
 sidebar_position: 3
 ---
 
-# HTTP Requests (fetch)
+:::info
+
+[Available since v1.4](https://github.com/vmware-labs/wasm-workers-server/releases/tag/v1.4.0)
+
+:::
 
 Often times, workers require to access data from an external resource like a website or an API. This feature allows workers to perform HTTP requests to external resources. It follows the capability-based model, so workers cannot perform any HTTP request until you configure the allowed hosts and HTTP methods.
 

@@ -1,4 +1,12 @@
-# Mount folders
+---
+title: Mount folders
+---
+
+:::info
+
+[Available since v1.1](https://github.com/vmware-labs/wasm-workers-server/releases/tag/v1.1.0)
+
+:::
 
 Wasm Workers Server allows you to mount folders in the workers' execution context so they can access the files inside. This configuration is done through the `TOML` file associated to a worker (a `TOML` file with the same filename as the worker). **This means every worker has its own set of mount folders**.
 
