@@ -129,7 +129,7 @@ impl WasmOutput {
         if self.base64 {
             Ok(general_purpose::STANDARD
                 .decode(&self.data)
-                .map_err(|_| errors::WorkerError::ReadingWorkerBodyError)?)
+                .map_err(|_| errors::WorkerError::WorkerBodyReadError)?)
         } else {
             Ok(self.data.as_bytes().into())
         }

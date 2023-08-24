@@ -5,13 +5,13 @@ pub type Result<T> = std::result::Result<T, RuntimeError>;
 
 #[derive(Debug)]
 pub enum RuntimeError {
-    WasiContextError,
     CannotReadModule,
     InvalidExtension { extension: Option<String> },
     InvalidWrapper,
     IOError(std::io::Error),
     MissingRuntime { extension: String },
     StoreError(wws_store::errors::StoreError),
+    WasiContextError,
     WasiError(Option<wasmtime_wasi::Error>),
 }
 
