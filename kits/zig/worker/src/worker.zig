@@ -8,6 +8,30 @@ const allocator = arena.allocator();
 pub var cache = std.StringHashMap([]const u8).init(allocator);
 pub var params = std.StringHashMap([]const u8).init(allocator);
 
+pub const Request = struct {
+    url: std.Uri,
+    method: []const u8, // TODO: change to http.Method enum
+    headers: http.Headers,
+    data: []const u8,
+    context: Context,
+};
+
+pub const Response = struct {
+    data: []const u8,
+    headers: http.Headers,
+    request: Request,
+
+    pub fn writeAll(res: *Response, data: []const u8) !u32 {
+        res.data = data;
+        return res.data.len;
+    }
+};
+
+const RequestAndOutput = struct {
+    req: Request,
+    output: Output,
+};
+
 pub const Input = struct {
     url: []const u8,
     method: []const u8,
@@ -48,21 +72,12 @@ pub const Output = struct {
     }
 
     pub fn write(self: *Self, data: []const u8) !u32 {
-
-        self.data = data;
-
-        // TODO: fix this base64 encoding
-        // if (std.unicode.utf8ValidateSlice(data)) {
-        //     self.data = data;
-        // } else {
-        //     self.base64 = true;
-        //     // This line throws weird error?
-        //     var enc = std.base64.Base64Encoder.init(std.base64.standard_alphabet_chars, '=');
-        //     _ = enc;
-        //     // var data_len = enc.calcSize(data.len);
-        //     // var buf: [128]u8 = undefined;
-        //     // self.data = enc.encode(buf[0..data_len], data);
-        // }
+        if (std.unicode.utf8ValidateSlice(data)) {
+            self.data = data;
+        } else {
+            self.base64 = true;
+            self.data = base64Encode(data);
+        }
 
         if (self.status == 0) {
             self.writeHeader(200);
@@ -99,7 +114,7 @@ pub const Output = struct {
         try w.endObject();
         const result = slice_stream.getWritten();
 
-        // std.debug.print("output json: {s}\n", .{ result });
+        // std.debug.print("\noutput json: {s}\n\n", .{ result });
 
         const stdout = std.io.getStdOut().writer();
         try stdout.print("{s}", .{ result });
@@ -107,6 +122,14 @@ pub const Output = struct {
         return self.data.len;
     }
 };
+
+fn base64Encode(data: []const u8) []const u8 {
+    // This initializing Base64Encoder throws weird error if not wrapped in function (maybe Zig bug?)
+    var enc = std.base64.Base64Encoder.init(std.base64.standard_alphabet_chars, '=');
+    var data_len = enc.calcSize(data.len);
+    var buf: [128]u8 = undefined;
+    return enc.encode(buf[0..data_len], data);
+}
 
 fn getHeadersJsonObject(s: std.StringArrayHashMap([]const u8)) !std.json.Value {
     var value = std.json.Value{ .object = std.json.ObjectMap.init(allocator) };
@@ -131,7 +154,6 @@ fn getCacheJsonObject(s: std.StringHashMap([]const u8)) !std.json.Value {
 }
 
 pub fn readInput() !Input {
-
     const in = std.io.getStdIn();
     var buf = std.io.bufferedReader(in.reader());
     var r = buf.reader();
@@ -140,7 +162,7 @@ pub fn readInput() !Input {
 
     if (r.readUntilDelimiterOrEof(&msg_buf, '\n')) |msg| {
         if (msg) | m | {
-            // std.debug.print("raw input json: {s}\n", .{m});
+            // std.debug.print("\nraw input json: {s}\n\n", .{m});
             return getInput(m);
         }
     } else |err| {
@@ -186,7 +208,6 @@ fn getInput(s: []const u8) !Input {
 }
 
 pub fn createRequest(in: *Input) !Request {
-
     var req = Request{
         .url = try std.Uri.parseWithoutScheme(in.url),
         .method = in.method,
@@ -203,13 +224,7 @@ pub fn createRequest(in: *Input) !Request {
     return req;
 }
 
-const RequestAndOutput = struct {
-    req: Request,
-    output: Output,
-};
-
 pub fn getWriterRequest() !RequestAndOutput {
-
     var in = readInput() catch |err| {
         std.debug.print("error reading input: {!}\n", .{err});
         return std.os.exit(1);
@@ -228,14 +243,6 @@ pub fn getWriterRequest() !RequestAndOutput {
     };
 }
 
-pub const Request = struct {
-    url: std.Uri,
-    method: []const u8, // TODO: change to http.Method enum
-    headers: http.Headers,
-    data: []const u8,
-    context: Context,
-};
-
 pub const Context = struct {
     cache: *std.StringHashMap([]const u8),
     params: *std.StringHashMap([]const u8),
@@ -245,17 +252,6 @@ pub const Context = struct {
             .cache = &cache,
             .params = &params,
         };
-    }
-};
-
-pub const Response = struct {
-    data: []const u8,
-    headers: http.Headers,
-    request: Request,
-
-    pub fn writeAll(res: *Response, data: []const u8) !u32 {
-        res.data = data;
-        return res.data.len;
     }
 };
 
