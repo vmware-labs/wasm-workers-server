@@ -23,8 +23,8 @@ path = "src/main.rs"
 
 # Main binary (wws CLI dependencies)
 [dependencies]
-anyhow = { workspace = true }
 actix-web = { workspace = true }
+anyhow = "1.0.66"
 env_logger = "0.10.0"
 clap = { version = "4.0.10", features = ["derive"] }
 prettytable-rs = "0.10.0"
@@ -74,7 +74,6 @@ exclude = [
 
 [workspace.dependencies]
 actix-web = "4"
-anyhow = "1.0.66"
 lazy_static = "1.4.0"
 reqwest = "0.11"
 serde = { version = "1.0", features = ["derive"] }

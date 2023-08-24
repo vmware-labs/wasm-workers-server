@@ -4077,7 +4077,6 @@ dependencies = [
 name = "wws-config"
 version = "1.4.0"
 dependencies = [
- "anyhow",
  "serde",
  "serde_json",
  "toml 0.7.4",
@@ -4088,7 +4087,6 @@ dependencies = [
 name = "wws-data-kv"
 version = "1.4.0"
 dependencies = [
- "anyhow",
  "serde",
  "serde_json",
 ]
@@ -4106,7 +4104,6 @@ dependencies = [
 name = "wws-project"
 version = "1.4.0"
 dependencies = [
- "anyhow",
  "git2",
  "openssl",
  "path-slash",
@@ -4138,7 +4135,6 @@ dependencies = [
 name = "wws-runtimes"
 version = "1.4.0"
 dependencies = [
- "anyhow",
  "serde",
  "serde_json",
  "wasmtime-wasi",
@@ -4153,7 +4149,6 @@ version = "1.4.0"
 dependencies = [
  "actix-files",
  "actix-web",
- "anyhow",
  "wws-api-manage",
  "wws-data-kv",
  "wws-panel",
@@ -4165,7 +4160,6 @@ dependencies = [
 name = "wws-store"
 version = "1.4.0"
 dependencies = [
- "anyhow",
  "blake3",
 ]
 
@@ -4174,7 +4168,6 @@ name = "wws-worker"
 version = "1.4.0"
 dependencies = [
  "actix-web",
- "anyhow",
  "base64",
  "reqwest",
  "serde",

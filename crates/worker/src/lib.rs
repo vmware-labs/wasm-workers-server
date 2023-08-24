@@ -3,14 +3,15 @@
 
 mod bindings;
 pub mod config;
+pub mod errors;
 pub mod features;
 pub mod io;
 mod stdio;
 
 use actix_web::HttpRequest;
-use anyhow::{anyhow, Result};
 use bindings::http::{add_to_linker as http_add_to_linker, HttpBindings};
 use config::Config;
+use errors::Result;
 use features::wasi_nn::WASI_NN_BACKEND_OPENVINO;
 use io::{WasmInput, WasmOutput};
 use sha256::digest as sha256_digest;
@@ -73,7 +74,8 @@ impl Worker {
         let engine = Engine::default();
         let runtime = init_runtime(project_root, path, project_config)?;
         let bytes = runtime.module_bytes()?;
-        let module = Module::from_binary(&engine, &bytes)?;
+        let module =
+            Module::from_binary(&engine, &bytes).map_err(|_| errors::WorkerError::BadWasmModule)?;
 
         // Prepare the environment if required
         runtime.prepare()?;
@@ -102,7 +104,10 @@ impl Worker {
         let stderr_file;
 
         if let Some(file) = stderr {
-            stderr_file = Some(file.try_clone()?);
+            stderr_file = Some(
+                file.try_clone()
+                    .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?,
+            );
         } else {
             stderr_file = None;
         }
@@ -112,15 +117,19 @@ impl Worker {
 
         let mut linker = Linker::new(&self.engine);
 
-        http_add_to_linker(&mut linker, |s: &mut WorkerState| &mut s.http)?;
-        wasmtime_wasi::add_to_linker(&mut linker, |s: &mut WorkerState| &mut s.wasi)?;
+        http_add_to_linker(&mut linker, |s: &mut WorkerState| &mut s.http)
+            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
+        wasmtime_wasi::add_to_linker(&mut linker, |s: &mut WorkerState| &mut s.wasi)
+            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
 
         // I have to use `String` as it's required by WasiCtxBuilder
         let tuple_vars: Vec<(String, String)> =
             vars.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
 
         // Create the initial WASI context
-        let mut wasi_builder = WasiCtxBuilder::new().envs(&tuple_vars)?;
+        let mut wasi_builder = WasiCtxBuilder::new()
+            .envs(&tuple_vars)
+            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
 
         // Configure the stdio
         wasi_builder = stdio.configure_wasi_ctx(wasi_builder);
@@ -129,11 +138,13 @@ impl Worker {
         if let Some(folders) = self.config.folders.as_ref() {
             for folder in folders {
                 if let Some(base) = &self.path.parent() {
-                    let dir = Dir::open_ambient_dir(base.join(&folder.from), ambient_authority())?;
-                    wasi_builder = wasi_builder.preopened_dir(dir, &folder.to)?;
+                    let dir = Dir::open_ambient_dir(base.join(&folder.from), ambient_authority())
+                        .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
+                    wasi_builder = wasi_builder
+                        .preopened_dir(dir, &folder.to)
+                        .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
                 } else {
-                    // TODO: Revisit error management on #73
-                    return Err(anyhow!("The worker couldn't be initialized"));
+                    return Err(errors::WorkerError::FailedToInitialize);
                 }
             }
         }
@@ -152,9 +163,18 @@ impl Worker {
                 wasmtime_wasi_nn::add_to_linker(&mut linker, |s: &mut WorkerState| {
                     Arc::get_mut(s.wasi_nn.as_mut().unwrap())
                         .expect("wasi-nn is not implemented with multi-threading support")
+                })
+                .map_err(|_| {
+                    errors::WorkerError::RuntimeError(
+                        wws_runtimes::errors::RuntimeError::WasiContextError,
+                    )
                 })?;
 
-                Some(Arc::new(WasiNnCtx::new()?))
+                Some(Arc::new(WasiNnCtx::new().map_err(|_| {
+                    errors::WorkerError::RuntimeError(
+                        wws_runtimes::errors::RuntimeError::WasiContextError,
+                    )
+                })?))
             }
         } else {
             None
@@ -173,22 +193,28 @@ impl Worker {
         };
         let mut store = Store::new(&self.engine, state);
 
-        linker.module(&mut store, "", &self.module)?;
         linker
-            .get_default(&mut store, "")?
-            .typed::<(), ()>(&store)?
-            .call(&mut store, ())?;
+            .module(&mut store, "", &self.module)
+            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
+        linker
+            .get_default(&mut store, "")
+            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?
+            .typed::<(), ()>(&store)
+            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?
+            .call(&mut store, ())
+            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
 
         drop(store);
 
         let contents: Vec<u8> = stdio
             .stdout
             .try_into_inner()
-            .map_err(|_err| anyhow::Error::msg("Nothing to show"))?
+            .unwrap_or_default()
             .into_inner();
 
         // Build the output
-        let output: WasmOutput = serde_json::from_slice(&contents)?;
+        let output: WasmOutput = serde_json::from_slice(&contents)
+            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
 
         Ok(output)
     }

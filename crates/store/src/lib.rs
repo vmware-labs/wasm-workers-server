@@ -7,11 +7,13 @@
 //
 // This struct provide the basics to interact with that folder
 // in both Unix and Windows systems.
-use anyhow::{anyhow, Result};
 use std::{
     fs,
     path::{Path, PathBuf},
 };
+
+pub mod errors;
+use errors::{Result, StoreError};
 
 /// This is a temporary folder in which runtimes can prepare
 /// and store certain data. For example, the JS runtime have
@@ -46,22 +48,29 @@ impl Store {
         let folder = Self::build_root_path(project_root, folder);
 
         // Try to create the directory
-        fs::create_dir_all(&folder)?;
+        fs::create_dir_all(&folder).map_err(|err| StoreError::CannotCreateDirectory {
+            path: folder.clone(),
+            error: err,
+        })?;
 
         Ok(Self { folder })
     }
 
     /// Create the root folder for the current context
     pub fn create_root_folder(&self) -> Result<()> {
-        fs::create_dir_all(&self.folder)
-            .map_err(|err| anyhow!("There was an error creating the a required folder: {}", err))
+        fs::create_dir_all(&self.folder).map_err(|err| StoreError::CannotCreateDirectory {
+            path: self.folder.clone(),
+            error: err,
+        })
     }
 
     /// Delete the root folder from the current context
     pub fn delete_root_folder(&self) -> Result<()> {
         if self.folder.exists() {
-            fs::remove_dir_all(&self.folder)
-                .map_err(|err| anyhow!("There was an error deleting the folder: {}", err))
+            fs::remove_dir_all(&self.folder).map_err(|err| StoreError::CannotDeleteDirectory {
+                path: self.folder.clone(),
+                error: err,
+            })
         } else {
             Ok(())
         }
@@ -75,28 +84,28 @@ impl Store {
     /// Write a specific file inside the configured root folder
     pub fn write(&self, path: &[&str], contents: &[u8]) -> Result<()> {
         let file_path = self.build_folder_path(path);
-        fs::write(file_path, contents)?;
-
-        Ok(())
+        fs::write(&file_path, contents).map_err(|err| StoreError::CannotWriteFile {
+            path: file_path,
+            error: err,
+        })
     }
 
     /// Read the file content in the given store
     pub fn read(&self, path: &[&str]) -> Result<Vec<u8>> {
         let file_path = self.build_folder_path(path);
-        fs::read(&file_path).map_err(|err| {
-            anyhow!(
-                "There was an error reading the {} file: {}",
-                &file_path.display(),
-                err
-            )
+        fs::read(&file_path).map_err(|err| StoreError::CannotReadFile {
+            path: file_path,
+            error: err,
         })
     }
 
     /// Copy file inside the configured root folder
     pub fn copy(&self, source: &Path, dest: &[&str]) -> Result<()> {
         let file_path = self.build_folder_path(dest);
-        fs::copy(source, file_path)?;
-
+        fs::copy(source, &file_path).map_err(|err| StoreError::CannotWriteFile {
+            path: file_path,
+            error: err,
+        })?;
         Ok(())
     }
 
@@ -109,7 +118,10 @@ impl Store {
 
     /// Generate a file hash based on the blake3 implementation
     pub fn file_hash(path: &Path) -> Result<String> {
-        let content = fs::read(path)?;
+        let content = fs::read(path).map_err(|err| StoreError::CannotReadFile {
+            path: path.to_path_buf(),
+            error: err,
+        })?;
 
         Ok(blake3::hash(&content).to_string())
     }

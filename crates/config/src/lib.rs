@@ -1,7 +1,9 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::{anyhow, Result};
+pub mod errors;
+pub use errors::Result;
+
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
@@ -42,9 +44,7 @@ impl Config {
         let config_path = Self::config_path(project_root);
 
         if config_path.exists() {
-            toml::from_str(&fs::read_to_string(config_path)?).map_err(|_| {
-                anyhow!("Error opening the .wws.toml file. The file format is not correct")
-            })
+            Ok(toml::from_str(&fs::read_to_string(config_path)?)?)
         } else {
             Ok(Self::default())
         }
@@ -111,10 +111,10 @@ impl Config {
     /// Write the current configuration into the `.wws.toml` file. It will
     /// store it in the project root folder
     pub fn save(&self, project_root: &Path) -> Result<()> {
-        let contents = toml::to_string_pretty(self)?;
-
-        fs::write(Self::config_path(project_root), contents)
-            .map_err(|_| anyhow!("Error saving the .wws.toml file"))
+        Ok(fs::write(
+            Self::config_path(project_root),
+            toml::to_string_pretty(self)?,
+        )?)
     }
 
     /// Retrieve the configuration path from the project root

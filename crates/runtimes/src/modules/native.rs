@@ -1,8 +1,9 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::errors::Result;
 use crate::runtime::Runtime;
-use anyhow::Result;
+
 use std::{fs, path::PathBuf};
 
 pub struct NativeRuntime {
@@ -22,6 +23,6 @@ impl Runtime for NativeRuntime {
     /// run this worker. It can be a custom (native) or a
     /// shared module (others).
     fn module_bytes(&self) -> Result<Vec<u8>> {
-        fs::read(&self.path).map_err(anyhow::Error::msg)
+        fs::read(&self.path).map_err(|_| crate::errors::RuntimeError::CannotReadModule)
     }
 }

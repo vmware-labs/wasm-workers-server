@@ -1,8 +1,9 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::errors::Result;
 use crate::runtime::Runtime;
-use anyhow::Result;
+
 use std::path::{Path, PathBuf};
 use wasmtime_wasi::{ambient_authority, Dir, WasiCtxBuilder};
 use wws_store::Store;

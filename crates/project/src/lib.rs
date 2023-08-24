@@ -1,12 +1,13 @@
 // Copyright 2022-2023 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+pub mod errors;
 mod fetch;
 pub mod metadata;
 pub mod options;
 pub mod types;
 
-use anyhow::{bail, Result};
+use errors::Result;
 use fetch::fetch_and_validate;
 use metadata::{RemoteFile, Runtime};
 use options::Options;
@@ -68,7 +69,7 @@ pub fn identify_type(location: &Path) -> Result<ProjectType> {
         if path.exists() {
             Ok(ProjectType::Local)
         } else {
-            bail!("The given path does not exist in the local filesystem.")
+            Err(errors::FetchError::MissingPathInFilesystem)
         }
     }
 }
@@ -138,11 +139,11 @@ pub fn check_runtime(project_root: &Path, repository: &str, runtime: &Runtime) -
 /// and delete the folder.
 pub fn uninstall_runtime(project_root: &Path, repository: &str, metadata: &Runtime) -> Result<()> {
     // Delete the current folder
-    Store::new(
+    Ok(Store::new(
         project_root,
         &["runtimes", repository, &metadata.name, &metadata.version],
     )
-    .delete_root_folder()
+    .delete_root_folder()?)
 }
 
 /// Downloads a remote file and saves into the given store. This
@@ -150,7 +151,7 @@ pub fn uninstall_runtime(project_root: &Path, repository: &str, metadata: &Runti
 /// in the metadata.
 async fn download_file(file: &RemoteFile, store: &Store) -> Result<()> {
     let contents = fetch_and_validate(&file.url, &file.checksum).await?;
-    store.write(&[&file.filename], &contents)
+    Ok(store.write(&[&file.filename], &contents)?)
 }
 
 #[cfg(test)]
@@ -190,7 +191,7 @@ mod tests {
                 Ok(_) => {
                     panic!("The folder doesn't exist, so identifying it should fail.");
                 }
-                Err(err) => assert!(err.to_string().contains("does not exist")),
+                Err(err) => assert!(err.to_string().contains("Missing path in filesystem")),
             }
         }
     }
