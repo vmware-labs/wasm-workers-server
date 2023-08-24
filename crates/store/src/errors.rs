@@ -7,19 +7,19 @@ pub type Result<T> = std::result::Result<T, StoreError>;
 
 #[derive(Debug)]
 pub enum StoreError {
-    CouldNotCreateDirectory {
+    CannotCreateDirectory {
         path: PathBuf,
         error: std::io::Error,
     },
-    CouldNotDeleteDirectory {
+    CannotDeleteDirectory {
         path: PathBuf,
         error: std::io::Error,
     },
-    CouldNotReadFile {
+    CannotReadFile {
         path: PathBuf,
         error: std::io::Error,
     },
-    CouldNotWriteFile {
+    CannotWriteFile {
         path: PathBuf,
         error: std::io::Error,
     },
@@ -28,7 +28,7 @@ pub enum StoreError {
 impl std::fmt::Display for StoreError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::CouldNotCreateDirectory { path, error } => {
+            Self::CannotCreateDirectory { path, error } => {
                 write!(
                     f,
                     "Could not create directory {}: {}",
@@ -36,7 +36,7 @@ impl std::fmt::Display for StoreError {
                     error
                 )
             }
-            Self::CouldNotDeleteDirectory { path, error } => {
+            Self::CannotDeleteDirectory { path, error } => {
                 write!(
                     f,
                     "Could not delete directory {}: {}",
@@ -44,10 +44,10 @@ impl std::fmt::Display for StoreError {
                     error
                 )
             }
-            Self::CouldNotReadFile { path, error } => {
+            Self::CannotReadFile { path, error } => {
                 write!(f, "Could not read file {}: {}", path.display(), error)
             }
-            Self::CouldNotWriteFile { path, error } => {
+            Self::CannotWriteFile { path, error } => {
                 write!(f, "Could not write to file {}: {}", path.display(), error)
             }
         }

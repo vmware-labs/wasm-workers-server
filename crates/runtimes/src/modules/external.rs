@@ -96,7 +96,7 @@ impl Runtime for ExternalRuntime {
         builder
             .preopened_dir(dir, "/src")?
             .args(&self.metadata.args)
-            .map_err(|_| errors::RuntimeError::ErrorCreatingWasiContext)
+            .map_err(|_| errors::RuntimeError::WasiContextError)
     }
 
     /// Returns a reference to the Wasm module that should

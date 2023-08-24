@@ -1,9 +1,8 @@
 // Copyright 2023 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use wws_config::errors::ConfigError;
-
 use anyhow::anyhow;
+use wws_config::errors::ConfigError;
 use wws_project::errors::FetchError;
 
 pub type Result<T> = std::result::Result<T, UtilsError>;
@@ -43,12 +42,12 @@ impl From<UtilsError> for anyhow::Error {
     fn from(error: UtilsError) -> Self {
         match error {
             UtilsError::ConfigError(error) => match error {
-                ConfigError::CouldNotLoadConfig(error) => anyhow!("Error opening file: {}", error),
-                ConfigError::CouldNotParseConfig(error) => anyhow!(
+                ConfigError::CannotLoadConfig(error) => anyhow!("Error opening file: {}", error),
+                ConfigError::CannotParseConfig(error) => anyhow!(
                     "Error loading file: {}. The file format is not correct",
                     error
                 ),
-                ConfigError::CouldNotSaveConfig => anyhow!("Error saving configuration"),
+                ConfigError::CannotSaveConfig => anyhow!("Error saving configuration"),
             },
             UtilsError::FetchError(error) => anyhow!("Error fetching repository: {}", error),
             UtilsError::MissingRuntime { runtime, version } => anyhow!(

@@ -35,7 +35,7 @@ pub fn init_runtime(
             other => init_external_runtime(project_root, config, path, other),
         }
     } else {
-        Err(errors::RuntimeError::FileHasInvalidExtension { extension: None })
+        Err(errors::RuntimeError::InvalidExtension { extension: None })
     }
 }
 
@@ -69,7 +69,7 @@ fn init_external_runtime(
             runtime_config.clone(),
         )?))
     } else {
-        Err(errors::RuntimeError::MissingRuntimeForExtension {
+        Err(errors::RuntimeError::MissingRuntime {
             extension: extension.to_string(),
         })
     }

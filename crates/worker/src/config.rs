@@ -59,7 +59,7 @@ impl Config {
     /// ```
     pub fn try_from_file(path: PathBuf) -> Result<Self> {
         Ok(from_str(&fs::read_to_string(path).map_err(|_| {
-            crate::errors::WorkerError::CouldNotLoadConfig
+            crate::errors::WorkerError::CannotLoadConfig
         })?)?)
     }
 

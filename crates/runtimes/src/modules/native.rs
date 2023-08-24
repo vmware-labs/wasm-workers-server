@@ -23,6 +23,6 @@ impl Runtime for NativeRuntime {
     /// run this worker. It can be a custom (native) or a
     /// shared module (others).
     fn module_bytes(&self) -> Result<Vec<u8>> {
-        fs::read(&self.path).map_err(|_| crate::errors::RuntimeError::ErrorReadingLocalModule)
+        fs::read(&self.path).map_err(|_| crate::errors::RuntimeError::CannotReadModule)
     }
 }

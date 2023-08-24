@@ -166,13 +166,13 @@ impl Worker {
                 })
                 .map_err(|_| {
                     errors::WorkerError::RuntimeError(
-                        wws_runtimes::errors::RuntimeError::ErrorCreatingWasiContext,
+                        wws_runtimes::errors::RuntimeError::WasiContextError,
                     )
                 })?;
 
                 Some(Arc::new(WasiNnCtx::new().map_err(|_| {
                     errors::WorkerError::RuntimeError(
-                        wws_runtimes::errors::RuntimeError::ErrorCreatingWasiContext,
+                        wws_runtimes::errors::RuntimeError::WasiContextError,
                     )
                 })?))
             }

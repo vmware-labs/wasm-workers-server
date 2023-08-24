@@ -9,8 +9,8 @@ pub type Result<T> = std::result::Result<T, WorkerError>;
 pub enum WorkerError {
     BadWasmModule,
     FailedToInitialize,
-    CouldNotLoadConfig,
-    CouldNotParseConfig {
+    CannotLoadConfig,
+    CannotParseConfig {
         path: PathBuf,
         error: toml::de::Error,
     },
@@ -22,7 +22,7 @@ pub enum WorkerError {
 
 impl From<toml::de::Error> for WorkerError {
     fn from(_error: toml::de::Error) -> Self {
-        WorkerError::CouldNotLoadConfig
+        WorkerError::CannotLoadConfig
     }
 }
 
@@ -37,8 +37,8 @@ impl std::fmt::Display for WorkerError {
         match self {
             WorkerError::BadWasmModule => write!(f, "Bad Wasm module"),
             WorkerError::FailedToInitialize => write!(f, "Failed to initialize"),
-            WorkerError::CouldNotLoadConfig => write!(f, "Could not load configuration"),
-            WorkerError::CouldNotParseConfig { path, error } => write!(
+            WorkerError::CannotLoadConfig => write!(f, "Could not load configuration"),
+            WorkerError::CannotParseConfig { path, error } => write!(
                 f,
                 "Could not parse configuration at {:?}: {:?}",
                 path, error

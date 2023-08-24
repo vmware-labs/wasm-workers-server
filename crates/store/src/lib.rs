@@ -48,7 +48,7 @@ impl Store {
         let folder = Self::build_root_path(project_root, folder);
 
         // Try to create the directory
-        fs::create_dir_all(&folder).map_err(|err| StoreError::CouldNotCreateDirectory {
+        fs::create_dir_all(&folder).map_err(|err| StoreError::CannotCreateDirectory {
             path: folder.clone(),
             error: err,
         })?;
@@ -58,7 +58,7 @@ impl Store {
 
     /// Create the root folder for the current context
     pub fn create_root_folder(&self) -> Result<()> {
-        fs::create_dir_all(&self.folder).map_err(|err| StoreError::CouldNotCreateDirectory {
+        fs::create_dir_all(&self.folder).map_err(|err| StoreError::CannotCreateDirectory {
             path: self.folder.clone(),
             error: err,
         })
@@ -67,7 +67,7 @@ impl Store {
     /// Delete the root folder from the current context
     pub fn delete_root_folder(&self) -> Result<()> {
         if self.folder.exists() {
-            fs::remove_dir_all(&self.folder).map_err(|err| StoreError::CouldNotDeleteDirectory {
+            fs::remove_dir_all(&self.folder).map_err(|err| StoreError::CannotDeleteDirectory {
                 path: self.folder.clone(),
                 error: err,
             })
@@ -84,7 +84,7 @@ impl Store {
     /// Write a specific file inside the configured root folder
     pub fn write(&self, path: &[&str], contents: &[u8]) -> Result<()> {
         let file_path = self.build_folder_path(path);
-        fs::write(&file_path, contents).map_err(|err| StoreError::CouldNotWriteFile {
+        fs::write(&file_path, contents).map_err(|err| StoreError::CannotWriteFile {
             path: file_path,
             error: err,
         })
@@ -93,7 +93,7 @@ impl Store {
     /// Read the file content in the given store
     pub fn read(&self, path: &[&str]) -> Result<Vec<u8>> {
         let file_path = self.build_folder_path(path);
-        fs::read(&file_path).map_err(|err| StoreError::CouldNotReadFile {
+        fs::read(&file_path).map_err(|err| StoreError::CannotReadFile {
             path: file_path,
             error: err,
         })
@@ -102,7 +102,7 @@ impl Store {
     /// Copy file inside the configured root folder
     pub fn copy(&self, source: &Path, dest: &[&str]) -> Result<()> {
         let file_path = self.build_folder_path(dest);
-        fs::copy(source, &file_path).map_err(|err| StoreError::CouldNotWriteFile {
+        fs::copy(source, &file_path).map_err(|err| StoreError::CannotWriteFile {
             path: file_path,
             error: err,
         })?;
@@ -118,7 +118,7 @@ impl Store {
 
     /// Generate a file hash based on the blake3 implementation
     pub fn file_hash(path: &Path) -> Result<String> {
-        let content = fs::read(path).map_err(|err| StoreError::CouldNotReadFile {
+        let content = fs::read(path).map_err(|err| StoreError::CannotReadFile {
             path: path.to_path_buf(),
             error: err,
         })?;
