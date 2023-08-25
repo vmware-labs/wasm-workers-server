@@ -14,7 +14,7 @@ To provide this feature, Wasm Workers Server relies on the [WASI-NN proposal](ht
 
 ## Available backends
 
-A backend or ML engine is an application that parses the ML model, loads the inputs, runs them and returns the output. There are multiple backends like PyTorch, [Tensorflow](https://www.tensorflow.org/) (and [Lite version]((https://www.tensorflow.org/lite))), [ONNX](https://onnxruntime.ai/) and [OpenVINO™](https://docs.openvino.ai/).
+A backend or ML engine is an application that parses the ML model, loads the inputs, runs them and returns the output. There are multiple backends like PyTorch, [Tensorflow](https://www.tensorflow.org/) (and [Lite version](https://www.tensorflow.org/lite)), [ONNX](https://onnxruntime.ai/) and [OpenVINO™](https://docs.openvino.ai/).
 
 Currently, Wasm Workers Server only supports [OpenVINO™](https://docs.openvino.ai/) as ML inference engine or backend. The community is actively working on adding support for more backends, so you may expect new backends in the future.
 
