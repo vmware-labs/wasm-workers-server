@@ -5,12 +5,14 @@ use super::{assets::handle_assets, not_found::handle_not_found};
 use crate::DataConnectors;
 use actix_web::{
     http::StatusCode,
-    web::{Bytes, Data},
+    web::{self, Bytes, Data},
     HttpRequest, HttpResponse,
 };
 use std::{fs::File, io::Write, sync::RwLock};
 use wws_router::Routes;
 use wws_worker::io::WasmOutput;
+
+const CORS_HEADER: &str = "Access-Control-Allow-Origin";
 
 /// Process an HTTP request by passing it to the right Runner. The Runner
 /// will prepare the WASI environment and call the Wasm module with the data.
@@ -29,7 +31,11 @@ use wws_worker::io::WasmOutput;
 ///
 /// For these reasons, we are selecting the right handler at this point and not
 /// allowing Actix to select it for us.
-pub async fn handle_worker(req: HttpRequest, body: Bytes) -> HttpResponse {
+pub async fn handle_worker(
+    req: HttpRequest,
+    body: Bytes,
+    cors_origins: web::Data<Option<Vec<String>>>,
+) -> HttpResponse {
     let routes = req.app_data::<Data<Routes>>().unwrap();
     let stderr_file = req.app_data::<Data<Option<File>>>().unwrap();
     let data_connectors = req
@@ -96,6 +102,16 @@ pub async fn handle_worker(req: HttpRequest, body: Bytes) -> HttpResponse {
         );
         // Default content type
         builder.insert_header(("Content-Type", "text/html"));
+
+        // Check if cors config has any origins to register
+        if let Some(origins) = cors_origins.as_ref() {
+            // Check if worker has overridden the header, if not
+            if !handler_result.headers.contains_key(CORS_HEADER) {
+                // insert those origins in 'Access-Control-Allow-Origin' header
+                let header_value = origins.join(",");
+                builder.insert_header((CORS_HEADER, header_value));
+            }
+        }
 
         for (key, val) in handler_result.headers.iter() {
             // Note that QuickJS is replacing the "-" character

@@ -37,6 +37,7 @@ pub async fn serve(
     port: u16,
     panel: bool,
     stderr: Option<&Path>,
+    cors_origins: Option<Vec<String>>,
 ) -> Result<Server> {
     // Initializes the data connectors. For now, just KV
     let data = Data::new(RwLock::new(DataConnectors::default()));
@@ -53,6 +54,8 @@ pub async fn serve(
         stderr_file = Data::new(None);
     }
 
+    let cors_data = Data::new(cors_origins);
+
     let server = HttpServer::new(move || {
         let mut app = App::new()
             // enable logger
@@ -62,7 +65,8 @@ pub async fn serve(
             .app_data(Data::clone(&routes))
             .app_data(Data::clone(&data))
             .app_data(Data::clone(&root_path))
-            .app_data(Data::clone(&stderr_file));
+            .app_data(Data::clone(&stderr_file))
+            .app_data(Data::clone(&cors_data));
 
         // Configure panel
         if panel {
