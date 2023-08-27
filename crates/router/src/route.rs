@@ -1,9 +1,13 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
+mod segment;
 
 use lazy_static::lazy_static;
 use regex::Regex;
+use segment::Segment;
 use std::{
+    cmp::Ordering,
+    cmp::Ordering::{Greater, Less},
     ffi::OsStr,
     path::{Component, Path, PathBuf},
 };
@@ -15,16 +19,15 @@ lazy_static! {
         Regex::new(r"\[(?P<ellipsis>\.{3})?(?P<segment>\w+)\]").unwrap();
 }
 
-/// Identify if a route can manage a certain URL and generates
-/// a score in that case. This is required by dynamic routes as
-/// different files can manage the same route. For example:
-/// `/test` may be managed by `test.js` and `[id].js`. Regarding
-/// the score, routes with a lower value will have a higher priority.
+/// Represents the type of a route.
+///
+/// Each variant of this enum holds an associated `usize` value,
+/// which represents the number of segments in the route's path.
 #[derive(PartialEq, Eq, Debug)]
-pub enum RouteAffinity {
-    CannotManage,
-    // Score
-    CanManage(i32),
+pub enum RouteType {
+    Satic(usize),
+    Dynamic(usize),
+    Tail(usize),
 }
 
 /// An existing route in the project. It contains a reference to the handler, the URL path,
@@ -42,6 +45,10 @@ pub struct Route {
     pub handler: PathBuf,
     /// The URL path
     pub path: String,
+    /// The route type
+    pub route_type: RouteType,
+    /// The segments' URL path
+    pub segments: Vec<Segment>,
     /// The associated worker
     pub worker: Worker,
 }
@@ -58,10 +65,12 @@ impl Route {
         project_config: &ProjectConfig,
     ) -> Self {
         let worker = Worker::new(base_path, &filepath, project_config).unwrap();
-
+        let route_path = Self::retrieve_route(base_path, &filepath, prefix);
         Self {
-            path: Self::retrieve_route(base_path, &filepath, prefix),
             handler: filepath,
+            route_type: Self::get_route_type(&route_path),
+            segments: Self::get_segments(&route_path),
+            path: route_path,
             worker,
         }
     }
@@ -109,49 +118,57 @@ impl Route {
             .collect()
     }
 
-    /// Check if the given path can be managed by this worker. This was introduced
-    /// to support parameters in the URLs. Note that this method returns an integer,
-    /// which means the priority for this route.
-    ///
-    /// Note that a /a/b route may be served by:
-    /// - /a/b.js
-    /// - /a/[id].js
-    /// - /[id]/b.wasm
-    /// - /[id]/[other].wasm
-    /// - /[id]/[..all].wasm
-    ///
-    /// We need to establish a priority. The lower of the returned number,
-    /// the more priority it has. This number is calculated based on the number of used
-    /// parameters, as fixed routes has more priority than parameted ones.
-    ///
-    /// To avoid collisions like `[id]/b.wasm` vs `/a/[id].js`. Every depth level will
-    /// add an extra +1 to the score. So, in case of `[id]/b.wasm` vs `/a/[id].js`,
-    /// the /a/b path will be managed by `/a/[id].js`
-    ///
-    /// In case it cannot manage it, it will return -1
-    pub fn affinity(&self, url_path: &str) -> RouteAffinity {
-        let mut score: i32 = 0;
-        let mut split_path = self.path.split('/').peekable();
-
-        for (depth, segment) in url_path.split('/').enumerate() {
-            match split_path.next() {
-                None => return RouteAffinity::CannotManage,
-                Some(el) if el == segment => continue,
-                Some(el) => match PARAMETER_REGEX.captures(el) {
-                    None => return RouteAffinity::CannotManage,
-                    Some(caps) => match (caps.name("ellipsis"), caps.name("segment")) {
-                        (Some(_), Some(_)) => return RouteAffinity::CanManage(i32::MAX),
-                        (_, Some(_)) => score += depth as i32,
-                        _ => return RouteAffinity::CannotManage,
-                    },
-                },
-            }
+    /// Determine the type of route based on the provided route path.
+    fn get_route_type(route_path: &str) -> RouteType {
+        let path_segments_count = route_path.chars().filter(|&c| c == '/').count();
+        if route_path.contains("/[...") {
+            RouteType::Tail(path_segments_count)
+        } else if route_path.contains("/[") {
+            RouteType::Dynamic(path_segments_count)
+        } else {
+            RouteType::Satic(path_segments_count)
         }
+    }
 
-        // I should check the other iterator to confirm if it is empty
-        match split_path.peek() {
-            None => RouteAffinity::CanManage(score),
-            Some(_) => RouteAffinity::CannotManage,
+    /// Parse the route path into individual segments and determine their types.
+    ///
+    /// This function parses the provided route path into individual segments and identifies
+    /// whether each segment is static, dynamic, or tail based on certain patterns.
+    fn get_segments(route_path: &str) -> Vec<Segment> {
+        route_path
+            .split('/')
+            .skip(1)
+            .into_iter()
+            .map(|segment| {
+                if segment.starts_with("[...") {
+                    Segment::Tail(segment.to_owned())
+                } else if segment.contains("[") {
+                    Segment::Dynamic(segment.to_owned())
+                } else {
+                    Segment::Satic(segment.to_owned())
+                }
+            })
+            .collect()
+    }
+
+    /// Check if the given path can be managed by this worker. This was introduced
+    /// to support parameters in the URLs.
+    /// Dertermine the 'RouteType' allow to shortcut the comparaison.
+    pub fn can_manage(&self, path: &str) -> bool {
+        let path_segments_count = path.chars().filter(|&c| c == '/').count();
+
+        match self.route_type {
+            RouteType::Satic(_) => self.path == path,
+            RouteType::Dynamic(segments_count) if segments_count != path_segments_count => false,
+            RouteType::Tail(segments_count) if segments_count > path_segments_count => false,
+            _ => path
+                .split("/")
+                .skip(1)
+                .zip(self.segments.iter())
+                .all(|zip| match zip {
+                    (sp, Segment::Satic(segment)) => sp == segment,
+                    _ => true,
+                }),
         }
     }
 
@@ -172,7 +189,45 @@ impl Route {
 
     /// Check if the current route is dynamic
     pub fn is_dynamic(&self) -> bool {
-        PARAMETER_REGEX.is_match(&self.path)
+        match self.route_type {
+            RouteType::Satic(_) => false,
+            RouteType::Dynamic(_) => true,
+            RouteType::Tail(_) => true,
+        }
+    }
+}
+
+impl Ord for Route {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (&self.route_type, &other.route_type) {
+            (RouteType::Satic(a), RouteType::Satic(b)) => a.cmp(b),
+            (RouteType::Satic(_), _) => Less,
+            (_, RouteType::Satic(_)) => Greater,
+            (RouteType::Dynamic(a), RouteType::Dynamic(b)) if a == b => {
+                self.segments.cmp(&other.segments)
+            }
+            (RouteType::Dynamic(a), RouteType::Dynamic(b)) => a.cmp(b),
+            (RouteType::Dynamic(_), _) => Less,
+            (_, RouteType::Dynamic(_)) => Greater,
+            (RouteType::Tail(a), RouteType::Tail(b)) if a == b => {
+                self.segments.cmp(&other.segments)
+            }
+            (RouteType::Tail(a), RouteType::Tail(b)) => b.cmp(a),
+        }
+    }
+}
+
+impl PartialOrd for Route {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Eq for Route {}
+
+impl PartialEq for Route {
+    fn eq(&self, other: &Self) -> bool {
+        self.path == other.path
     }
 }
 

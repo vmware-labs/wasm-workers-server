@@ -8,9 +8,7 @@
 
 mod files;
 mod route;
-
 use files::Files;
-use route::RouteAffinity;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 use wws_config::Config;
@@ -49,28 +47,22 @@ impl Routes {
         for route_path in route_paths {
             routes.push(Route::new(path, route_path, &prefix, config));
         }
+        routes.sort();
         println!("✅ Workers loaded in {:?}.", start.elapsed());
 
         Self { routes, prefix }
     }
 
-    /// Based on a set of routes and a given path, it provides the best
-    /// match based on the parametrized URL score. See the [`Route::can_manage_path`]
-    /// method to understand how to calculate the score.
+    /// Provides the **first** route that can handle the given path.
+    /// This only works because the routes are already sorted.
+    /// Because a '/a/b' route may be served by:
+    /// - /a/b.js
+    /// - /a/[id].js
+    /// - /[id]/b.wasm
+    /// - /[id]/[other].wasm
+    /// - /[id]/[..all].wasm
     pub fn retrieve_best_route<'a>(&'a self, path: &str) -> Option<&'a Route> {
-        // Keep it to avoid calculating the score twice when iterating
-        // to look for the best route
-        let mut best_score = -1;
-
-        self.routes
-            .iter()
-            .fold(None, |acc, item| match item.affinity(path) {
-                RouteAffinity::CanManage(score) if best_score == -1 || score < best_score => {
-                    best_score = score;
-                    Some(item)
-                }
-                _ => acc,
-            })
+        self.routes.iter().find(|r| r.can_manage(path))
     }
 
     /// Defines a prefix in the context of the application.
@@ -108,98 +100,30 @@ impl Routes {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
 
     #[test]
-    fn route_path_affinity() {
-        let build_route = |file: &str| -> Route {
-            let project_config = Config::default();
-            Route::new(
-                Path::new("../../tests/data/params"),
-                PathBuf::from(format!("../../tests/data/params{file}")),
-                "",
-                &project_config,
-            )
-        };
-
-        // Route initializes the Wasm module. We create these
-        // variables to avoid loading the same Wasm module multiple times
-        let param_route = build_route("/[id].wasm");
-        let fixed_route = build_route("/fixed.wasm");
-        let param_folder_route = build_route("/[id]/fixed.wasm");
-        let param_sub_route = build_route("/sub/[id].wasm");
-        let catch_all_sub_route = build_route("/sub/[...all].wasm");
+    fn retrieve_best_route() {
+        let project_config = Config::default();
+        let router = Routes::new(
+            Path::new("../../tests/data/params"),
+            "",
+            Vec::new(),
+            &project_config,
+        );
 
         let tests = [
-            (&param_route, "/a", RouteAffinity::CanManage(1)),
-            (&fixed_route, "/fixed", RouteAffinity::CanManage(0)),
-            (&fixed_route, "/a", RouteAffinity::CannotManage),
-            (&param_folder_route, "/a", RouteAffinity::CannotManage),
-            (&param_folder_route, "/a/fixed", RouteAffinity::CanManage(1)),
-            (&param_sub_route, "/a/b", RouteAffinity::CannotManage),
-            (&param_sub_route, "/sub/b", RouteAffinity::CanManage(2)),
-            (
-                &catch_all_sub_route,
-                "/sub/catch/all/routes",
-                RouteAffinity::CanManage(i32::MAX),
-            ),
-        ];
-
-        for (route, path, route_affinity) in tests {
-            assert_eq!(route.affinity(path), route_affinity);
-        }
-    }
-
-    #[test]
-    fn best_route_by_affinity() {
-        let build_route = |file: &str| -> Route {
-            let project_config = Config::default();
-            Route::new(
-                Path::new("../../tests/data/params"),
-                PathBuf::from(format!("../../tests/data/params{file}")),
-                "",
-                &project_config,
-            )
-        };
-
-        // Route initializes the Wasm module. We create these
-        // variables to avoid loading the same Wasm module multiple times
-        let param_route = build_route("/[id].wasm");
-        let fixed_route = build_route("/fixed.wasm");
-        let param_folder_route = build_route("/[id]/fixed.wasm");
-        let param_sub_route = build_route("/sub/[id].wasm");
-        let catch_all_sub_route = build_route("/sub/[...all].wasm");
-
-        // I'm gonna use this values for comparison as `routes` consumes
-        // the Route elements.
-        let param_path = param_route.path.clone();
-        let fixed_path = fixed_route.path.clone();
-        let param_folder_path = param_folder_route.path.clone();
-        let param_sub_path = param_sub_route.path.clone();
-        let catch_all_sub_path: String = catch_all_sub_route.path.clone();
-
-        let routes = Routes {
-            routes: vec![
-                param_route,
-                fixed_route,
-                param_folder_route,
-                param_sub_route,
-                catch_all_sub_route,
-            ],
-            prefix: String::from("/"),
-        };
-
-        let tests = [
-            ("/a", Some(param_path)),
-            ("/fixed", Some(fixed_path)),
-            ("/a/fixed", Some(param_folder_path)),
-            ("/sub/b", Some(param_sub_path)),
-            ("/sub/catch/all/routes", Some(catch_all_sub_path)),
+            ("/any", Some("/[id]")),
+            ("/fixed", Some("/fixed")),
+            ("/any/fixed", Some("/[id]/fixed")),
+            ("/any/sub", Some("/[id]/sub")),
+            ("/sub/any", Some("/sub/[id]")),
+            ("/sub/any/catch/all/routes", Some("/sub/[...all]")),
+            ("/sub/sub/any/catch/all/routes", Some("/sub/sub/[...all]")),
             ("/donot/exist", None),
         ];
 
         for (given_path, expected_path) in tests {
-            let route = routes.retrieve_best_route(given_path);
+            let route = router.retrieve_best_route(given_path);
 
             if let Some(path) = expected_path {
                 assert!(route.is_some());
