@@ -68,6 +68,10 @@ pub struct Args {
     /// Manage language runtimes in your project
     #[command(subcommand)]
     commands: Option<Main>,
+
+    /// CORS headers to add to all workers if not already set by the worker
+    #[arg(long)]
+    cors: Option<Vec<String>>,
 }
 
 #[actix_web::main]
@@ -198,6 +202,7 @@ async fn main() -> std::io::Result<()> {
             args.port,
             args.enable_panel,
             None,
+            args.cors,
         )
         .await
         .map_err(|err| Error::new(ErrorKind::AddrInUse, err))?;
