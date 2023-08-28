@@ -1,9 +1,14 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
+mod route_type;
 mod segment;
 
 use lazy_static::lazy_static;
 use regex::Regex;
+use route_type::{
+    RouteType,
+    RouteType::{Dynamic, Satic, Tail},
+};
 use segment::Segment;
 use std::{
     cmp::Ordering,
@@ -17,17 +22,6 @@ use wws_worker::Worker;
 lazy_static! {
     static ref PARAMETER_REGEX: Regex =
         Regex::new(r"\[(?P<ellipsis>\.{3})?(?P<segment>\w+)\]").unwrap();
-}
-
-/// Represents the type of a route.
-///
-/// Each variant of this enum holds an associated `usize` value,
-/// which represents the number of segments in the route's path.
-#[derive(PartialEq, Eq, Debug)]
-pub enum RouteType {
-    Satic(usize),
-    Dynamic(usize),
-    Tail(usize),
 }
 
 /// An existing route in the project. It contains a reference to the handler, the URL path,
@@ -68,7 +62,7 @@ impl Route {
         let route_path = Self::retrieve_route(base_path, &filepath, prefix);
         Self {
             handler: filepath,
-            route_type: Self::get_route_type(&route_path),
+            route_type: RouteType::from(&route_path),
             segments: Self::get_segments(&route_path),
             path: route_path,
             worker,
@@ -118,55 +112,34 @@ impl Route {
             .collect()
     }
 
-    /// Determine the type of route based on the provided route path.
-    fn get_route_type(route_path: &str) -> RouteType {
-        let path_segments_count = route_path.chars().filter(|&c| c == '/').count();
-        if route_path.contains("/[...") {
-            RouteType::Tail(path_segments_count)
-        } else if route_path.contains("/[") {
-            RouteType::Dynamic(path_segments_count)
-        } else {
-            RouteType::Satic(path_segments_count)
-        }
-    }
-
     /// Parse the route path into individual segments and determine their types.
     ///
     /// This function parses the provided route path into individual segments and identifies
     /// whether each segment is static, dynamic, or tail based on certain patterns.
     fn get_segments(route_path: &str) -> Vec<Segment> {
-        route_path
-            .split('/')
-            .skip(1)
-            .into_iter()
-            .map(|segment| {
-                if segment.starts_with("[...") {
-                    Segment::Tail(segment.to_owned())
-                } else if segment.contains("[") {
-                    Segment::Dynamic(segment.to_owned())
-                } else {
-                    Segment::Satic(segment.to_owned())
-                }
-            })
-            .collect()
+        route_path.split('/').skip(1).map(Segment::from).collect()
     }
 
     /// Check if the given path can be managed by this worker. This was introduced
     /// to support parameters in the URLs.
     /// Dertermine the 'RouteType' allow to shortcut the comparaison.
     pub fn can_manage(&self, path: &str) -> bool {
-        let path_segments_count = path.chars().filter(|&c| c == '/').count();
+        let path_number_of_segments = path.chars().filter(|&c| c == '/').count();
 
         match self.route_type {
-            RouteType::Satic(_) => self.path == path,
-            RouteType::Dynamic(segments_count) if segments_count != path_segments_count => false,
-            RouteType::Tail(segments_count) if segments_count > path_segments_count => false,
+            Satic {
+                number_of_segments: _,
+            } => self.path == path,
+            Dynamic { number_of_segments } if number_of_segments != path_number_of_segments => {
+                false
+            }
+            Tail { number_of_segments } if number_of_segments > path_number_of_segments => false,
             _ => path
-                .split("/")
+                .split('/')
                 .skip(1)
                 .zip(self.segments.iter())
                 .all(|zip| match zip {
-                    (sp, Segment::Satic(segment)) => sp == segment,
+                    (sp, Segment::Static(segment)) => sp == segment,
                     _ => true,
                 }),
         }
@@ -190,9 +163,9 @@ impl Route {
     /// Check if the current route is dynamic
     pub fn is_dynamic(&self) -> bool {
         match self.route_type {
-            RouteType::Satic(_) => false,
-            RouteType::Dynamic(_) => true,
-            RouteType::Tail(_) => true,
+            Satic { .. } => false,
+            Dynamic { .. } => true,
+            Tail { .. } => true,
         }
     }
 }
@@ -200,19 +173,42 @@ impl Route {
 impl Ord for Route {
     fn cmp(&self, other: &Self) -> Ordering {
         match (&self.route_type, &other.route_type) {
-            (RouteType::Satic(a), RouteType::Satic(b)) => a.cmp(b),
-            (RouteType::Satic(_), _) => Less,
-            (_, RouteType::Satic(_)) => Greater,
-            (RouteType::Dynamic(a), RouteType::Dynamic(b)) if a == b => {
-                self.segments.cmp(&other.segments)
-            }
-            (RouteType::Dynamic(a), RouteType::Dynamic(b)) => a.cmp(b),
-            (RouteType::Dynamic(_), _) => Less,
-            (_, RouteType::Dynamic(_)) => Greater,
-            (RouteType::Tail(a), RouteType::Tail(b)) if a == b => {
-                self.segments.cmp(&other.segments)
-            }
-            (RouteType::Tail(a), RouteType::Tail(b)) => b.cmp(a),
+            (
+                Satic {
+                    number_of_segments: a,
+                },
+                Satic {
+                    number_of_segments: b,
+                },
+            ) => a.cmp(b),
+            (Satic { .. }, _) => Less,
+            (_, Satic { .. }) => Greater,
+            (
+                Dynamic {
+                    number_of_segments: a,
+                },
+                Dynamic {
+                    number_of_segments: b,
+                },
+            ) if a == b => self.segments.cmp(&other.segments),
+            (Dynamic { .. }, _) => Less,
+            (_, Dynamic { .. }) => Greater,
+            (
+                Tail {
+                    number_of_segments: a,
+                },
+                Tail {
+                    number_of_segments: b,
+                },
+            ) if a == b => self.segments.cmp(&other.segments),
+            (
+                Tail {
+                    number_of_segments: a,
+                },
+                Tail {
+                    number_of_segments: b,
+                },
+            ) => b.cmp(a),
         }
     }
 }
