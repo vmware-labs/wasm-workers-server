@@ -15,7 +15,7 @@ use errors::Result;
 use features::wasi_nn::WASI_NN_BACKEND_OPENVINO;
 use io::{WasmInput, WasmOutput};
 use sha256::digest as sha256_digest;
-use std::fs::{self, File};
+use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::{collections::HashMap, path::Path};
@@ -96,24 +96,8 @@ impl Worker {
         body: &str,
         kv: Option<HashMap<String, String>>,
         vars: &HashMap<String, String>,
-        stderr: &Option<File>,
     ) -> Result<WasmOutput> {
         let input = serde_json::to_string(&WasmInput::new(request, body, kv)).unwrap();
-
-        // Prepare the stderr file if present
-        let stderr_file;
-
-        if let Some(file) = stderr {
-            stderr_file = Some(
-                file.try_clone()
-                    .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?,
-            );
-        } else {
-            stderr_file = None;
-        }
-
-        // Initialize stdio and configure it
-        let stdio = Stdio::new(&input, stderr_file);
 
         let mut linker = Linker::new(&self.engine);
 
@@ -132,6 +116,7 @@ impl Worker {
             .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
 
         // Configure the stdio
+        let stdio = Stdio::new(&input);
         wasi_builder = stdio.configure_wasi_ctx(wasi_builder);
 
         // Mount folders from the configuration

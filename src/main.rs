@@ -201,7 +201,6 @@ async fn main() -> std::io::Result<()> {
             hostname: args.hostname.clone(),
             port: args.port,
             panel: args.enable_panel.into(),
-            stderr: None,
             cors_origins: args.cors,
         })
         .await
