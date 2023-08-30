@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::{assets::handle_assets, not_found::handle_not_found};
-use crate::DataConnectors;
+use crate::{AppData, DataConnectors};
 use actix_web::{
     http::StatusCode,
-    web::{self, Bytes, Data},
+    web::{Bytes, Data},
     HttpRequest, HttpResponse,
 };
-use std::{fs::File, io::Write, sync::RwLock};
-use wws_router::Routes;
+use std::{io::Write, sync::RwLock};
+use wws_router::WORKERS;
 use wws_worker::io::WasmOutput;
 
 const CORS_HEADER: &str = "Access-Control-Allow-Origin";
@@ -31,23 +31,17 @@ const CORS_HEADER: &str = "Access-Control-Allow-Origin";
 ///
 /// For these reasons, we are selecting the right handler at this point and not
 /// allowing Actix to select it for us.
-pub async fn handle_worker(
-    req: HttpRequest,
-    body: Bytes,
-    cors_origins: web::Data<Option<Vec<String>>>,
-) -> HttpResponse {
-    let routes = req.app_data::<Data<Routes>>().unwrap();
-    let stderr_file = req.app_data::<Data<Option<File>>>().unwrap();
+pub async fn handle_worker(req: HttpRequest, body: Bytes) -> HttpResponse {
+    let app_data = req
+        .app_data::<Data<AppData>>()
+        .expect("error fetching app data");
     let data_connectors = req
         .app_data::<Data<RwLock<DataConnectors>>>()
-        .unwrap()
-        .clone();
-    // We will improve error handling
+        .expect("error fetching data connectors");
     let result: HttpResponse;
 
     // First, we need to identify the best suited route
-    let selected_route = routes.retrieve_best_route(req.path());
-
+    let selected_route = app_data.routes.retrieve_best_route(req.path());
     if let Some(route) = selected_route {
         // First, check if there's an existing static file. Static assets have more priority
         // than dynamic routes. However, I cannot set the static assets as the first service
@@ -58,16 +52,26 @@ pub async fn handle_worker(
             }
         }
 
+        let workers = WORKERS
+            .read()
+            .expect("error locking worker lock for reading");
+
+        let worker = workers
+            .get(&route.worker)
+            .expect("unexpected missing worker");
+
         // Let's continue
         let body_str = String::from_utf8(body.to_vec()).unwrap_or_else(|_| String::from(""));
 
         // Init from configuration
-        let vars = &route.worker.config.vars;
-        let kv_namespace = route.worker.config.data_kv_namespace();
+        let vars = &worker.config.vars;
+        let kv_namespace = worker.config.data_kv_namespace();
 
         let store = match &kv_namespace {
             Some(namespace) => {
-                let connector = data_connectors.read().unwrap();
+                let connector = data_connectors
+                    .read()
+                    .expect("error locking data connectors lock for reading");
                 let kv_store = connector.kv.find_store(namespace);
 
                 kv_store.map(|store| store.clone())
@@ -75,21 +79,19 @@ pub async fn handle_worker(
             None => None,
         };
 
+        let stderr_file = app_data
+            .stderr
+            .as_ref()
+            .map(|file| file.try_clone().expect("error setting up stderr"));
+
         let (handler_result, handler_success) =
-            match route
-                .worker
-                .run(&req, &body_str, store, vars, stderr_file.get_ref())
-            {
+            match worker.run(&req, &body_str, store, vars, &stderr_file) {
                 Ok(output) => (output, true),
                 Err(error) => {
-                    if let Some(stderr_file) = stderr_file.get_ref() {
-                        if let Ok(mut stderr_file) = stderr_file.try_clone() {
-                            stderr_file
-                                .write_all(error.to_string().as_bytes())
-                                .expect("Failed to write error to stderr_file");
-                        } else {
-                            eprintln!("{}", error);
-                        }
+                    if let Some(mut stderr_file) = stderr_file {
+                        stderr_file
+                            .write_all(error.to_string().as_bytes())
+                            .expect("Failed to write error to stderr_file");
                     } else {
                         eprintln!("{}", error);
                     }
@@ -104,7 +106,7 @@ pub async fn handle_worker(
         builder.insert_header(("Content-Type", "text/html"));
 
         // Check if cors config has any origins to register
-        if let Some(origins) = cors_origins.as_ref() {
+        if let Some(origins) = app_data.cors_origins.as_ref() {
             // Check if worker has overridden the header, if not
             if !handler_result.headers.contains_key(CORS_HEADER) {
                 // insert those origins in 'Access-Control-Allow-Origin' header
@@ -123,7 +125,7 @@ pub async fn handle_worker(
         if handler_success && kv_namespace.is_some() {
             data_connectors
                 .write()
-                .unwrap()
+                .expect("error locking data connectors lock for writing")
                 .kv
                 .replace_store(&kv_namespace.unwrap(), &handler_result.kv)
         }

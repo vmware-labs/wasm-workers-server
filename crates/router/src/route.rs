@@ -4,8 +4,10 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::{
+    collections::HashMap,
     ffi::OsStr,
     path::{Component, Path, PathBuf},
+    sync::RwLock,
 };
 use wws_config::Config as ProjectConfig;
 use wws_worker::Worker;
@@ -13,6 +15,7 @@ use wws_worker::Worker;
 lazy_static! {
     static ref PARAMETER_REGEX: Regex = Regex::new(r"\[\w+\]").unwrap();
     static ref DYNAMIC_ROUTE_REGEX: Regex = Regex::new(r".*\[\w+\].*").unwrap();
+    pub static ref WORKERS: RwLock<WorkerSet> = RwLock::new(WorkerSet::default());
 }
 
 /// Identify if a route can manage a certain URL and generates
@@ -37,13 +40,36 @@ pub enum RouteAffinity {
 /// api/index.wasm      =>  /api
 /// api/v2/ping.wasm    =>  /api/v2/ping
 /// ```
+#[derive(Clone)]
 pub struct Route {
     /// The wasm module that will manage the route
     pub handler: PathBuf,
     /// The URL path
     pub path: String,
     /// The associated worker
-    pub worker: Worker,
+    pub worker: String,
+}
+
+/// Structure that holds the map of workers from their identifier to
+/// their worker::Worker structure containing the runtime information,
+/// such as the WebAssembly module itself as well as the WebAssembly
+/// runtime.
+///
+/// This structure hides the global (but internal) hash map from
+/// other crates.
+#[derive(Default)]
+pub struct WorkerSet {
+    workers: HashMap<String, Worker>,
+}
+
+impl WorkerSet {
+    pub fn get(&self, worker_id: &str) -> Option<&Worker> {
+        self.workers.get(worker_id)
+    }
+
+    pub fn register(&mut self, worker_id: String, worker: Worker) {
+        self.workers.insert(worker_id, worker);
+    }
 }
 
 impl Route {
@@ -57,12 +83,19 @@ impl Route {
         prefix: &str,
         project_config: &ProjectConfig,
     ) -> Self {
-        let worker = Worker::new(base_path, &filepath, project_config).unwrap();
+        let worker =
+            Worker::new(base_path, &filepath, project_config).expect("error creating worker");
+        let worker_id = worker.id.clone();
+
+        WORKERS
+            .write()
+            .expect("error locking worker lock for writing")
+            .register(worker_id.clone(), worker);
 
         Self {
             path: Self::retrieve_route(base_path, &filepath, prefix),
             handler: filepath,
-            worker,
+            worker: worker_id.clone(),
         }
     }
 

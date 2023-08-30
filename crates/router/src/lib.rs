@@ -15,9 +15,10 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 use wws_config::Config;
 
-pub use route::Route;
+pub use route::{Route, WORKERS};
 
 /// Contains all registered routes
+#[derive(Clone, Default)]
 pub struct Routes {
     pub routes: Vec<Route>,
     pub prefix: String,
@@ -52,6 +53,10 @@ impl Routes {
         println!("✅ Workers loaded in {:?}.", start.elapsed());
 
         Self { routes, prefix }
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &Route> {
+        self.routes.iter()
     }
 
     /// Based on a set of routes and a given path, it provides the best
