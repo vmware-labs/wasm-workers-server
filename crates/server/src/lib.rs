@@ -53,7 +53,7 @@ pub struct ServeOptions {
     pub base_routes: Routes,
     pub hostname: String,
     pub port: u16,
-    pub panel: Option<Panel>,
+    pub panel: Panel,
     pub stderr: Option<PathBuf>,
     pub cors_origins: Option<Vec<String>>,
 }
@@ -116,7 +116,7 @@ pub async fn serve(serve_options: ServeOptions) -> Result<Server> {
             .app_data(Data::clone(&data_connectors));
 
         // Configure panel
-        if serve_options.panel == Some(Panel::Enabled) {
+        if serve_options.panel == Panel::Enabled {
             app = app.configure(config_panel_handlers);
             app = app.configure(config_manage_api_handlers);
         }

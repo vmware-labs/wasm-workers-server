@@ -200,7 +200,7 @@ async fn main() -> std::io::Result<()> {
             base_routes: routes,
             hostname: args.hostname.clone(),
             port: args.port,
-            panel: Some(args.enable_panel.into()),
+            panel: args.enable_panel.into(),
             stderr: None,
             cors_origins: args.cors,
         })
