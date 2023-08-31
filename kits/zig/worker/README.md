@@ -4,32 +4,32 @@ This folder contains the Zig kit or SDK for Wasm Workers Server. Currently, it u
 
 > *Note: this assumes Zig `0.11.0`*
 
-## build
+## Build
 
-To build all example in ./examples
+To build all examples in ./examples
 
-```bash
+```shell-session
 $ zig build -Dtarget="wasm32-wasi"
 ```
 
-To build a specific example
+To build a specific example:
 
-```bash
+```shell-session
 $ zig build-exe examples/<example>.zig -target wasm32-wasi
 ```
 
-## testing
+## Testing
 
-from `./kits/zig/worker` execute
+At `./kits/zig/worker` execute:
 
-```bash
+```shell-session
 $ zig build -Dtarget="wasm32-wasi"
 $ wws ./zig-out/bin/
 ```
 
 ## sockaddr issue
 
-Using `*http.Server.Response` was unsuccessful and lead to following error:
+Using `http.Server.Response` was unsuccessful and lead to following error:
 
 ```
 $ worker git:(144_-_add_support_for_zig) ✗ zig build -Dtarget="wasm32-wasi"

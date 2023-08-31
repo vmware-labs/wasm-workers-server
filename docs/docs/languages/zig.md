@@ -8,13 +8,13 @@ Zig workers are tested with Zig version `0.11.0`. Then, they are loaded by Wasm 
 
 ## Your first Zig worker
 
-Workers can be implemented via `worker.ServeFunc``.
+The recommended way to implement workers is by using the `worker.ServeFunc` function.
 
 In this example, the worker will get a request and print all the related information.
 
 1. Create a new Zig project:
 
-    ```bash
+    ```shell-session
     zig init-exe
     ```
 
@@ -22,9 +22,9 @@ In this example, the worker will get a request and print all the related informa
 
     At this point in time Zigs Package manager is not yet available. We will therefore clone the repository to make the library locally available.
 
-    ```
+    ```shell-session
     mkdir lib
-    wget -O ./lib/worker.zig https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/kits/zig/worker/worker.zig ./lib
+    wget -O ./lib/worker.zig https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/kits/zig/worker/worker.zig
     ```
 
 3. Edit the `src/main.zig`  to match the following contents:
@@ -113,7 +113,7 @@ In this example, the worker will get a request and print all the related informa
 
 5. Compile the project
 
-    ```bash
+    ```shell-session
     zig build-exe src/main.zig \
         --name worker \
         -mexec-model=reactor \
@@ -126,7 +126,7 @@ In this example, the worker will get a request and print all the related informa
 
 6. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
 
-    ```bash
+    ```shell-session
     wws .
 
     ⚙️ Loading routes from: .
@@ -146,7 +146,7 @@ To add a KV store to your worker, follow these steps:
 
 1. Create a new Zig project:
 
-    ```bash
+    ```shell-session
     zig init-exe
     ```
 
@@ -154,7 +154,7 @@ To add a KV store to your worker, follow these steps:
 
     At this point in time Zigs Package manager is not yet available. We will therefore clone the repository to make the library locally available.
 
-    ```
+    ```shell-session
     mkdir lib
     wget -O ./lib/worker.zig https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/kits/zig/worker/worker.zig ./lib
     ```
@@ -251,7 +251,7 @@ To add a KV store to your worker, follow these steps:
 
 ## Dynamic routes
 
-You can define [dynamic routes by adding route parameters to your worker files](../features/dynamic-routes.md) (like `[id].wasm`). To read them in Go, follow these steps:
+You can define [dynamic routes by adding route parameters to your worker files](../features/dynamic-routes.md) (like `[id].wasm`). To read them in Zig, follow these steps:
 
 1. Use the `worker.ParamsKey` context value to read in the passed in parameters:
 
@@ -303,7 +303,7 @@ You can define [dynamic routes by adding route parameters to your worker files](
 
 3. Compile the project
 
-    ```bash
+    ```shell-session
     zig build-exe src/main.zig \
         --name "[id]" \
         -mexec-model=reactor \
@@ -316,7 +316,7 @@ You can define [dynamic routes by adding route parameters to your worker files](
 
 4. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
 
-    ```bash
+    ```shell-session
     wws .
     
     ⚙️ Loading routes from: .
