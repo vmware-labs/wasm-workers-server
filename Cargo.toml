@@ -11,7 +11,7 @@ repository = { workspace = true }
 
 # Common package definition for all crates / kits
 [workspace.package]
-version = "1.4.0"
+version = "1.5.0"
 edition = "2021"
 authors = ["Wasm Labs <https://wasmlabs.dev>"]
 license = "Apache-2.0"
