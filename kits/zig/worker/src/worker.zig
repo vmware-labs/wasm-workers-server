@@ -12,18 +12,18 @@ pub const Request = struct {
     url: std.Uri,
     method: []const u8, // TODO: change to http.Method enum
     headers: http.Headers,
-    data: []const u8,
+    body: []const u8,
     context: Context,
 };
 
 pub const Response = struct {
-    data: []const u8,
+    body: []const u8,
     headers: http.Headers,
     request: Request,
 
     pub fn writeAll(res: *Response, data: []const u8) !u32 {
-        res.data = data;
-        return res.data.len;
+        res.body = data;
+        return res.body.len;
     }
 };
 
@@ -212,7 +212,7 @@ pub fn createRequest(in: *Input) !Request {
         .url = try std.Uri.parseWithoutScheme(in.url),
         .method = in.method,
         .headers = http.Headers.init(allocator),
-        .data = in.body,
+        .body = in.body,
         .context = Context.init(),
     };
 
@@ -260,13 +260,13 @@ pub fn ServeFunc(requestFn: *const fn (*Response, *Request) void) void {
     var request = r.req;
     var output = r.output;
 
-    var response = Response{ .data = "", .headers = http.Headers.init(allocator), .request = request, };
+    var response = Response{ .body = "", .headers = http.Headers.init(allocator), .request = request, };
     
     requestFn(&response, &request);
 
     output.httpHeader = response.headers;
 
-    _ = output.write(response.data) catch |err| {
+    _ = output.write(response.body) catch |err| {
         std.debug.print("error writing data: {!} \n", .{ err });
     };
 }
