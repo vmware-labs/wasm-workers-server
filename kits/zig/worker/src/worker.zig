@@ -67,7 +67,7 @@ pub const Output = struct {
         return self.httpHeader;
     }
 
-    pub fn writeHeader(self: *Self, statusCode: u16) void {
+    pub fn setStatus(self: *Self, statusCode: u16) void {
         self.status = statusCode;
     }
 
@@ -80,7 +80,7 @@ pub const Output = struct {
         }
 
         if (self.status == 0) {
-            self.writeHeader(200);
+            self.setStatus(200);
         }
 
         for (self.httpHeader.list.items) |item| {
