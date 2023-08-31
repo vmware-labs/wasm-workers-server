@@ -27,8 +27,10 @@ pub const Response = struct {
     }
 };
 
+// Note: as Zig does not support multiple return types, we use this struct
+// to wrap both the request and the output to keep code a bit more clean
 const RequestAndOutput = struct {
-    req: Request,
+    request: Request,
     output: Output,
 };
 
@@ -238,7 +240,7 @@ pub fn getWriterRequest() !RequestAndOutput {
     var output = Output.init();
 
     return RequestAndOutput{
-        .req = req,
+        .request = req,
         .output = output,
     };
 }
@@ -257,7 +259,7 @@ pub const Context = struct {
 
 pub fn ServeFunc(requestFn: *const fn (*Response, *Request) void) void {
     var r = try getWriterRequest();
-    var request = r.req;
+    var request = r.request;
     var output = r.output;
 
     var response = Response{ .body = "", .headers = http.Headers.init(allocator), .request = request, };
