@@ -16,11 +16,7 @@ use actix_web::{
 use handlers::assets::handle_assets;
 use handlers::not_found::handle_not_found;
 use handlers::worker::handle_worker;
-use std::{
-    fs::{File, OpenOptions},
-    path::PathBuf,
-    sync::RwLock,
-};
+use std::{path::PathBuf, sync::RwLock};
 use wws_api_manage::config_manage_api_handlers;
 use wws_data_kv::KV;
 use wws_panel::config_panel_handlers;
@@ -54,7 +50,6 @@ pub struct ServeOptions {
     pub hostname: String,
     pub port: u16,
     pub panel: Panel,
-    pub stderr: Option<PathBuf>,
     pub cors_origins: Option<Vec<String>>,
 }
 
@@ -62,31 +57,16 @@ pub struct ServeOptions {
 pub struct AppData {
     routes: Routes,
     root_path: PathBuf,
-    stderr: Option<File>,
     cors_origins: Option<Vec<String>>,
 }
 
-impl TryFrom<ServeOptions> for AppData {
-    type Error = ServeError;
-
-    fn try_from(serve_options: ServeOptions) -> Result<Self> {
-        let stderr = if let Some(stderr) = serve_options.stderr {
-            Some(
-                OpenOptions::new()
-                    .append(true)
-                    .open(stderr)
-                    .map_err(|_| ServeError::InitializeServerError)?,
-            )
-        } else {
-            None
-        };
-
-        Ok(AppData {
+impl From<ServeOptions> for AppData {
+    fn from(serve_options: ServeOptions) -> Self {
+        AppData {
             routes: serve_options.base_routes,
             root_path: serve_options.root_path.clone(),
-            stderr,
             cors_origins: serve_options.cors_origins.clone(),
-        })
+        }
     }
 }
 
@@ -174,7 +154,7 @@ pub async fn serve(serve_options: ServeOptions) -> Result<Server> {
         app
     })
     .bind(format!("{}:{}", hostname, port))
-    .map_err(|_| errors::ServeError::InitializeServerError)?;
+    .map_err(|_| ServeError::InitializeServerError)?;
 
     Ok(server.run())
 }
