@@ -7,7 +7,7 @@ const allocator = arena.allocator();
 fn requestFn(resp: *worker.Response, r: *worker.Request) void {
 
     var payload: []const u8 = "";
-    var reqBody = r.data;
+    var reqBody = r.body;
 
     if (reqBody.len == 0) {
         payload = "-";
