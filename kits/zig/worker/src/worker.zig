@@ -160,21 +160,8 @@ pub fn readInput() !Input {
     var buf = std.io.bufferedReader(in.reader());
     var r = buf.reader();
 
-    var msg_buf: [4096]u8 = undefined;
-
-    if (r.readUntilDelimiterOrEof(&msg_buf, '\n')) |msg| {
-        if (msg) | m | {
-            // std.debug.print("\nraw input json: {s}\n\n", .{m});
-            return getInput(m);
-        }
-    } else |err| {
-        std.debug.print("error parsing json: {!}\n", .{err});
-        return err;
-    }
-
-    // is there a better return value?
-    // maybe unreachable?
-    return undefined;
+    var msg = try r.readAllAlloc(allocator, std.math.maxInt(u32));
+    return getInput(msg);
 }
 
 fn getInput(s: []const u8) !Input {
