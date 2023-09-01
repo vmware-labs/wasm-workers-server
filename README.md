@@ -133,3 +133,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.
 Wasm Workers Server is distributed under the terms of the Apache License (Version 2.0).
 
 See [LICENSE](LICENSE) for details.
+
+(trigger CLA bot!)
