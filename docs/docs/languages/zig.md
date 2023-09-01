@@ -29,7 +29,7 @@ In this example, the worker will get a request and print all the related informa
 
 3. Edit the `src/main.zig`  to match the following contents:
 
-    ```zig title="worker.zig"
+    ```c title="worker.zig"
     const std = @import("std");
     const worker = @import("worker");
     
@@ -47,7 +47,7 @@ In this example, the worker will get a request and print all the related informa
     
 4. Additionally, you can now go further add all the information from the received `worker.Request`:
 
-    ```zig title="worker.zig"
+    ```c title="worker.zig"
     const std = @import("std");
     const worker = @import("worker");
 
@@ -161,7 +161,7 @@ To add a KV store to your worker, follow these steps:
 
 1. Edit `src/main.zig` file with the following contents:
 
-    ```zig title="main.zig"
+    ```c title="main.zig"
     const std = @import("std");
     const worker = @import("worker");
 
@@ -255,7 +255,7 @@ You can define [dynamic routes by adding route parameters to your worker files](
 
 1. Use the `worker.ParamsKey` context value to read in the passed in parameters:
 
-    ```zig title="main.zig"
+    ```c title="main.zig"
     const std = @import("std");
     const worker = @import("worker");
     
@@ -268,7 +268,7 @@ You can define [dynamic routes by adding route parameters to your worker files](
 
 2. Then, you can read the values as follows:
 
-    ```zig title="main.zig"
+    ```c title="main.zig"
     const std = @import("std");
     const worker = @import("worker");
     
