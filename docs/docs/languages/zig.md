@@ -212,7 +212,7 @@ To add a KV store to your worker, follow these steps:
 
 5. Compile the project
 
-    ```bash
+    ```shell-session
     zig build-exe src/main.zig \
         --name worker-kv \
         -mexec-model=reactor \
@@ -236,7 +236,7 @@ To add a KV store to your worker, follow these steps:
 
 1. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
 
-    ```bash
+    ```shell-session
     wws .
 
     ⚙️ Loading routes from: .
