@@ -15,7 +15,7 @@ use std::process::exit;
 use wws_config::Config;
 use wws_project::{identify_type, prepare_project, ProjectType};
 use wws_router::Routes;
-use wws_server::serve;
+use wws_server::{serve, ServeOptions};
 
 // Arguments
 #[derive(Parser, Debug)]
@@ -68,6 +68,10 @@ pub struct Args {
     /// Manage language runtimes in your project
     #[command(subcommand)]
     commands: Option<Main>,
+
+    /// CORS headers to add to all workers if not already set by the worker
+    #[arg(long)]
+    cors: Option<Vec<String>>,
 }
 
 #[actix_web::main]
@@ -191,20 +195,20 @@ async fn main() -> std::io::Result<()> {
             );
         }
 
-        let server = serve(
-            &project_path,
-            routes,
-            &args.hostname,
-            args.port,
-            args.enable_panel,
-            None,
-        )
+        let server = serve(ServeOptions {
+            root_path: project_path,
+            base_routes: routes,
+            hostname: args.hostname.clone(),
+            port: args.port,
+            panel: args.enable_panel.into(),
+            cors_origins: args.cors,
+        })
         .await
         .map_err(|err| Error::new(ErrorKind::AddrInUse, err))?;
 
         println!(
             "🚀 Start serving requests at http://{}:{}\n",
-            &args.hostname, args.port
+            args.hostname, args.port
         );
 
         // Run the server

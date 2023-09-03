@@ -1,10 +1,12 @@
 //// Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+pub mod errors;
+use errors::Result;
+
 mod modules;
 mod runtime;
 
-use anyhow::{anyhow, Result};
 use modules::{external::ExternalRuntime, javascript::JavaScriptRuntime, native::NativeRuntime};
 use std::path::Path;
 use wws_config::Config;
@@ -33,7 +35,7 @@ pub fn init_runtime(
             other => init_external_runtime(project_root, config, path, other),
         }
     } else {
-        Err(anyhow!("The given file does not have a valid extension"))
+        Err(errors::RuntimeError::InvalidExtension { extension: None })
     }
 }
 
@@ -67,8 +69,8 @@ fn init_external_runtime(
             runtime_config.clone(),
         )?))
     } else {
-        Err(anyhow!(format!(
-            "The '{extension}' extension does not have an associated runtime"
-        )))
+        Err(errors::RuntimeError::MissingRuntime {
+            extension: extension.to_string(),
+        })
     }
 }

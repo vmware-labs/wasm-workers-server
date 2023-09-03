@@ -1,8 +1,8 @@
 // Copyright 2023 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::errors::{self, Result};
 use crate::options::{GitReference, Options};
-use anyhow::{anyhow, bail, Result};
 use git2::{build::CheckoutBuilder, FetchOptions, Oid, Repository};
 use sha256::digest as sha256_digest;
 use std::{
@@ -18,19 +18,17 @@ static DEFAULT_REMOTE: &str = "origin";
 pub fn prepare_git_project(location: &Path, options: Options) -> Result<PathBuf> {
     let project_url = location
         .to_str()
-        .ok_or(anyhow!("The project URL cannot be retrieved"))?;
+        .ok_or(errors::FetchError::InvalidRepository)?;
     let (folder, git_ref) = parse_options(options);
     // By default, we use temporary dirs
     let mut dir = temp_dir().join(sha256_digest(project_url));
 
     let repo = if dir.exists() {
         // Reuse the same repository.
-        Repository::open(&dir)
-            .map_err(|e| anyhow!("There was an error opening the repository: {e}"))?
+        Repository::open(&dir).map_err(|_| errors::FetchError::InvalidReusedRepository)?
     } else {
         // clone it
-        Repository::clone(project_url, &dir)
-            .map_err(|e| anyhow!("There was an error cloning the repository: {e}"))?
+        Repository::clone(project_url, &dir).map_err(|_| errors::FetchError::InvalidRepository)?
     };
 
     if let Some(git_ref) = git_ref.as_ref() {
@@ -106,7 +104,7 @@ fn detect_main_branch(repo: &Repository) -> Result<&str> {
     } else if repo.find_branch("master", git2::BranchType::Local).is_ok() {
         Ok("master")
     } else {
-        bail!("Couldn't find the default main branch. Please, set the Git branch you want to use.")
+        Err(errors::FetchError::DefaultBranchMissing)
     }
 }
 

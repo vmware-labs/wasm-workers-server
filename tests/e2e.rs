@@ -110,7 +110,10 @@ mod test {
         child.kill().expect("Error stopping wws");
 
         // Test
-        assert!(body.contains(expected_text));
+        assert!(
+            body.contains(expected_text),
+            "result \"{body}\" does not contain \"{expected_text}\""
+        );
     }
 
     #[test]

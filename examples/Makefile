@@ -20,9 +20,14 @@ rust-params:
 	cargo build --target wasm32-wasi --release && \
 	mv target/wasm32-wasi/release/rust-params.wasm "./[id].wasm"
 
+rust-wasi-nn:
+	cd rust-wasi-nn && \
+	cargo build --target wasm32-wasi --release && \
+	mv target/wasm32-wasi/release/rust-wasi-nn.wasm "./inference.wasm"
+
 rust-pdf-create:
 	cd rust-pdf-create && \
 	cargo build --target wasm32-wasi --release && \
 	mv target/wasm32-wasi/release/rust-pdf-create.wasm ./index.wasm
 
-all: rust-basic rust-fetch rust-kv rust-params
+all: rust-basic rust-fetch rust-kv rust-params rust-wasi-nn

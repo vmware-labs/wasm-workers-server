@@ -1,8 +1,9 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::errors::{self, Result};
+
 use crate::runtime::Runtime;
-use anyhow::Result;
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -92,15 +93,18 @@ impl Runtime for ExternalRuntime {
     fn prepare_wasi_ctx(&self, builder: WasiCtxBuilder) -> Result<WasiCtxBuilder> {
         let dir = Dir::open_ambient_dir(&self.store.folder, ambient_authority())?;
 
-        Ok(builder
+        builder
             .preopened_dir(dir, "/src")?
-            .args(&self.metadata.args)?)
+            .args(&self.metadata.args)
+            .map_err(|_| errors::RuntimeError::WasiContextError)
     }
 
     /// Returns a reference to the Wasm module that should
     /// run this worker. It can be a custom (native) or a
     /// shared module (others).
     fn module_bytes(&self) -> Result<Vec<u8>> {
-        self.runtime_store.read(&[&self.metadata.binary.filename])
+        self.runtime_store
+            .read(&[&self.metadata.binary.filename])
+            .map_err(|_| errors::RuntimeError::CannotReadModule)
     }
 }

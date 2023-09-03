@@ -1,12 +1,12 @@
 // Copyright 2023 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::{anyhow, Result};
 use std::{env, path::Path};
 use wws_config::Config;
 use wws_project::{check_runtime, install_runtime, metadata::Repository};
 
 use crate::commands::runtimes::Runtimes;
+use crate::utils::errors::{Result, UtilsError};
 
 /// Default repository name
 pub const DEFAULT_REPO_NAME: &str = "wasmlabs";
@@ -76,11 +76,10 @@ pub async fn install_from_repository(
             Ok(())
         }
     } else {
-        Err(anyhow!(
-            "The runtime with name = '{}' and version = '{}' is not present in the repository",
-            name,
-            version
-        ))
+        Err(UtilsError::MissingRuntime {
+            runtime: name.to_string(),
+            version: version.to_string(),
+        })
     }
 }
 

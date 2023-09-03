@@ -1,9 +1,10 @@
 // Copyright 2022-2023 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::errors::Result;
 use crate::features::http_requests::HttpRequestsConfig;
+use crate::features::wasi_nn::WasiNnConfig;
 use crate::features::{data::ConfigData, folders::Folder};
-use anyhow::{anyhow, Result};
 use serde::{Deserialize, Deserializer};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -13,9 +14,12 @@ use wws_data_kv::KVConfigData;
 
 /// List all available features for a worker
 #[derive(Deserialize, Clone, Default)]
+#[serde(default)]
 pub struct Features {
     /// Allow to perform http requests from a worker
     pub http_requests: HttpRequestsConfig,
+    /// Enables WASI-NN bindings for Machine Learning inference
+    pub wasi_nn: WasiNnConfig,
 }
 
 /// Workers configuration. These files are optional when no configuration change is required.
@@ -54,18 +58,9 @@ impl Config {
     /// namespace = "todos"
     /// ```
     pub fn try_from_file(path: PathBuf) -> Result<Self> {
-        let contents = fs::read_to_string(&path)?;
-
-        let try_config: Result<Config, toml::de::Error> = from_str(&contents);
-
-        match try_config {
-            Ok(c) => Ok(c),
-            Err(err) => Err(anyhow!(
-                "Error reading the configuration file at {}: {}",
-                &path.to_str().unwrap_or("?"),
-                err
-            )),
-        }
+        Ok(from_str(&fs::read_to_string(path).map_err(|_| {
+            crate::errors::WorkerError::CannotLoadConfig
+        })?)?)
     }
 
     /// Returns a data Key/Value configuration if available
@@ -83,11 +78,13 @@ impl Config {
 /// function won't modify the K or the V of the HashMap. If
 /// V starts with $, its value will be read from the server
 /// environment variables
-fn read_environment_variables<'de, D>(deserializer: D) -> Result<HashMap<String, String>, D::Error>
+fn read_environment_variables<'de, D>(
+    deserializer: D,
+) -> core::result::Result<HashMap<String, String>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    let result: Result<Option<HashMap<String, String>>, D::Error> =
+    let result: core::result::Result<Option<HashMap<String, String>>, D::Error> =
         Deserialize::deserialize(deserializer);
 
     match result {

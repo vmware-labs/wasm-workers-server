@@ -1,8 +1,13 @@
 ---
+title: Static assets
 sidebar_position: 5
 ---
 
-# Static assets
+:::info
+
+[Available since v0.6](https://github.com/vmware-labs/wasm-workers-server/releases/tag/v0.6.0)
+
+:::
 
 Wasm Workers Server allows you to serve any static asset required by your workers. For that, place any static asset in a `public` folder. It must be present in the root of the directory you're serving with `wws`.
 

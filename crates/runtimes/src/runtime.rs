@@ -1,7 +1,8 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::Result;
+use crate::errors::Result;
+
 use wasmtime_wasi::WasiCtxBuilder;
 
 /// Define the behavior a Runtime must have. This includes methods

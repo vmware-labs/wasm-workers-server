@@ -1,8 +1,8 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::errors::{self, Result};
 use crate::fetch::fetch;
-use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use sha256::digest as sha256_digest;
 use std::collections::HashMap;
@@ -61,15 +61,12 @@ impl Repository {
 }
 
 impl FromStr for Repository {
-    type Err = anyhow::Error;
+    type Err = errors::FetchError;
 
     /// Reads and parses the metadata from a slice of bytes. It will return
     /// a result as the deserialization may fail.
     fn from_str(data: &str) -> Result<Self> {
-        toml::from_str::<Repository>(data).map_err(|err| {
-            println!("Err: {err}");
-            anyhow!("wws could not deserialize the repository metadata")
-        })
+        toml::from_str::<Repository>(data).map_err(|_| errors::FetchError::InvalidRepository)
     }
 }
 
@@ -169,7 +166,7 @@ impl Checksum {
     pub fn validate(&self, bytes: &[u8]) -> Result<()> {
         match self {
             Checksum::Sha256 { value } if value == &sha256_digest(bytes) => Ok(()),
-            _ => Err(anyhow!("The checksums don't match")),
+            _ => Err(errors::FetchError::InvalidChecksum),
         }
     }
 }

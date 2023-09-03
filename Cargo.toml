@@ -11,9 +11,9 @@ repository = { workspace = true }
 
 # Common package definition for all crates / kits
 [workspace.package]
-version = "1.4.0"
+version = "1.5.0"
 edition = "2021"
-authors = [ "Wasm Labs <https://wasmlabs.dev>" ]
+authors = ["Wasm Labs <https://wasmlabs.dev>"]
 license = "Apache-2.0"
 repository = "https://github.com/vmware-labs/wasm-workers-server/"
 
@@ -23,8 +23,8 @@ path = "src/main.rs"
 
 # Main binary (wws CLI dependencies)
 [dependencies]
-anyhow = { workspace = true }
 actix-web = { workspace = true }
+anyhow = "1.0.66"
 env_logger = "0.10.0"
 clap = { version = "4.0.10", features = ["derive"] }
 prettytable-rs = "0.10.0"
@@ -60,7 +60,7 @@ members = [
   "crates/worker",
   "kits/rust",
   "kits/rust/worker",
-  "kits/javascript"
+  "kits/javascript",
 ]
 # Exclude examples
 exclude = [
@@ -68,12 +68,12 @@ exclude = [
   "examples/rust-basic",
   "examples/rust-fetch",
   "examples/rust-kv",
-  "examples/rust-params"
+  "examples/rust-params",
+  "examples/rust-wasi-nn",
 ]
 
 [workspace.dependencies]
 actix-web = "4"
-anyhow = "1.0.66"
 lazy_static = "1.4.0"
 reqwest = "0.11"
 serde = { version = "1.0", features = ["derive"] }
@@ -93,6 +93,7 @@ wws-api-manage = { path = "./crates/api-manage" }
 wws-api-manage-openapi = { path = "./crates/api-manage-openapi" }
 wasmtime = "10.0.1"
 wasmtime-wasi = "10.0.1"
+wasmtime-wasi-nn = "10.0.1"
 wasi-common = "10.0.1"
 path-slash = "0.2.1"
 openssl = { version = "=0.10.55" }

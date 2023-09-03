@@ -7,7 +7,7 @@ use actix_web::{
     web::{Data, Json, Path},
     HttpResponse, Responder, Result,
 };
-use wws_router::Routes;
+use wws_router::{Routes, WORKERS};
 
 /// Return the list of loaded workers.
 #[utoipa::path(
@@ -34,11 +34,14 @@ pub async fn handle_api_workers(routes: Data<Routes>) -> Result<impl Responder> 
 )]
 #[get("/_api/v0/workers/{id}")]
 pub async fn handle_api_worker(routes: Data<Routes>, path: Path<String>) -> HttpResponse {
+    let workers = WORKERS
+        .read()
+        .expect("error locking worker lock for reading");
     let worker = routes
         .routes
         .iter()
-        .find(|r| &r.worker.id == path.as_ref())
-        .map(|r| &r.worker);
+        .find(|r| &r.worker == path.as_ref())
+        .map(|r| workers.get(&r.worker).expect("unexpected missing worker"));
 
     if let Some(worker) = worker {
         HttpResponse::Ok().json(WorkerConfig::from(worker))

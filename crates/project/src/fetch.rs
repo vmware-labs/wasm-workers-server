@@ -1,8 +1,8 @@
 // Copyright 2022 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::errors::Result;
 use crate::metadata::Checksum;
-use anyhow::Result;
 use reqwest::header::USER_AGENT;
 
 /// The current wws version
