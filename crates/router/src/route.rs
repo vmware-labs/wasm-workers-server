@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use route_type::{
     RouteType,
-    RouteType::{Dynamic, Satic, Tail},
+    RouteType::{Dynamic, Static, Tail},
 };
 use segment::Segment;
 use std::{
@@ -37,7 +37,7 @@ lazy_static! {
 /// api/index.wasm      =>  /api
 /// api/v2/ping.wasm    =>  /api/v2/ping
 /// ```
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Route {
     /// The wasm module that will manage the route
     pub handler: PathBuf,
@@ -160,7 +160,7 @@ impl Route {
         let path_number_of_segments = path.chars().filter(|&c| c == '/').count();
 
         match self.route_type {
-            Satic {
+            Static {
                 number_of_segments: _,
             } => self.path == path,
             Dynamic { number_of_segments } if number_of_segments != path_number_of_segments => {
@@ -196,7 +196,7 @@ impl Route {
     /// Check if the current route is dynamic
     pub fn is_dynamic(&self) -> bool {
         match self.route_type {
-            Satic { .. } => false,
+            Static { .. } => false,
             Dynamic { .. } => true,
             Tail { .. } => true,
         }
@@ -207,15 +207,15 @@ impl Ord for Route {
     fn cmp(&self, other: &Self) -> Ordering {
         match (&self.route_type, &other.route_type) {
             (
-                Satic {
+                Static {
                     number_of_segments: a,
                 },
-                Satic {
+                Static {
                     number_of_segments: b,
                 },
             ) => a.cmp(b),
-            (Satic { .. }, _) => Less,
-            (_, Satic { .. }) => Greater,
+            (Static { .. }, _) => Less,
+            (_, Static { .. }) => Greater,
             (
                 Dynamic {
                     number_of_segments: a,

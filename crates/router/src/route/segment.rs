@@ -3,7 +3,7 @@
 
 use std::cmp::Ordering;
 
-#[derive(PartialEq, Eq, PartialOrd, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Debug, Clone)]
 pub enum Segment {
     /// A static segment in the URL path.
     /// Static segments are fixed and don't contain any parameter.

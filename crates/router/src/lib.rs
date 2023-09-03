@@ -58,10 +58,6 @@ impl Routes {
         self.routes.iter()
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &Route> {
-        self.routes.iter()
-    }
-
     /// Provides the **first** route that can handle the given path.
     /// This only works because the routes are already sorted.
     /// Because a '/a/b' route may be served by:
@@ -71,7 +67,7 @@ impl Routes {
     /// - /[id]/[other].wasm
     /// - /[id]/[..all].wasm
     pub fn retrieve_best_route<'a>(&'a self, path: &str) -> Option<&'a Route> {
-        self.routes.iter().find(|r| r.can_manage(path))
+        self.iter().find(|r| r.can_manage(path))
     }
 
     /// Defines a prefix in the context of the application.
@@ -129,11 +125,7 @@ mod tests {
 
         sorted_router.routes.sort();
 
-        let router_paths: Vec<&String> = router.routes.iter().map(|r| &r.path).collect();
-        let sorted_router_paths: Vec<&String> =
-            sorted_router.routes.iter().map(|r| &r.path).collect();
-
-        assert_eq!(router_paths, sorted_router_paths);
+        assert_eq!(router.routes, sorted_router.routes);
     }
 
     #[test]

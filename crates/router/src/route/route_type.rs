@@ -3,12 +3,12 @@
 
 /// Represents the type of a route.
 ///
-/// - `Satic`: Represents a static route with a fixed number of segments.
+/// - `Static`: Represents a static route with a fixed number of segments.
 /// - `Dynamic`: Represents a dynamic route with a fixed number of segments.
 /// - `Tail`: Represents a tail route with a variable number of segments. It may also contain dynamic segments.
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 pub enum RouteType {
-    Satic { number_of_segments: usize },
+    Static { number_of_segments: usize },
     Dynamic { number_of_segments: usize },
     Tail { number_of_segments: usize },
 }
@@ -20,7 +20,7 @@ impl From<&String> for RouteType {
         } else if route_path.contains("/[") {
             RouteType::Dynamic { number_of_segments }
         } else {
-            RouteType::Satic { number_of_segments }
+            RouteType::Static { number_of_segments }
         }
     }
 }
@@ -36,7 +36,7 @@ mod tests {
 
         assert_eq!(
             route_type,
-            RouteType::Satic {
+            RouteType::Static {
                 number_of_segments: 1
             }
         );
@@ -76,7 +76,7 @@ mod tests {
         // Default to static if the format is not recognized
         assert_eq!(
             route_type,
-            RouteType::Satic {
+            RouteType::Static {
                 number_of_segments: 1
             }
         );
