@@ -102,6 +102,32 @@ mod tests {
     use super::*;
 
     #[test]
+    fn routes_sorted_on_creation() {
+        let project_config = Config::default();
+        let router = Routes::new(
+            Path::new("../../tests/data/params"),
+            "",
+            Vec::new(),
+            &project_config,
+        );
+
+        let mut sorted_router = Routes::new(
+            Path::new("../../tests/data/params"),
+            "",
+            Vec::new(),
+            &project_config,
+        );
+
+        sorted_router.routes.sort();
+
+        let router_paths: Vec<&String> = router.routes.iter().map(|r| &r.path).collect();
+        let sorted_router_paths: Vec<&String> =
+            sorted_router.routes.iter().map(|r| &r.path).collect();
+
+        assert_eq!(router_paths, sorted_router_paths);
+    }
+
+    #[test]
     fn retrieve_best_route() {
         let project_config = Config::default();
         let router = Routes::new(

@@ -191,6 +191,14 @@ impl Ord for Route {
                     number_of_segments: b,
                 },
             ) if a == b => self.segments.cmp(&other.segments),
+            (
+                Dynamic {
+                    number_of_segments: a,
+                },
+                Dynamic {
+                    number_of_segments: b,
+                },
+            ) => a.cmp(b),
             (Dynamic { .. }, _) => Less,
             (_, Dynamic { .. }) => Greater,
             (
