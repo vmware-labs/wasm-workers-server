@@ -3,7 +3,7 @@
 
 use std::cmp::Ordering;
 
-#[derive(PartialEq, Eq, PartialOrd, Debug, Clone)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 pub enum Segment {
     /// A static segment in the URL path.
     /// Static segments are fixed and don't contain any parameter.
@@ -32,6 +32,12 @@ impl Ord for Segment {
             (_, Segment::Dynamic(_)) => Ordering::Greater,
             (Segment::Tail(a), Segment::Tail(b)) => a.cmp(b),
         }
+    }
+}
+
+impl PartialOrd for Segment {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 
