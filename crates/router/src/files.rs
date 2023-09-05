@@ -22,8 +22,8 @@ pub struct Files<'t> {
 }
 
 impl<'t> Files<'t> {
-    const PUBLIC_ASSETS_FOLDER: &str = "public";
-    const DEFAULT_EXTENSIONS: [&str; 2] = ["js", "wasm"];
+    const PUBLIC_ASSETS_FOLDER: &'static str = "public";
+    const DEFAULT_EXTENSIONS: [&'static str; 2] = ["js", "wasm"];
 
     /// Initializes a new files instance. It will detect
     /// relevant resources for WWS like the public folder.
