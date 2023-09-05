@@ -44,3 +44,4 @@ Check these guides to perform HTTP requests in the different supported languages
 | Go | ✅ |
 | Ruby | ❌ |
 | Python | ❌ |
+| Zig | ❌ |

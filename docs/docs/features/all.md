@@ -36,3 +36,4 @@ The following table shows the language compatibility for the different worker fu
 | Go | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Ruby | ✅ | ✅ | ✅ | ✅ | ❌ |
 | Python | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Zig | ✅ | ❌ | ✅ | ✅ | ❌ |

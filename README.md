@@ -99,7 +99,7 @@ Wasm Workers Server focuses on simplicity. We want you to run workers (written i
 | Go | ✅ | No | [#95](https://github.com/vmware-labs/wasm-workers-server/issues/95) |
 | Ruby | ✅ | [Yes](https://workers.wasmlabs.dev/docs/languages/ruby#installation) | [#63](https://github.com/vmware-labs/wasm-workers-server/issues/63) |
 | Python | ✅ | [Yes](https://workers.wasmlabs.dev/docs/languages/python#installation) | [#63](https://github.com/vmware-labs/wasm-workers-server/issues/63) |
-| Zig | 🚧 | No | [#144](https://github.com/vmware-labs/wasm-workers-server/issues/144) |
+| Zig | ✅ | No | [#144](https://github.com/vmware-labs/wasm-workers-server/issues/144) |
 | PHP | 🚧 | No | [#100](https://github.com/vmware-labs/wasm-workers-server/issues/100) |
 
 To get more information about multi-language support in Wasm Workers Server, [check our documentation](https://workers.wasmlabs.dev/docs/languages/introduction).

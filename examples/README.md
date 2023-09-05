@@ -16,3 +16,4 @@ Every example includes a `README.md` file with all the instructions.
 * [Python documentation](https://workers.wasmlabs.dev/docs/languages/python)
 * [Ruby documentation](https://workers.wasmlabs.dev/docs/languages/ruby)
 * [Go documentation](https://workers.wasmlabs.dev/docs/languages/go)
+* [Zig documentation](https://workers.wasmlabs.dev/docs/languages/zig)
