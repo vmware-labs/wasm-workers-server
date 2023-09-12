@@ -29,11 +29,11 @@ You can develop workers in different languages. However, not all of them support
 
 The following table shows the language compatibility for the different worker functions:
 
-| Language | K/V Store | Environment Variables | Dynamic Routes | Folders | HTTP Requests |
-| --- | --- | --- | --- | --- | --- |
-| JavaScript | ✅ | ✅ | ✅ | ❌ | ✅ |
-| Rust | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Go | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Ruby | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Python | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Zig | ✅ | ❌ | ✅ | ✅ | ❌ |
+| Language   | K/V Store | Environment Variables | Dynamic Routes | Folders | HTTP Requests |
+|------------|-----------|-----------------------|----------------|---------|---------------|
+| JavaScript | ✅        | ✅                    | ✅             | ❌      | ✅            |
+| Rust       | ✅        | ✅                    | ✅             | ✅      | ✅            |
+| Go         | ✅        | ✅                    | ✅             | ✅      | ✅            |
+| Ruby       | ✅        | ✅                    | ✅             | ✅      | ❌            |
+| Python     | ✅        | ✅                    | ✅             | ✅      | ❌            |
+| Zig        | ✅        | ❌                    | ✅             | ✅      | ❌            |

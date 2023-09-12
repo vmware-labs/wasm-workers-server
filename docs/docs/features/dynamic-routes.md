@@ -56,13 +56,61 @@ $ tree .
 
 In this case, the `./[resource]/[id]/show.js` worker replies to URLs like `/articles/2/show`.
 
+## Catch-all routes
+
+Catch-all routes are route segments that can be matched with any path segment on the route. For example, you can use catch-all routes by having a directory structure like the following:
+
+```
+$ tree .
+.
+└── [...slug]
+    └── index.js
+```
+
+This means, that the JavaScript worker at `[...slug]/index.js` will serve any path beneath. You can mix and match specific routes with catch-all routes. For example, given the following directory structure:
+
+```
+$ tree .
+.
+├── about.js
+└── [...slug]
+    └── index.js
+```
+
+In this example, two workers are fulfilling HTTP requests:
+
+- `/about` is served by the `about.js` worker.
+- Anything else under `/` is served by the `[...slug]/index.js` worker.
+
+You can also place multiple catch-all routes as long as they are splitted by a non-catch-all segment. For example:
+
+```
+$ tree .
+.
+├── about.js
+├── other
+│   └── [...slug]
+│       └── index.js
+└── [...slug]
+    └── index.js
+```
+
+Here, we have the same structure as in the previous example, but we have two catch-all, under two different roots:
+
+- One catch-all, `[...slug]/index.js` is serving all requests, except for requests whose path starts with `/about` or `/other`.
+- Another catch-all, `other/[...slug]/index.js` serves all requests under the `/other` path.
+
+### Routing priority
+
+Given catch-all routes could potentially shadow other routes, it is important to settle precedence when routing requests. The rule of thumb is more specific routes win. This is, a route with no catch-all will always against a route with catch-all when they are at the same depth.
+
 ## Language compatibility
 
-| Language | Dynamic routes |
-| --- | --- |
-| JavaScript | ✅ |
-| Rust | ✅ |
-| Go | ✅ |
-| Ruby | ✅ |
-| Python | ✅ |
-| Zig | ✅ |
+| Language   | Dynamic routes |
+|------------|----------------|
+| JavaScript | ✅             |
+| Rust       | ✅             |
+| Go         | ✅             |
+| Ruby       | ✅             |
+| Python     | ✅             |
+| Zig        | ✅             |

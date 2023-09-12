@@ -37,11 +37,11 @@ Check these guides to perform HTTP requests in the different supported languages
 
 ## Language compatibility
 
-| Language | HTTP Requests |
-| --- | --- |
-| JavaScript | ✅ |
-| Rust | ✅ |
-| Go | ✅ |
-| Ruby | ❌ |
-| Python | ❌ |
-| Zig | ❌ |
+| Language   | HTTP Requests |
+|------------|---------------|
+| JavaScript | ✅            |
+| Rust       | ✅            |
+| Go         | ✅            |
+| Ruby       | ❌            |
+| Python     | ❌            |
+| Zig        | ❌            |
