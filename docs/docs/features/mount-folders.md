@@ -42,11 +42,11 @@ Note that those folders may include files that `wws` recognizes as workers (like
 
 ## Language compatibility
 
-| Language | Mount folders |
-| --- | --- |
-| JavaScript | ❌ |
-| Rust | ✅ |
-| Go | ✅ |
-| Ruby | ✅ |
-| Python | ✅ |
-| Zig | ✅ |
+| Language   | Mount folders |
+|------------|---------------|
+| JavaScript | ❌            |
+| Rust       | ✅            |
+| Go         | ✅            |
+| Ruby       | ✅            |
+| Python     | ✅            |
+| Zig        | ✅            |

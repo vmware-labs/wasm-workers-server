@@ -63,10 +63,10 @@ We recommend to check this example to get started with ML and Wasm Workers Serve
 
 ## Language compatibility
 
-| Language | Machine learning inference |
-| --- | --- |
-| JavaScript | ❌ |
-| Rust | ✅ |
-| Go | ❌ |
-| Ruby | ❌ |
-| Python | ❌ |
+| Language   | Machine learning inference |
+|------------|----------------------------|
+| JavaScript | ❌                         |
+| Rust       | ✅                         |
+| Go         | ❌                         |
+| Ruby       | ❌                         |
+| Python     | ❌                         |
