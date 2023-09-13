@@ -100,6 +100,8 @@ Here, we have the same structure as in the previous example, but we have two cat
 - One catch-all, `[...slug]/index.js` is serving all requests, except for requests whose path starts with `/about` or `/other`.
 - Another catch-all, `other/[...slug]/index.js` serves all requests under the `/other` path.
 
+**You can also define segments at at the trailing of the URL**, by having a worker in the filesystem of the form `/some/resource/[...slug].js`. This worker will serve requests at the path `/some/resource/<slug>`.
+
 ### Routing priority
 
 Given catch-all routes could potentially shadow other routes, it is important to settle precedence when routing requests. **The rule of thumb is more specific routes win**. For example, a route with no catch-all will always against a route with catch-all when they are at the same depth.
