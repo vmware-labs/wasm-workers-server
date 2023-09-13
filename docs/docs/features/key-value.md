@@ -29,11 +29,11 @@ A known limitation of the snapshot approach is the data override when concurrent
 
 ## Language compatibility
 
-| Language | K/V store |
-| --- | --- |
-| JavaScript | ✅ |
-| Rust | ✅ |
-| Go | ✅ |
-| Ruby | ✅ |
-| Python | ✅ |
-| Zig | ✅ |
+| Language   | K/V store |
+|------------|-----------|
+| JavaScript | ✅        |
+| Rust       | ✅        |
+| Go         | ✅        |
+| Ruby       | ✅        |
+| Python     | ✅        |
+| Zig        | ✅        |
