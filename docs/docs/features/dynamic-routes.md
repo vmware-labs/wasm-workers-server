@@ -102,7 +102,7 @@ Here, we have the same structure as in the previous example, but we have two cat
 
 ### Routing priority
 
-Given catch-all routes could potentially shadow other routes, it is important to settle precedence when routing requests. The rule of thumb is more specific routes win. This is, a route with no catch-all will always against a route with catch-all when they are at the same depth.
+Given catch-all routes could potentially shadow other routes, it is important to settle precedence when routing requests. **The rule of thumb is more specific routes win**. For example, a route with no catch-all will always against a route with catch-all when they are at the same depth.
 
 ## Language compatibility
 
