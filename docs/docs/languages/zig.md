@@ -342,4 +342,4 @@ The Zig kit was originally authored by Christoph Voigt ([@voigt](https://github.
 
 | [K/V Store](../features/key-value.md) | [Environment Variables](../features/environment-variables.md) | [Dynamic Routes](../features/dynamic-routes.md) | [Folders](../features/mount-folders.md) | [HTTP Requests](../features/http-requests.md) |
 | --- | --- | --- | --- | --- |
-|  ✅ | ❌ | ✅ | ❓ | ❌ |
+|  ✅ | ❌ | ✅ | ✅ | ❌ |

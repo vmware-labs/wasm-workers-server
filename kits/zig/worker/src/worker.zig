@@ -18,11 +18,18 @@ pub const Request = struct {
 
 pub const Response = struct {
     body: []const u8,
+    base64: bool,
     headers: http.Headers,
     request: Request,
 
     pub fn writeAll(res: *Response, data: []const u8) !u32 {
         res.body = data;
+        return res.body.len;
+    }
+
+    pub fn writeAllBase64(res: *Response, data: []const u8) !u32 {
+        res.body = base64Encode(data);
+        res.base64 = true;
         return res.body.len;
     }
 };
@@ -60,7 +67,7 @@ pub const Output = struct {
             .httpHeader = http.Headers.init(allocator),
         };
     }
-    
+
     pub fn header(self: *Self) http.Headers {
         if (self.httpHeader == undefined) {
             self.httpHeader = http.Headers.init(allocator);
@@ -73,12 +80,12 @@ pub const Output = struct {
         self.status = statusCode;
     }
 
-    pub fn write(self: *Self, data: []const u8) !u32 {
-        if (std.unicode.utf8ValidateSlice(data)) {
-            self.data = data;
+     pub fn write(self: *Self, response: Response) !u32 {
+        self.base64 = response.base64;
+        if (response.base64) {
+            self.data = base64Encode(response.body);
         } else {
-            self.base64 = true;
-            self.data = base64Encode(data);
+            self.data = response.body;
         }
 
         if (self.status == 0) {
@@ -90,7 +97,7 @@ pub const Output = struct {
         }
 
         // prepare writer for json
-        var out_buf: [1024]u8 = undefined;
+        var out_buf: [4096]u8 = undefined;
         var slice_stream = std.io.fixedBufferStream(&out_buf);
         const out = slice_stream.writer();
         var w = std.json.writeStream(out, .{ .whitespace = .minified });
@@ -116,8 +123,6 @@ pub const Output = struct {
         try w.endObject();
         const result = slice_stream.getWritten();
 
-        // std.debug.print("\noutput json: {s}\n\n", .{ result });
-
         const stdout = std.io.getStdOut().writer();
         try stdout.print("{s}", .{ result });
 
@@ -129,7 +134,7 @@ fn base64Encode(data: []const u8) []const u8 {
     // This initializing Base64Encoder throws weird error if not wrapped in function (maybe Zig bug?)
     var enc = std.base64.Base64Encoder.init(std.base64.standard_alphabet_chars, '=');
     var data_len = enc.calcSize(data.len);
-    var buf: [128]u8 = undefined;
+    var buf: [16384]u8 = undefined;
     return enc.encode(buf[0..data_len], data);
 }
 
@@ -192,7 +197,7 @@ fn getInput(s: []const u8) !Input {
     while (paramsIterator.next()) |entry| {
         try params.put(entry.key_ptr.*, entry.value_ptr.*.string);
     }
-    
+
     return input;
 }
 
@@ -249,13 +254,13 @@ pub fn ServeFunc(requestFn: *const fn (*Response, *Request) void) void {
     var request = r.request;
     var output = r.output;
 
-    var response = Response{ .body = "", .headers = http.Headers.init(allocator), .request = request, };
-    
+    var response = Response{ .body = "", .base64 = false, .headers = http.Headers.init(allocator), .request = request, };
+
     requestFn(&response, &request);
 
     output.httpHeader = response.headers;
 
-    _ = output.write(response.body) catch |err| {
+    _ = output.write(response) catch |err| {
         std.debug.print("error writing data: {!} \n", .{ err });
     };
 }
