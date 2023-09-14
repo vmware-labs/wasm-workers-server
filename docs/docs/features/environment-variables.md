@@ -50,4 +50,4 @@ This feature allows you to configure environment variables dynamically.
 | Go         | ✅                    |
 | Ruby       | ✅                    |
 | Python     | ✅                    |
-| Zig        | ❌                    |
+| Zig        | ✅                    |

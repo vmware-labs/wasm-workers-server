@@ -32,19 +32,19 @@ In this example, the worker will get a request and print all the related informa
     ```c title="worker.zig"
     const std = @import("std");
     const worker = @import("worker");
-    
+
     fn requestFn(resp: *worker.Response, r: *worker.Request) void {
         _ = r;
-    
+
         _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
         _ = &resp.writeAll("hello from zig");
     }
-    
+
     pub fn main() !void {
         worker.ServeFunc(requestFn);
     }
     ```
-    
+
 4. Additionally, you can now go further add all the information from the received `worker.Request`:
 
     ```c title="worker.zig"
@@ -100,7 +100,7 @@ In this example, the worker will get a request and print all the related informa
             \\</body>
         ;
 
-        var body = std.fmt.allocPrint(allocator, s, .{ r.url.path, r.method, "-", payload }) catch undefined; 
+        var body = std.fmt.allocPrint(allocator, s, .{ r.url.path, r.method, "-", payload }) catch undefined;
 
         _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
         _ = &resp.writeAll(body);
@@ -121,7 +121,7 @@ In this example, the worker will get a request and print all the related informa
         --mod worker::lib/worker.zig \
         --deps worker
     ```
-    
+
     You can also use a build script to build the project with a simple `zig build`, please find some inspiration in our [zig examples](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/).
 
 6. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
@@ -220,7 +220,7 @@ To add a KV store to your worker, follow these steps:
         --mod worker::lib/worker.zig \
         --deps worker
     ```
-    
+
     You can also use a build script to build the project with a simple `zig build`, please find some inspiration in our [zig examples](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/).
 
 1. Create a `worker-kv.toml` file with the following content. Note the name of the TOML file must match the name of the worker. In this case we have `worker-kv.wasm` and `worker-kv.toml` in the same folder:
@@ -258,10 +258,10 @@ You can define [dynamic routes by adding route parameters to your worker files](
     ```c title="main.zig"
     const std = @import("std");
     const worker = @import("worker");
-    
+
     fn requestFn(resp: *worker.Response, r: *worker.Request) void {
         var params = r.context.params;
-    
+
         ...
     }
     ```
@@ -271,31 +271,31 @@ You can define [dynamic routes by adding route parameters to your worker files](
     ```c title="main.zig"
     const std = @import("std");
     const worker = @import("worker");
-    
+
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     const allocator = arena.allocator();
-    
+
     fn requestFn(resp: *worker.Response, r: *worker.Request) void {
         var params = r.context.params;
-    
+
         var id: []const u8 = "the value is not available";
-    
+
         var v = params.get("id");
-    
+
         if (v) |val| {
             id = val;
         }
-    
+
         const s =
             \\Hey! The parameter is: {s}
         ;
-    
+
         var body = std.fmt.allocPrint(allocator, s, .{ id }) catch undefined; // add useragent
-    
+
         _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
         _ = &resp.writeAll(body);
     }
-    
+
     pub fn main() !void {
         worker.ServeFunc(requestFn);
     }
@@ -318,7 +318,7 @@ You can define [dynamic routes by adding route parameters to your worker files](
 
     ```shell-session
     wws .
-    
+
     ⚙️ Loading routes from: .
     🗺 Detected routes:
     - http://127.0.0.1:8080/[id]
@@ -342,4 +342,4 @@ The Zig kit was originally authored by Christoph Voigt ([@voigt](https://github.
 
 | [K/V Store](../features/key-value.md) | [Environment Variables](../features/environment-variables.md) | [Dynamic Routes](../features/dynamic-routes.md) | [Folders](../features/mount-folders.md) | [HTTP Requests](../features/http-requests.md) |
 | --- | --- | --- | --- | --- |
-|  ✅ | ❌ | ✅ | ✅ | ❌ |
+|  ✅ | ✅ | ✅ | ✅ | ❌ |
