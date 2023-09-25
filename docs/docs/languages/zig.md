@@ -328,6 +328,50 @@ You can define [dynamic routes by adding route parameters to your worker files](
 
 5. Finally, open <http://127.0.0.1:8080/hello> in your browser.
 
+## Read environment variables
+
+Environment variables are configured [via the related TOML configuration file](../features/environment-variables.md). These variables are accessible via `std.process.getEnvMap` or `std.process.getEnvVarOwned` in your worker. To read them, just use the same name you configured in your TOML file:
+
+```toml title="envs.toml"
+name = "envs"
+version = "1"
+
+[vars]
+MESSAGE = "Hello 👋! This message comes from an environment variable"
+```
+
+Now, you can read the `MESSAGE` variable using either the `std.process.getEnvMap` or the `std.process.getEnvVarOwned` functions:
+
+```c title="envs.zig"
+const std = @import("std");
+const worker = @import("worker");
+
+var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+const allocator = arena.allocator();
+
+fn requestFn(resp: *worker.Response, r: *worker.Request) void {
+    _ = r;
+
+    const envvar = std.process.getEnvVarOwned(allocator, "MESSAGE") catch "";
+    defer allocator.free(envvar);
+
+    const s =
+        \\The environment variable value is: {s}
+    ;
+
+    var body = std.fmt.allocPrint(allocator, s, .{ envvar }) catch undefined; // add useragent
+
+    _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
+    _ = &resp.writeAll(body);
+}
+
+pub fn main() !void {
+    worker.ServeFunc(requestFn);
+}
+```
+
+If you prefer, you can configure the environment variable value dynamically by following [these instructions](../features/environment-variables.md#inject-existing-environment-variables).
+
 ## Other examples
 
 Find other examples in the [`/examples` directory](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/) of wasm-workers-server repository.
