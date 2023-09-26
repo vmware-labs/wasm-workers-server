@@ -24,7 +24,10 @@ impl Stdio {
         }
     }
 
-    pub fn configure_wasi_ctx(&self, builder: WasiCtxBuilder) -> WasiCtxBuilder {
+    pub fn configure_wasi_ctx<'a>(
+        &self,
+        builder: &'a mut WasiCtxBuilder,
+    ) -> &'a mut WasiCtxBuilder {
         builder
             .stdin(Box::new(self.stdin.clone()))
             .stdout(Box::new(self.stdout.clone()))
