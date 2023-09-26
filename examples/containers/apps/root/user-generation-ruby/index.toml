@@ -1,0 +1,6 @@
+name = "user-generation-ruby"
+version = "1"
+
+[[folders]]
+from = "./tmp"
+to = "/tmp"

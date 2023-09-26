@@ -1,0 +1,14 @@
+name = "user-generation-go"
+version = "1"
+
+[data]
+[data.kv]
+namespace = "generated_users_counter"
+
+[[folders]]
+from = "./tmp"
+to = "/tmp"
+
+[features]
+[features.http_requests]
+allowed_hosts = ["random-data-api.com"]

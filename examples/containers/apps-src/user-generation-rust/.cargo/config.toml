@@ -1,0 +1,3 @@
+[build]
+target = "wasm32-wasi"
+rustflags = ["-Cstrip=symbols", "-Copt-level=z", "-Cpanic=abort", "-Cdebuginfo=none"]
