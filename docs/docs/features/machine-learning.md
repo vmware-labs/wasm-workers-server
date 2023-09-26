@@ -2,9 +2,9 @@
 title: Machine Learning inference
 ---
 
-:::caution
+:::info
 
-This is a feature preview. It will be available in v1.5.0
+[Available since v1.5](https://github.com/vmware-labs/wasm-workers-server/releases/tag/v1.5.0)
 
 :::
 
