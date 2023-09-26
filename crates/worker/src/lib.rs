@@ -111,13 +111,14 @@ impl Worker {
             vars.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
 
         // Create the initial WASI context
-        let mut wasi_builder = WasiCtxBuilder::new()
+        let mut wasi_builder = WasiCtxBuilder::new();
+        wasi_builder
             .envs(&tuple_vars)
             .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
 
         // Configure the stdio
         let stdio = Stdio::new(&input);
-        wasi_builder = stdio.configure_wasi_ctx(wasi_builder);
+        stdio.configure_wasi_ctx(&mut wasi_builder);
 
         // Mount folders from the configuration
         if let Some(folders) = self.config.folders.as_ref() {
@@ -125,7 +126,7 @@ impl Worker {
                 if let Some(base) = &self.path.parent() {
                     let dir = Dir::open_ambient_dir(base.join(&folder.from), ambient_authority())
                         .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
-                    wasi_builder = wasi_builder
+                    wasi_builder
                         .preopened_dir(dir, &folder.to)
                         .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
                 } else {
@@ -145,7 +146,7 @@ impl Worker {
                 eprintln!("❌ The only WASI-NN supported backend name is \"{WASI_NN_BACKEND_OPENVINO}\". Please, update your config.");
                 None
             } else {
-                wasmtime_wasi_nn::add_to_linker(&mut linker, |s: &mut WorkerState| {
+                wasmtime_wasi_nn::witx::add_to_linker(&mut linker, |s: &mut WorkerState| {
                     Arc::get_mut(s.wasi_nn.as_mut().unwrap())
                         .expect("wasi-nn is not implemented with multi-threading support")
                 })
@@ -155,18 +156,20 @@ impl Worker {
                     )
                 })?;
 
-                Some(Arc::new(WasiNnCtx::new().map_err(|_| {
+                let (backends, registry) = wasmtime_wasi_nn::preload(&[]).map_err(|_| {
                     errors::WorkerError::RuntimeError(
                         wws_runtimes::errors::RuntimeError::WasiContextError,
                     )
-                })?))
+                })?;
+
+                Some(Arc::new(WasiNnCtx::new(backends, registry)))
             }
         } else {
             None
         };
 
         // Pass to the runtime to add any WASI specific requirement
-        wasi_builder = self.runtime.prepare_wasi_ctx(wasi_builder)?;
+        self.runtime.prepare_wasi_ctx(&mut wasi_builder)?;
 
         let wasi = wasi_builder.build();
         let state = WorkerState {

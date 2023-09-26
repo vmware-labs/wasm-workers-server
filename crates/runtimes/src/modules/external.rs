@@ -90,13 +90,16 @@ impl Runtime for ExternalRuntime {
 
     /// Mount the source code in the WASI context so it can be
     /// processed by the engine
-    fn prepare_wasi_ctx(&self, builder: WasiCtxBuilder) -> Result<WasiCtxBuilder> {
-        let dir = Dir::open_ambient_dir(&self.store.folder, ambient_authority())?;
-
+    fn prepare_wasi_ctx(&self, builder: &mut WasiCtxBuilder) -> Result<()> {
         builder
-            .preopened_dir(dir, "/src")?
+            .preopened_dir(
+                Dir::open_ambient_dir(&self.store.folder, ambient_authority())?,
+                "/src",
+            )?
             .args(&self.metadata.args)
-            .map_err(|_| errors::RuntimeError::WasiContextError)
+            .map_err(|_| errors::RuntimeError::WasiContextError)?;
+
+        Ok(())
     }
 
     /// Returns a reference to the Wasm module that should

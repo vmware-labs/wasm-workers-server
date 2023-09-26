@@ -21,8 +21,8 @@ pub trait Runtime {
     /// WASI context builder. This allow runtimes to mount
     /// specific lib folders, source code and adding
     /// environment variables.
-    fn prepare_wasi_ctx(&self, builder: WasiCtxBuilder) -> Result<WasiCtxBuilder> {
-        Ok(builder)
+    fn prepare_wasi_ctx(&self, _builder: &mut WasiCtxBuilder) -> Result<()> {
+        Ok(())
     }
 
     /// Returns a reference raw bytes of the Wasm module that should
