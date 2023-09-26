@@ -1,0 +1,84 @@
+body {
+  max-width: 1000px;
+}
+
+main {
+  margin: 5rem 0;
+}
+
+h1,
+p {
+  text-align: center;
+}
+
+h1 {
+  margin-bottom: 2rem;
+}
+
+pre {
+  font-size: .9rem;
+}
+
+pre>code {
+  padding: 2rem;
+}
+
+p {
+  margin-top: 2rem;
+}
+
+input {
+  margin: 0 auto;
+  width: auto;
+}
+
+.image {
+  width: 500px;
+  height: 224px;
+  border-radius: 5px;
+  background-color: #151f27;
+  margin: 2rem auto 1rem;
+  text-align: center;
+}
+
+#image {
+  display: inline-block;
+  height: calc(224px - 2rem);
+  border-radius: 5px;
+  margin: 1rem;
+  width: auto;
+}
+
+.results {
+  margin: 2rem auto;
+  width: 500px;
+}
+
+.result {
+  margin-top: 1.25rem;
+}
+
+.result_progress {
+  --progress: 0%;
+  position: relative;
+  height: 5px;
+  border-radius: 5px;
+  width: 100%;
+  background-color: #151f27;
+}
+
+.result_progress::after {
+  background-color: blueviolet;
+  content: "";
+  border-radius: 5px;
+  height: 5px;
+  width: var(--progress);
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.result_label {
+  margin-top: .5rem;
+  font-style: italic;
+}
