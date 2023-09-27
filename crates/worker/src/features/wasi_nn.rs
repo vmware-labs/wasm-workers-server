@@ -38,12 +38,19 @@ impl Display for WasiNnBackend {
 }
 
 /// Available providers to load Wasi NN models.
-#[derive(Deserialize, Clone, Default)]
-#[serde(rename_all = "lowercase")]
+#[derive(Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase", tag = "type")]
 pub enum WasiNnModelProvider {
     /// Load it from the local filesystem
-    #[default]
-    Local,
+    Local { dir: PathBuf },
+}
+
+impl Default for WasiNnModelProvider {
+    fn default() -> Self {
+        Self::Local {
+            dir: PathBuf::from("./"),
+        }
+    }
 }
 
 #[derive(Deserialize, Clone, Default)]
@@ -53,21 +60,19 @@ pub struct WasiNnModel {
     provider: WasiNnModelProvider,
     /// Backend to run this specific model
     backend: WasiNnBackend,
-    /// For a local provider, it will retrieve the data from a local path.
-    dir: PathBuf,
 }
 
 impl WasiNnModel {
     /// Provide the graph configuration from the current model. Depending on the
     /// provider, it may need to perform other tasks before running it.
     pub fn build_graph_data(&self, worker_path: &Path) -> (String, String) {
-        match self.provider {
-            WasiNnModelProvider::Local => {
-                let data = if self.dir.is_relative() {
+        match &self.provider {
+            WasiNnModelProvider::Local { dir } => {
+                let data = if dir.is_relative() {
                     worker_path.parent().map(|parent| {
                         (
                             self.backend.clone().to_string(),
-                            parent.join(&self.dir).to_string_lossy().to_string(),
+                            parent.join(dir).to_string_lossy().to_string(),
                         )
                     })
                 } else {
@@ -78,7 +83,7 @@ impl WasiNnModel {
                     // Absolute path or best effort if it cannot retrieve the parent path
                     (
                         self.backend.clone().to_string(),
-                        self.dir.to_string_lossy().to_string(),
+                        dir.to_string_lossy().to_string(),
                     )
                 })
             }

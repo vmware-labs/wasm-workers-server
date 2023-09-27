@@ -6,8 +6,7 @@ MODEL = "model"
 
 [[features.wasi_nn.preload_models]]
 backend = "openvino"
-provider = "local"
-dir = "./_models/mobilenet/"
+provider = { type = "local", dir = "./_models/mobilenet/" }
 
 [[folders]]
 from = "./_data"
