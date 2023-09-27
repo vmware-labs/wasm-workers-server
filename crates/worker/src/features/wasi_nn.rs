@@ -4,6 +4,8 @@
 use serde::Deserialize;
 use std::fmt::Display;
 use std::path::{Path, PathBuf};
+use wasmtime_wasi_nn::backend::openvino::OpenvinoBackend;
+use wasmtime_wasi_nn::Backend;
 
 /// Available Machine Learning backends
 #[derive(Deserialize, Clone, Default)]
@@ -14,6 +16,16 @@ pub enum WasiNnBackend {
     None,
     /// OpenVINO backend
     Openvino,
+}
+
+impl WasiNnBackend {
+    /// Convert the given enum variant into a WASI-NN backend.
+    pub fn to_backend(&self) -> Option<Backend> {
+        match self {
+            Self::None => None,
+            Self::Openvino => Some(Backend::from(OpenvinoBackend::default())),
+        }
+    }
 }
 
 impl Display for WasiNnBackend {
@@ -51,29 +63,24 @@ impl WasiNnModel {
     pub fn build_graph_data(&self, worker_path: &Path) -> (String, String) {
         match self.provider {
             WasiNnModelProvider::Local => {
-                if self.dir.is_absolute() {
-                    // Absolute path
-                    (
-                        self.backend.clone().to_string(),
-                        self.dir.to_string_lossy().to_string(),
-                    )
-                } else {
-                    // Relative path
-                    let parent = worker_path.parent();
-
-                    if let Some(parent) = parent {
+                let data = if self.dir.is_relative() {
+                    worker_path.parent().map(|parent| {
                         (
                             self.backend.clone().to_string(),
                             parent.join(&self.dir).to_string_lossy().to_string(),
                         )
-                    } else {
-                        // Best effort
-                        (
-                            self.backend.clone().to_string(),
-                            self.dir.to_string_lossy().to_string(),
-                        )
-                    }
-                }
+                    })
+                } else {
+                    None
+                };
+
+                data.unwrap_or_else(|| {
+                    // Absolute path or best effort if it cannot retrieve the parent path
+                    (
+                        self.backend.clone().to_string(),
+                        self.dir.to_string_lossy().to_string(),
+                    )
+                })
             }
         }
     }
@@ -82,7 +89,7 @@ impl WasiNnModel {
 #[derive(Deserialize, Clone, Default)]
 #[serde(default)]
 pub struct WasiNnConfig {
-    /// List of Machine Learning backends. For now, only "Openvino" option is supported
+    /// List of Machine Learning backends. For now, only "openvino" option is supported
     pub allowed_backends: Vec<WasiNnBackend>,
     /// List of preloaded models. It allows you to get the models from different strategies.
     pub preload_models: Vec<WasiNnModel>,

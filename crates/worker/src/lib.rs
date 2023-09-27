@@ -1,4 +1,4 @@
-// Copyright 2022 VMware, Inc.
+// Copyright 2022-2023 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 mod bindings;
@@ -22,7 +22,7 @@ use stdio::Stdio;
 use wasi_common::WasiCtx;
 use wasmtime::{Engine, Linker, Module, Store};
 use wasmtime_wasi::{ambient_authority, Dir, WasiCtxBuilder};
-use wasmtime_wasi_nn::WasiNnCtx;
+use wasmtime_wasi_nn::{InMemoryRegistry, Registry, WasiNnCtx};
 use wws_config::Config as ProjectConfig;
 use wws_runtimes::{init_runtime, Runtime};
 
@@ -139,6 +139,7 @@ impl Worker {
         let preload_models = &self.config.features.wasi_nn.preload_models;
 
         let wasi_nn = if !preload_models.is_empty() {
+            // Preload the models on the host.
             let graphs = preload_models
                 .iter()
                 .map(|m| m.build_graph_data(&self.path))
@@ -151,11 +152,15 @@ impl Worker {
 
             Some(Arc::new(WasiNnCtx::new(backends, registry)))
         } else if !allowed_backends.is_empty() {
-            let (backends, registry) = wasmtime_wasi_nn::preload(&[]).map_err(|_| {
-                errors::WorkerError::RuntimeError(
-                    wws_runtimes::errors::RuntimeError::WasiContextError,
-                )
-            })?;
+            let registry = Registry::from(InMemoryRegistry::new());
+            let mut backends = Vec::new();
+
+            // Load the given backends:
+            for b in allowed_backends.iter() {
+                if let Some(backend) = b.to_backend() {
+                    backends.push(backend);
+                }
+            }
 
             Some(Arc::new(WasiNnCtx::new(backends, registry)))
         } else {

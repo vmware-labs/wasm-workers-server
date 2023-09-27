@@ -4,8 +4,6 @@ version = "1"
 [vars]
 MODEL = "model"
 
-# [features]
-# [features.wasi_nn]
 [[features.wasi_nn.preload_models]]
 backend = "openvino"
 provider = "local"
