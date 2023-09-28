@@ -19,9 +19,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::{collections::HashMap, path::Path};
 use stdio::Stdio;
-use wasi_common::WasiCtx;
 use wasmtime::{component::Component, Engine, Linker, Module, Store};
-use wasmtime_wasi::{ambient_authority, Dir, WasiCtxBuilder};
+use wasmtime_wasi::{ambient_authority, preview2, Dir, WasiCtxBuilder};
 use wasmtime_wasi_nn::{InMemoryRegistry, Registry, WasiNnCtx};
 use wws_config::Config as ProjectConfig;
 use wws_runtimes::{init_runtime, Runtime};
@@ -49,10 +48,52 @@ pub struct Worker {
     path: PathBuf,
 }
 
-struct WorkerState {
-    pub wasi: WasiCtx,
+struct Host {
+    pub wasi_preview1_ctx: Option<wasmtime_wasi::WasiCtx>,
+    pub wasi_preview2_ctx: Option<Arc<preview2::WasiCtx>>,
+
+    // Resource table for preview2 if the `preview2_ctx` is in use, otherwise
+    // "just" an empty table.
+    wasi_preview2_table: Arc<preview2::Table>,
+
+    // State necessary for the preview1 implementation of WASI backed by the
+    // preview2 host implementation. Only used with the `--preview2` flag right
+    // now when running core modules.
+    wasi_preview2_adapter: Arc<preview2::preview1::WasiPreview1Adapter>,
+
     pub wasi_nn: Option<Arc<WasiNnCtx>>,
     pub http: HttpBindings,
+}
+
+impl preview2::WasiView for Host {
+    fn table(&self) -> &preview2::Table {
+        &self.wasi_preview2_table
+    }
+
+    fn table_mut(&mut self) -> &mut preview2::Table {
+        Arc::get_mut(&mut self.wasi_preview2_table)
+            .expect("preview2 is not compatible with threads")
+    }
+
+    fn ctx(&self) -> &preview2::WasiCtx {
+        self.wasi_preview2_ctx.as_ref().unwrap()
+    }
+
+    fn ctx_mut(&mut self) -> &mut preview2::WasiCtx {
+        let ctx = self.wasi_preview2_ctx.as_mut().unwrap();
+        Arc::get_mut(ctx).expect("preview2 is not compatible with threads")
+    }
+}
+
+impl preview2::preview1::WasiPreview1View for Host {
+    fn adapter(&self) -> &preview2::preview1::WasiPreview1Adapter {
+        &self.wasi_preview2_adapter
+    }
+
+    fn adapter_mut(&mut self) -> &mut preview2::preview1::WasiPreview1Adapter {
+        Arc::get_mut(&mut self.wasi_preview2_adapter)
+            .expect("preview2 is not compatible with threads")
+    }
 }
 
 impl Worker {
@@ -110,16 +151,15 @@ impl Worker {
 
         let mut linker = Linker::new(&self.engine);
 
-        http_add_to_linker(&mut linker, |s: &mut WorkerState| &mut s.http).map_err(|error| {
+        http_add_to_linker(&mut linker, |host: &mut Host| &mut host.http).map_err(|error| {
             errors::WorkerError::ConfigureRuntimeError {
                 error: format!("error adding HTTP bindings to linker ({error})"),
             }
         })?;
-        wasmtime_wasi::add_to_linker(&mut linker, |s: &mut WorkerState| &mut s.wasi).map_err(
-            |error| errors::WorkerError::ConfigureRuntimeError {
+        wasmtime_wasi::add_to_linker(&mut linker, |host| host.wasi_preview1_ctx.as_mut().unwrap())
+            .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
                 error: format!("error adding WASI to linker ({error})"),
-            },
-        )?;
+            })?;
 
         // I have to use `String` as it's required by WasiCtxBuilder
         let tuple_vars: Vec<(String, String)> =
@@ -191,8 +231,8 @@ impl Worker {
 
         // Load the Wasi NN linker
         if wasi_nn.is_some() {
-            wasmtime_wasi_nn::witx::add_to_linker(&mut linker, |s: &mut WorkerState| {
-                Arc::get_mut(s.wasi_nn.as_mut().unwrap())
+            wasmtime_wasi_nn::witx::add_to_linker(&mut linker, |host: &mut Host| {
+                Arc::get_mut(host.wasi_nn.as_mut().unwrap())
                     .expect("wasi-nn is not implemented with multi-threading support")
             })
             .map_err(|_| {
@@ -206,21 +246,24 @@ impl Worker {
         self.runtime.prepare_wasi_ctx(&mut wasi_builder)?;
 
         let wasi = wasi_builder.build();
-        let state = WorkerState {
-            wasi,
+        let host = Host {
+            wasi_preview1_ctx: Some(wasi),
+            wasi_preview2_ctx: None,
+            wasi_preview2_table: Arc::new(preview2::Table::default()),
+            wasi_preview2_adapter: Arc::new(preview2::preview1::WasiPreview1Adapter::default()),
             wasi_nn,
             http: HttpBindings {
                 http_config: self.config.features.http_requests.clone(),
             },
         };
-        let mut store = Store::new(&self.engine, state);
+        let mut store = Store::new(&self.engine, host);
 
         let module = match &self.module_or_component {
             ModuleOrComponent::Module(module) => module,
             ModuleOrComponent::Component(_) => unimplemented!(),
         };
 
-        linker.module(&mut store, "", &module).map_err(|error| {
+        linker.module(&mut store, "", module).map_err(|error| {
             errors::WorkerError::ConfigureRuntimeError {
                 error: format!("error retrieving module from linker: {error}"),
             }
