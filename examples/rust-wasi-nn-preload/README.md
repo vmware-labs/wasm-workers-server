@@ -39,7 +39,7 @@ Compile a Rust that performs Machine Learning (ML) inference with [WASI-NN](http
 
 ```shell-session
 cargo build --target wasm32-wasi --release && \
-	cp target/wasm32-wasi/release/rust-wasi-nn.wasm ./inference.wasm
+	cp target/wasm32-wasi/release/rust-wasi-nn-preload.wasm ./inference.wasm
 ```
 
 ## Run

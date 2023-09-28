@@ -1,8 +1,5 @@
-name = "wasi-nn-mobilenet"
+name = "wasi-nn-mobilenet-preload"
 version = "1"
-
-[vars]
-MODEL = "model"
 
 [[features.wasi_nn.preload_models]]
 backend = "openvino"
