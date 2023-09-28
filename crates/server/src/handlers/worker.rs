@@ -81,7 +81,7 @@ pub async fn handle_worker(req: HttpRequest, body: Bytes) -> HttpResponse {
 
         let (handler_result, handler_success) = match worker.run(&req, &body_str, store, vars) {
             Ok(output) => (output, true),
-            Err(_) => (WasmOutput::failed(), false),
+            Err(err) => (WasmOutput::failed(err), false),
         };
 
         let mut builder = HttpResponse::build(
@@ -122,7 +122,57 @@ pub async fn handle_worker(req: HttpRequest, body: Bytes) -> HttpResponse {
             }
         }
     } else {
-        result = handle_not_found(&req).await;
+        None
+    };
+
+    if worker.is_none() {
+        return handle_not_found(&req).await;
+    };
+    let worker = worker.unwrap();
+
+    let body_str = String::from_utf8(body.to_vec()).unwrap_or_else(|_| String::from(""));
+
+    // Init from configuration
+    let vars = &worker.config.vars;
+    let kv_namespace = worker.config.data_kv_namespace();
+
+    let store = match &kv_namespace {
+        Some(namespace) => {
+            let connector = data_connectors
+                .read()
+                .expect("error locking data connectors lock for reading");
+            let kv_store = connector.kv.find_store(namespace);
+
+            kv_store.map(|store| store.clone())
+        }
+        None => None,
+    };
+
+    let (handler_result, handler_success) = match worker.run(&req, &body_str, store, vars).await {
+        Ok(output) => (output, true),
+        Err(err) => (
+            WasmOutput::failed(
+                err,
+                worker.config.name.clone(),
+                selected_route.map(|route| route.path.clone()),
+            ),
+            false,
+        ),
+    };
+
+    let mut builder =
+        HttpResponse::build(StatusCode::from_u16(handler_result.status).unwrap_or(StatusCode::OK));
+    // Default content type
+    builder.insert_header(("Content-Type", "text/html"));
+
+    // Check if cors config has any origins to register
+    if let Some(origins) = app_data.cors_origins.as_ref() {
+        // Check if worker has overridden the header, if not
+        if !handler_result.headers.contains_key(CORS_HEADER) {
+            // insert those origins in 'Access-Control-Allow-Origin' header
+            let header_value = origins.join(",");
+            builder.insert_header((CORS_HEADER, header_value));
+        }
     }
 
     result
