@@ -19,11 +19,14 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::{collections::HashMap, path::Path};
 use stdio::Stdio;
-use wasmtime::{component::Component, Engine, Linker, Module, Store};
+use wasmtime::{
+    component::{self, Component},
+    Config as WasmtimeConfig, Engine, Linker, Module, Store,
+};
 use wasmtime_wasi::{ambient_authority, preview2, Dir, WasiCtxBuilder};
 use wasmtime_wasi_nn::{InMemoryRegistry, Registry, WasiNnCtx};
 use wws_config::Config as ProjectConfig;
-use wws_runtimes::{init_runtime, Runtime};
+use wws_runtimes::{init_runtime, CtxBuilder, Runtime};
 
 pub enum ModuleOrComponent {
     Module(Module),
@@ -38,16 +41,17 @@ pub struct Worker {
     pub id: String,
     /// Wasmtime engine to run this worker
     engine: Engine,
-    /// Wasm Module or component
-    module_or_component: ModuleOrComponent,
     /// Worker runtime
     runtime: Box<dyn Runtime + Sync + Send>,
+    /// Wasm Module or component
+    module_or_component: ModuleOrComponent,
     /// Current config
     pub config: Config,
     /// The worker filepath
     path: PathBuf,
 }
 
+#[derive(Default)]
 struct Host {
     pub wasi_preview1_ctx: Option<wasmtime_wasi::WasiCtx>,
     pub wasi_preview2_ctx: Option<Arc<preview2::WasiCtx>>,
@@ -62,7 +66,7 @@ struct Host {
     wasi_preview2_adapter: Arc<preview2::preview1::WasiPreview1Adapter>,
 
     pub wasi_nn: Option<Arc<WasiNnCtx>>,
-    pub http: HttpBindings,
+    pub http: Option<HttpBindings>,
 }
 
 impl preview2::WasiView for Host {
@@ -116,7 +120,14 @@ impl Worker {
             }
         }
 
-        let engine = Engine::default();
+        let engine = Engine::new(
+            WasmtimeConfig::default()
+                .async_support(true)
+                .wasm_component_model(true),
+        )
+        .map_err(|err| errors::WorkerError::ConfigureRuntimeError {
+            error: format!("error creating engine ({err})"),
+        })?;
         let runtime = init_runtime(project_root, path, project_config)?;
         let bytes = runtime.module_bytes()?;
         let module_or_component = if let Ok(module) = Module::from_binary(&engine, &bytes) {
@@ -133,14 +144,86 @@ impl Worker {
         Ok(Self {
             id,
             engine,
-            module_or_component,
             runtime,
+            module_or_component,
             config,
             path: path.to_path_buf(),
         })
     }
 
-    pub fn run(
+    pub fn prepare_wasi_context(
+        &self,
+        environment_variables: &[(String, String)],
+        wasi_builder: &mut CtxBuilder,
+    ) -> Result<()> {
+        match wasi_builder {
+            CtxBuilder::Preview1(wasi_builder) => {
+                // Set up environment variables
+                wasi_builder.envs(environment_variables).map_err(|error| {
+                    errors::WorkerError::ConfigureRuntimeError {
+                        error: format!("error configuring runtime: {error}"),
+                    }
+                })?;
+
+                // Setup pre-opens
+                if let Some(folders) = self.config.folders.as_ref() {
+                    for folder in folders {
+                        if let Some(base) = &self.path.parent() {
+                            let dir =
+                                Dir::open_ambient_dir(base.join(&folder.from), ambient_authority())
+                                    .map_err(|error| {
+                                        errors::WorkerError::ConfigureRuntimeError {
+                                            error: format!(
+                                                "error setting up pre-opened folders: {error}"
+                                            ),
+                                        }
+                                    })?;
+                            wasi_builder
+                                .preopened_dir(dir, &folder.to)
+                                .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
+                                    error: format!("error setting up pre-opened folders: {error}"),
+                                })?;
+                        } else {
+                            return Err(errors::WorkerError::FailedToInitialize);
+                        }
+                    }
+                }
+            }
+            CtxBuilder::Preview2(wasi_builder) => {
+                // Set up environment variables
+                wasi_builder.envs(environment_variables);
+
+                // Setup pre-opens
+                if let Some(folders) = self.config.folders.as_ref() {
+                    for folder in folders {
+                        if let Some(base) = &self.path.parent() {
+                            let dir =
+                                Dir::open_ambient_dir(base.join(&folder.from), ambient_authority())
+                                    .map_err(|error| {
+                                        errors::WorkerError::ConfigureRuntimeError {
+                                            error: format!(
+                                                "error setting up pre-opened folders: {error}"
+                                            ),
+                                        }
+                                    })?;
+                            wasi_builder.preopened_dir(
+                                dir,
+                                preview2::DirPerms::all(),
+                                preview2::FilePerms::all(),
+                                &folder.to,
+                            );
+                        } else {
+                            return Err(errors::WorkerError::FailedToInitialize);
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn run(
         &self,
         request: &HttpRequest,
         body: &str,
@@ -150,145 +233,178 @@ impl Worker {
         let input = serde_json::to_string(&WasmInput::new(request, body, kv)).unwrap();
 
         let mut linker = Linker::new(&self.engine);
+        let mut component_linker = component::Linker::new(&self.engine);
 
-        http_add_to_linker(&mut linker, |host: &mut Host| &mut host.http).map_err(|error| {
-            errors::WorkerError::ConfigureRuntimeError {
-                error: format!("error adding HTTP bindings to linker ({error})"),
-            }
-        })?;
-        wasmtime_wasi::add_to_linker(&mut linker, |host| host.wasi_preview1_ctx.as_mut().unwrap())
+        if let ModuleOrComponent::Module(_) = &self.module_or_component {
+            wasmtime_wasi::add_to_linker(&mut linker, |host: &mut Host| {
+                host.wasi_preview1_ctx.as_mut().unwrap()
+            })
             .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
-                error: format!("error adding WASI to linker ({error})"),
+                error: format!("error adding WASI preview1 to linker ({error})"),
             })?;
 
-        // I have to use `String` as it's required by WasiCtxBuilder
-        let tuple_vars: Vec<(String, String)> =
+            http_add_to_linker(&mut linker, |host: &mut Host| host.http.as_mut().unwrap())
+                .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
+                    error: format!("error adding HTTP bindings to linker ({error})"),
+                })?;
+        } else {
+            preview2::command::add_to_linker(&mut component_linker).map_err(|error| {
+                errors::WorkerError::ConfigureRuntimeError {
+                    error: format!("error adding WASI preview2 to linker ({error})"),
+                }
+            })?;
+        }
+
+        let environment_variables: Vec<(String, String)> =
             vars.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
 
-        // Create the initial WASI context
-        let mut wasi_builder = WasiCtxBuilder::new();
-        wasi_builder.envs(&tuple_vars).map_err(|error| {
-            errors::WorkerError::ConfigureRuntimeError {
-                error: format!("error configuring runtime: {error}"),
-            }
-        })?;
-
-        // Configure the stdio
-        let stdio = Stdio::new(&input);
-        stdio.configure_wasi_ctx(&mut wasi_builder);
-
-        // Mount folders from the configuration
-        if let Some(folders) = self.config.folders.as_ref() {
-            for folder in folders {
-                if let Some(base) = &self.path.parent() {
-                    let dir = Dir::open_ambient_dir(base.join(&folder.from), ambient_authority())
-                        .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
-                        error: format!("error setting up pre-opened folders: {error}"),
-                    })?;
-                    wasi_builder
-                        .preopened_dir(dir, &folder.to)
-                        .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
-                            error: format!("error setting up pre-opened folders: {error}"),
-                        })?;
-                } else {
-                    return Err(errors::WorkerError::FailedToInitialize);
-                }
-            }
-        }
-
-        // WASI-NN
-        let allowed_backends = &self.config.features.wasi_nn.allowed_backends;
-        let preload_models = &self.config.features.wasi_nn.preload_models;
-
-        let wasi_nn = if !preload_models.is_empty() {
-            // Preload the models on the host.
-            let graphs = preload_models
-                .iter()
-                .map(|m| m.build_graph_data(&self.path))
-                .collect::<Vec<_>>();
-            let (backends, registry) = wasmtime_wasi_nn::preload(&graphs).map_err(|_| {
-                errors::WorkerError::RuntimeError(
-                    wws_runtimes::errors::RuntimeError::WasiContextError,
-                )
-            })?;
-
-            Some(Arc::new(WasiNnCtx::new(backends, registry)))
-        } else if !allowed_backends.is_empty() {
-            let registry = Registry::from(InMemoryRegistry::new());
-            let mut backends = Vec::new();
-
-            // Load the given backends:
-            for b in allowed_backends.iter() {
-                if let Some(backend) = b.to_backend() {
-                    backends.push(backend);
-                }
-            }
-
-            Some(Arc::new(WasiNnCtx::new(backends, registry)))
+        let mut wasi_builder = if let ModuleOrComponent::Module(_) = &self.module_or_component {
+            CtxBuilder::Preview1(WasiCtxBuilder::new())
         } else {
-            None
+            CtxBuilder::Preview2(preview2::WasiCtxBuilder::new())
         };
+        self.prepare_wasi_context(&environment_variables, &mut wasi_builder)?;
 
-        // Load the Wasi NN linker
-        if wasi_nn.is_some() {
-            wasmtime_wasi_nn::witx::add_to_linker(&mut linker, |host: &mut Host| {
-                Arc::get_mut(host.wasi_nn.as_mut().unwrap())
-                    .expect("wasi-nn is not implemented with multi-threading support")
-            })
-            .map_err(|_| {
-                errors::WorkerError::RuntimeError(
-                    wws_runtimes::errors::RuntimeError::WasiContextError,
-                )
-            })?;
-        }
+        let stdio = Stdio::new(&input);
+        let mut wasi_builder = stdio.configure_wasi_ctx(wasi_builder);
 
-        // Pass to the runtime to add any WASI specific requirement
         self.runtime.prepare_wasi_ctx(&mut wasi_builder)?;
 
-        let wasi = wasi_builder.build();
-        let host = Host {
-            wasi_preview1_ctx: Some(wasi),
-            wasi_preview2_ctx: None,
-            wasi_preview2_table: Arc::new(preview2::Table::default()),
-            wasi_preview2_adapter: Arc::new(preview2::preview1::WasiPreview1Adapter::default()),
-            wasi_nn,
-            http: HttpBindings {
-                http_config: self.config.features.http_requests.clone(),
+        let host = match wasi_builder {
+            CtxBuilder::Preview1(mut wasi_builder) => Host {
+                wasi_preview1_ctx: Some(wasi_builder.build()),
+                wasi_nn: None,
+                http: Some(HttpBindings {
+                    http_config: self.config.features.http_requests.clone(),
+                }),
+                ..Host::default()
             },
-        };
-        let mut store = Store::new(&self.engine, host);
-
-        let module = match &self.module_or_component {
-            ModuleOrComponent::Module(module) => module,
-            ModuleOrComponent::Component(_) => unimplemented!(),
-        };
-
-        linker.module(&mut store, "", module).map_err(|error| {
-            errors::WorkerError::ConfigureRuntimeError {
-                error: format!("error retrieving module from linker: {error}"),
+            CtxBuilder::Preview2(mut wasi_builder) => {
+                let mut table = preview2::Table::default();
+                Host {
+                    wasi_preview2_ctx: Some(Arc::new(wasi_builder.build(&mut table).map_err(
+                        |error| errors::WorkerError::ConfigureRuntimeError {
+                            error: format!("error configuring WASI preview 2: {error}"),
+                        },
+                    )?)),
+                    wasi_preview2_table: Arc::new(table),
+                    wasi_preview2_adapter: Arc::new(
+                        preview2::preview1::WasiPreview1Adapter::default(),
+                    ),
+                    wasi_nn: None,
+                    http: Some(HttpBindings {
+                        http_config: self.config.features.http_requests.clone(),
+                    }),
+                    ..Host::default()
+                }
             }
-        })?;
-        linker
-            .get_default(&mut store, "")
-            .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
-                error: format!("error getting default export from module: {error}"),
-            })?
-            .typed::<(), ()>(&store)
-            .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
-                error: format!("error getting default typed export from module: {error}"),
-            })?
-            .call(&mut store, ())
-            .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
-                error: format!("error calling module default export: {error}"),
-            })?;
+        };
 
-        drop(store);
+        // Setup wasi-nn
+        {
+            let allowed_backends = &self.config.features.wasi_nn.allowed_backends;
+            let preload_models = &self.config.features.wasi_nn.preload_models;
+            let wasi_nn = if !preload_models.is_empty() {
+                // Preload the models on the host.
+                let graphs = preload_models
+                    .iter()
+                    .map(|m| m.build_graph_data(&self.path))
+                    .collect::<Vec<_>>();
+                let (backends, registry) = wasmtime_wasi_nn::preload(&graphs).map_err(|_| {
+                    errors::WorkerError::RuntimeError(
+                        wws_runtimes::errors::RuntimeError::WasiContextError,
+                    )
+                })?;
 
-        let contents: Vec<u8> = stdio
-            .stdout
-            .try_into_inner()
-            .unwrap_or_default()
-            .into_inner();
+                Some(Arc::new(WasiNnCtx::new(backends, registry)))
+            } else if !allowed_backends.is_empty() {
+                let registry = Registry::from(InMemoryRegistry::new());
+                let mut backends = Vec::new();
+
+                // Load the given backends:
+                for b in allowed_backends.iter() {
+                    if let Some(backend) = b.to_backend() {
+                        backends.push(backend);
+                    }
+                }
+
+                Some(Arc::new(WasiNnCtx::new(backends, registry)))
+            } else {
+                None
+            };
+
+            // Load the Wasi NN linker
+            if wasi_nn.is_some() {
+                wasmtime_wasi_nn::witx::add_to_linker(&mut linker, |host: &mut Host| {
+                    Arc::get_mut(host.wasi_nn.as_mut().unwrap())
+                        .expect("wasi-nn is not implemented with multi-threading support")
+                })
+                .map_err(|_| {
+                    errors::WorkerError::RuntimeError(
+                        wws_runtimes::errors::RuntimeError::WasiContextError,
+                    )
+                })?;
+            }
+        }
+
+        let contents = {
+            let mut store = Store::new(&self.engine, host);
+            match &self.module_or_component {
+                ModuleOrComponent::Module(module) => {
+                    linker
+                        .module_async(&mut store, "", module)
+                        .await
+                        .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
+                            error: format!("error retrieving module from linker: {error}"),
+                        })?;
+
+                    linker
+                        .get_default(&mut store, "")
+                        .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
+                            error: format!("error getting default export from module: {error}"),
+                        })?
+                        .typed::<(), ()>(&store)
+                        .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
+                            error: format!(
+                                "error getting default typed export from module: {error}"
+                            ),
+                        })?
+                        .call_async(&mut store, ())
+                        .await
+                        .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
+                            error: format!("error calling module default export: {error}"),
+                        })?;
+
+                    drop(store);
+
+                    stdio
+                        .stdout
+                        .try_into_inner()
+                        .unwrap_or_default()
+                        .into_inner()
+                }
+                ModuleOrComponent::Component(component) => {
+                    let (command, _instance) = preview2::command::Command::instantiate_async(
+                        &mut store,
+                        component,
+                        &component_linker,
+                    )
+                    .await
+                    .unwrap();
+                    let _ = command
+                        .wasi_cli_run()
+                        .call_run(&mut store)
+                        .await
+                        .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
+                            error: format!("error calling component cli::run: {error}"),
+                        })?;
+
+                    drop(store);
+
+                    stdio.stdout_preview2.contents().to_vec()
+                }
+            }
+        };
 
         // Build the output
         let output: WasmOutput = serde_json::from_slice(&contents).map_err(|error| {

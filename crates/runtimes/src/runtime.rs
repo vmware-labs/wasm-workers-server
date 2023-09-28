@@ -3,7 +3,12 @@
 
 use crate::errors::Result;
 
-use wasmtime_wasi::WasiCtxBuilder;
+use wasmtime_wasi::{preview2, WasiCtxBuilder};
+
+pub enum CtxBuilder {
+    Preview1(WasiCtxBuilder),
+    Preview2(preview2::WasiCtxBuilder),
+}
 
 /// Define the behavior a Runtime must have. This includes methods
 /// to initialize the environment for the given runtime as well as
@@ -21,7 +26,7 @@ pub trait Runtime {
     /// WASI context builder. This allow runtimes to mount
     /// specific lib folders, source code and adding
     /// environment variables.
-    fn prepare_wasi_ctx(&self, _builder: &mut WasiCtxBuilder) -> Result<()> {
+    fn prepare_wasi_ctx(&self, _builder: &mut CtxBuilder) -> Result<()> {
         Ok(())
     }
 

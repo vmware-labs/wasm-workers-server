@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::errors::Result;
-use crate::runtime::Runtime;
+use crate::runtime::{CtxBuilder, Runtime};
 
 use std::path::{Path, PathBuf};
-use wasmtime_wasi::{ambient_authority, Dir, WasiCtxBuilder};
+use wasmtime_wasi::{ambient_authority, preview2, Dir};
 use wws_store::Store;
 
 static JS_ENGINE_WASM: &[u8] =
@@ -46,11 +46,23 @@ impl Runtime for JavaScriptRuntime {
 
     /// Mount the source code in the WASI context so it can be
     /// processed by the engine
-    fn prepare_wasi_ctx(&self, builder: &mut WasiCtxBuilder) -> Result<()> {
-        builder.preopened_dir(
-            Dir::open_ambient_dir(&self.store.folder, ambient_authority())?,
-            "/src",
-        )?;
+    fn prepare_wasi_ctx(&self, builder: &mut CtxBuilder) -> Result<()> {
+        match builder {
+            CtxBuilder::Preview1(ref mut builder) => {
+                builder.preopened_dir(
+                    Dir::open_ambient_dir(&self.store.folder, ambient_authority())?,
+                    "/src",
+                )?;
+            }
+            CtxBuilder::Preview2(ref mut builder) => {
+                builder.preopened_dir(
+                    Dir::open_ambient_dir(&self.store.folder, ambient_authority())?,
+                    preview2::DirPerms::all(),
+                    preview2::FilePerms::all(),
+                    "/src",
+                );
+            }
+        }
 
         Ok(())
     }

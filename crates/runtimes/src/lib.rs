@@ -6,6 +6,7 @@ use errors::Result;
 
 mod modules;
 mod runtime;
+pub use runtime::CtxBuilder;
 
 use modules::{external::ExternalRuntime, javascript::JavaScriptRuntime, native::NativeRuntime};
 use std::path::Path;

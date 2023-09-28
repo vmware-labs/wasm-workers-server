@@ -3,12 +3,12 @@
 
 use crate::errors::{self, Result};
 
-use crate::runtime::Runtime;
+use crate::runtime::{CtxBuilder, Runtime};
 use std::{
     fs,
     path::{Path, PathBuf},
 };
-use wasmtime_wasi::{ambient_authority, Dir, WasiCtxBuilder};
+use wasmtime_wasi::{ambient_authority, preview2, Dir};
 use wws_project::metadata::Runtime as RuntimeMetadata;
 use wws_store::Store;
 
@@ -90,14 +90,28 @@ impl Runtime for ExternalRuntime {
 
     /// Mount the source code in the WASI context so it can be
     /// processed by the engine
-    fn prepare_wasi_ctx(&self, builder: &mut WasiCtxBuilder) -> Result<()> {
-        builder
-            .preopened_dir(
-                Dir::open_ambient_dir(&self.store.folder, ambient_authority())?,
-                "/src",
-            )?
-            .args(&self.metadata.args)
-            .map_err(|_| errors::RuntimeError::WasiContextError)?;
+    fn prepare_wasi_ctx(&self, builder: &mut CtxBuilder) -> Result<()> {
+        match builder {
+            CtxBuilder::Preview1(ref mut builder) => {
+                builder
+                    .preopened_dir(
+                        Dir::open_ambient_dir(&self.store.folder, ambient_authority())?,
+                        "/src",
+                    )?
+                    .args(&self.metadata.args)
+                    .map_err(|_| errors::RuntimeError::WasiContextError)?;
+            }
+            CtxBuilder::Preview2(ref mut builder) => {
+                builder
+                    .preopened_dir(
+                        Dir::open_ambient_dir(&self.store.folder, ambient_authority())?,
+                        preview2::DirPerms::all(),
+                        preview2::FilePerms::all(),
+                        "/src",
+                    )
+                    .args(&self.metadata.args);
+            }
+        }
 
         Ok(())
     }
