@@ -70,6 +70,7 @@ exclude = [
   "examples/rust-kv",
   "examples/rust-params",
   "examples/rust-wasi-nn",
+  "examples/rust-wasi-nn-preload",
 ]
 
 [workspace.dependencies]

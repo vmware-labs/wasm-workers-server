@@ -1,0 +1,17 @@
+name = "wasi-nn-mobilenet"
+version = "1"
+
+[vars]
+MODEL = "model"
+
+[[features.wasi_nn.preload_models]]
+backend = "openvino"
+provider = { type = "local", dir = "./_models/mobilenet/" }
+
+[[folders]]
+from = "./_data"
+to = "/tmp/data"
+
+[[folders]]
+from = "./_images"
+to = "/tmp/images"

@@ -25,6 +25,11 @@ rust-wasi-nn:
 	cargo build --target wasm32-wasi --release && \
 	mv target/wasm32-wasi/release/rust-wasi-nn.wasm "./inference.wasm"
 
+rust-wasi-nn-preload:
+	cd rust-wasi-nn-preload && \
+	cargo build --target wasm32-wasi --release && \
+	mv target/wasm32-wasi/release/rust-wasi-nn-preload.wasm "./inference.wasm"
+
 rust-pdf-create:
 	cd rust-pdf-create && \
 	cargo build --target wasm32-wasi --release && \

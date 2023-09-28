@@ -1,4 +1,4 @@
-// Copyright 2022 VMware, Inc.
+// Copyright 2022-2023 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 mod bindings;
@@ -12,7 +12,6 @@ use actix_web::HttpRequest;
 use bindings::http::{add_to_linker as http_add_to_linker, HttpBindings};
 use config::Config;
 use errors::Result;
-use features::wasi_nn::WASI_NN_BACKEND_OPENVINO;
 use io::{WasmInput, WasmOutput};
 use sha256::digest as sha256_digest;
 use std::fs;
@@ -23,7 +22,7 @@ use stdio::Stdio;
 use wasi_common::WasiCtx;
 use wasmtime::{Engine, Linker, Module, Store};
 use wasmtime_wasi::{ambient_authority, Dir, WasiCtxBuilder};
-use wasmtime_wasi_nn::WasiNnCtx;
+use wasmtime_wasi_nn::{InMemoryRegistry, Registry, WasiNnCtx};
 use wws_config::Config as ProjectConfig;
 use wws_runtimes::{init_runtime, Runtime};
 
@@ -137,36 +136,49 @@ impl Worker {
 
         // WASI-NN
         let allowed_backends = &self.config.features.wasi_nn.allowed_backends;
+        let preload_models = &self.config.features.wasi_nn.preload_models;
 
-        let wasi_nn = if !allowed_backends.is_empty() {
-            // For now, we only support OpenVINO
-            if allowed_backends.len() != 1
-                || !allowed_backends.contains(&WASI_NN_BACKEND_OPENVINO.to_string())
-            {
-                eprintln!("❌ The only WASI-NN supported backend name is \"{WASI_NN_BACKEND_OPENVINO}\". Please, update your config.");
-                None
-            } else {
-                wasmtime_wasi_nn::witx::add_to_linker(&mut linker, |s: &mut WorkerState| {
-                    Arc::get_mut(s.wasi_nn.as_mut().unwrap())
-                        .expect("wasi-nn is not implemented with multi-threading support")
-                })
-                .map_err(|_| {
-                    errors::WorkerError::RuntimeError(
-                        wws_runtimes::errors::RuntimeError::WasiContextError,
-                    )
-                })?;
+        let wasi_nn = if !preload_models.is_empty() {
+            // Preload the models on the host.
+            let graphs = preload_models
+                .iter()
+                .map(|m| m.build_graph_data(&self.path))
+                .collect::<Vec<_>>();
+            let (backends, registry) = wasmtime_wasi_nn::preload(&graphs).map_err(|_| {
+                errors::WorkerError::RuntimeError(
+                    wws_runtimes::errors::RuntimeError::WasiContextError,
+                )
+            })?;
 
-                let (backends, registry) = wasmtime_wasi_nn::preload(&[]).map_err(|_| {
-                    errors::WorkerError::RuntimeError(
-                        wws_runtimes::errors::RuntimeError::WasiContextError,
-                    )
-                })?;
+            Some(Arc::new(WasiNnCtx::new(backends, registry)))
+        } else if !allowed_backends.is_empty() {
+            let registry = Registry::from(InMemoryRegistry::new());
+            let mut backends = Vec::new();
 
-                Some(Arc::new(WasiNnCtx::new(backends, registry)))
+            // Load the given backends:
+            for b in allowed_backends.iter() {
+                if let Some(backend) = b.to_backend() {
+                    backends.push(backend);
+                }
             }
+
+            Some(Arc::new(WasiNnCtx::new(backends, registry)))
         } else {
             None
         };
+
+        // Load the Wasi NN linker
+        if wasi_nn.is_some() {
+            wasmtime_wasi_nn::witx::add_to_linker(&mut linker, |s: &mut WorkerState| {
+                Arc::get_mut(s.wasi_nn.as_mut().unwrap())
+                    .expect("wasi-nn is not implemented with multi-threading support")
+            })
+            .map_err(|_| {
+                errors::WorkerError::RuntimeError(
+                    wws_runtimes::errors::RuntimeError::WasiContextError,
+                )
+            })?;
+        }
 
         // Pass to the runtime to add any WASI specific requirement
         self.runtime.prepare_wasi_ctx(&mut wasi_builder)?;
