@@ -20,11 +20,16 @@ use std::sync::Arc;
 use std::{collections::HashMap, path::Path};
 use stdio::Stdio;
 use wasi_common::WasiCtx;
-use wasmtime::{Engine, Linker, Module, Store};
+use wasmtime::{component::Component, Engine, Linker, Module, Store};
 use wasmtime_wasi::{ambient_authority, Dir, WasiCtxBuilder};
 use wasmtime_wasi_nn::{InMemoryRegistry, Registry, WasiNnCtx};
 use wws_config::Config as ProjectConfig;
 use wws_runtimes::{init_runtime, Runtime};
+
+pub enum ModuleOrComponent {
+    Module(Module),
+    Component(Component),
+}
 
 /// A worker contains the engine and the associated runtime.
 /// This struct will process requests by preparing the environment
@@ -34,8 +39,8 @@ pub struct Worker {
     pub id: String,
     /// Wasmtime engine to run this worker
     engine: Engine,
-    /// Wasm Module
-    module: Module,
+    /// Wasm Module or component
+    module_or_component: ModuleOrComponent,
     /// Worker runtime
     runtime: Box<dyn Runtime + Sync + Send>,
     /// Current config
@@ -73,8 +78,13 @@ impl Worker {
         let engine = Engine::default();
         let runtime = init_runtime(project_root, path, project_config)?;
         let bytes = runtime.module_bytes()?;
-        let module =
-            Module::from_binary(&engine, &bytes).map_err(|_| errors::WorkerError::BadWasmModule)?;
+        let module_or_component = if let Ok(module) = Module::from_binary(&engine, &bytes) {
+            Ok(ModuleOrComponent::Module(module))
+        } else if let Ok(component) = Component::from_binary(&engine, &bytes) {
+            Ok(ModuleOrComponent::Component(component))
+        } else {
+            Err(errors::WorkerError::BadWasmModuleOrComponent)
+        }?;
 
         // Prepare the environment if required
         runtime.prepare()?;
@@ -82,7 +92,7 @@ impl Worker {
         Ok(Self {
             id,
             engine,
-            module,
+            module_or_component,
             runtime,
             config,
             path: path.to_path_buf(),
@@ -100,10 +110,16 @@ impl Worker {
 
         let mut linker = Linker::new(&self.engine);
 
-        http_add_to_linker(&mut linker, |s: &mut WorkerState| &mut s.http)
-            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
-        wasmtime_wasi::add_to_linker(&mut linker, |s: &mut WorkerState| &mut s.wasi)
-            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
+        http_add_to_linker(&mut linker, |s: &mut WorkerState| &mut s.http).map_err(|error| {
+            errors::WorkerError::ConfigureRuntimeError {
+                error: format!("error adding HTTP bindings to linker ({error})"),
+            }
+        })?;
+        wasmtime_wasi::add_to_linker(&mut linker, |s: &mut WorkerState| &mut s.wasi).map_err(
+            |error| errors::WorkerError::ConfigureRuntimeError {
+                error: format!("error adding WASI to linker ({error})"),
+            },
+        )?;
 
         // I have to use `String` as it's required by WasiCtxBuilder
         let tuple_vars: Vec<(String, String)> =
@@ -111,9 +127,11 @@ impl Worker {
 
         // Create the initial WASI context
         let mut wasi_builder = WasiCtxBuilder::new();
-        wasi_builder
-            .envs(&tuple_vars)
-            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
+        wasi_builder.envs(&tuple_vars).map_err(|error| {
+            errors::WorkerError::ConfigureRuntimeError {
+                error: format!("error configuring runtime: {error}"),
+            }
+        })?;
 
         // Configure the stdio
         let stdio = Stdio::new(&input);
@@ -124,10 +142,14 @@ impl Worker {
             for folder in folders {
                 if let Some(base) = &self.path.parent() {
                     let dir = Dir::open_ambient_dir(base.join(&folder.from), ambient_authority())
-                        .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
+                        .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
+                        error: format!("error setting up pre-opened folders: {error}"),
+                    })?;
                     wasi_builder
                         .preopened_dir(dir, &folder.to)
-                        .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
+                        .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
+                            error: format!("error setting up pre-opened folders: {error}"),
+                        })?;
                 } else {
                     return Err(errors::WorkerError::FailedToInitialize);
                 }
@@ -193,16 +215,29 @@ impl Worker {
         };
         let mut store = Store::new(&self.engine, state);
 
-        linker
-            .module(&mut store, "", &self.module)
-            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
+        let module = match &self.module_or_component {
+            ModuleOrComponent::Module(module) => module,
+            ModuleOrComponent::Component(_) => unimplemented!(),
+        };
+
+        linker.module(&mut store, "", &module).map_err(|error| {
+            errors::WorkerError::ConfigureRuntimeError {
+                error: format!("error retrieving module from linker: {error}"),
+            }
+        })?;
         linker
             .get_default(&mut store, "")
-            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?
+            .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
+                error: format!("error getting default export from module: {error}"),
+            })?
             .typed::<(), ()>(&store)
-            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?
+            .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
+                error: format!("error getting default typed export from module: {error}"),
+            })?
             .call(&mut store, ())
-            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
+            .map_err(|error| errors::WorkerError::ConfigureRuntimeError {
+                error: format!("error calling module default export: {error}"),
+            })?;
 
         drop(store);
 
@@ -213,8 +248,11 @@ impl Worker {
             .into_inner();
 
         // Build the output
-        let output: WasmOutput = serde_json::from_slice(&contents)
-            .map_err(|_| errors::WorkerError::ConfigureRuntimeError)?;
+        let output: WasmOutput = serde_json::from_slice(&contents).map_err(|error| {
+            errors::WorkerError::ConfigureRuntimeError {
+                error: format!("error building worker output: {error}"),
+            }
+        })?;
 
         Ok(output)
     }
