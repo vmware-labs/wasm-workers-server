@@ -16,7 +16,7 @@ use std::{
     collections::HashMap,
     ffi::OsStr,
     path::{Component, Path, PathBuf},
-    sync::RwLock,
+    sync::{Arc, RwLock},
 };
 use wws_config::Config as ProjectConfig;
 use wws_worker::Worker;
@@ -60,16 +60,16 @@ pub struct Route {
 /// other crates.
 #[derive(Default)]
 pub struct WorkerSet {
-    workers: HashMap<String, Worker>,
+    workers: HashMap<String, Arc<Worker>>,
 }
 
 impl WorkerSet {
-    pub fn get(&self, worker_id: &str) -> Option<&Worker> {
+    pub fn get(&self, worker_id: &str) -> Option<&Arc<Worker>> {
         self.workers.get(worker_id)
     }
 
     pub fn register(&mut self, worker_id: String, worker: Worker) {
-        self.workers.insert(worker_id, worker);
+        self.workers.insert(worker_id, Arc::new(worker));
     }
 }
 

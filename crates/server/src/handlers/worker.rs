@@ -38,11 +38,10 @@ pub async fn handle_worker(req: HttpRequest, body: Bytes) -> HttpResponse {
     let data_connectors = req
         .app_data::<Data<RwLock<DataConnectors>>>()
         .expect("error fetching data connectors");
-    let result: HttpResponse;
 
     // First, we need to identify the best suited route
     let selected_route = app_data.routes.retrieve_best_route(req.path());
-    if let Some(route) = selected_route {
+    let worker = if let Some(route) = selected_route {
         // First, check if there's an existing static file. Static assets have more priority
         // than dynamic routes. However, I cannot set the static assets as the first service
         // as it's captures everything.
@@ -56,71 +55,12 @@ pub async fn handle_worker(req: HttpRequest, body: Bytes) -> HttpResponse {
             .read()
             .expect("error locking worker lock for reading");
 
-        let worker = workers
-            .get(&route.worker)
-            .expect("unexpected missing worker");
-
-        // Let's continue
-        let body_str = String::from_utf8(body.to_vec()).unwrap_or_else(|_| String::from(""));
-
-        // Init from configuration
-        let vars = &worker.config.vars;
-        let kv_namespace = worker.config.data_kv_namespace();
-
-        let store = match &kv_namespace {
-            Some(namespace) => {
-                let connector = data_connectors
-                    .read()
-                    .expect("error locking data connectors lock for reading");
-                let kv_store = connector.kv.find_store(namespace);
-
-                kv_store.map(|store| store.clone())
-            }
-            None => None,
-        };
-
-        let (handler_result, handler_success) = match worker.run(&req, &body_str, store, vars) {
-            Ok(output) => (output, true),
-            Err(err) => (WasmOutput::failed(err), false),
-        };
-
-        let mut builder = HttpResponse::build(
-            StatusCode::from_u16(handler_result.status).unwrap_or(StatusCode::OK),
-        );
-        // Default content type
-        builder.insert_header(("Content-Type", "text/html"));
-
-        // Check if cors config has any origins to register
-        if let Some(origins) = app_data.cors_origins.as_ref() {
-            // Check if worker has overridden the header, if not
-            if !handler_result.headers.contains_key(CORS_HEADER) {
-                // insert those origins in 'Access-Control-Allow-Origin' header
-                let header_value = origins.join(",");
-                builder.insert_header((CORS_HEADER, header_value));
-            }
-        }
-
-        for (key, val) in handler_result.headers.iter() {
-            // Note that QuickJS is replacing the "-" character
-            // with "_" on property keys. Here, we rollback it
-            builder.insert_header((key.replace('_', "-").as_str(), val.as_str()));
-        }
-
-        // Write to the state if required
-        if handler_success && kv_namespace.is_some() {
-            data_connectors
-                .write()
-                .expect("error locking data connectors lock for writing")
-                .kv
-                .replace_store(&kv_namespace.unwrap(), &handler_result.kv)
-        }
-
-        result = match handler_result.body() {
-            Ok(res) => builder.body(res),
-            Err(_) => {
-                HttpResponse::ServiceUnavailable().body("There was an error running the worker")
-            }
-        }
+        Some(
+            workers
+                .get(&route.worker)
+                .expect("unexpected missing worker")
+                .clone(),
+        )
     } else {
         None
     };
@@ -175,5 +115,23 @@ pub async fn handle_worker(req: HttpRequest, body: Bytes) -> HttpResponse {
         }
     }
 
-    result
+    for (key, val) in handler_result.headers.iter() {
+        // Note that QuickJS is replacing the "-" character
+        // with "_" on property keys. Here, we rollback it
+        builder.insert_header((key.replace('_', "-").as_str(), val.as_str()));
+    }
+
+    // Write to the state if required
+    if handler_success && kv_namespace.is_some() {
+        data_connectors
+            .write()
+            .expect("error locking data connectors lock for writing")
+            .kv
+            .replace_store(&kv_namespace.unwrap(), &handler_result.kv)
+    }
+
+    match handler_result.body() {
+        Ok(res) => builder.body(res),
+        Err(_) => HttpResponse::ServiceUnavailable().body("There was an error running the worker"),
+    }
 }

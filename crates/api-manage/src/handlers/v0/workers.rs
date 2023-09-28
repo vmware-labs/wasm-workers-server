@@ -44,7 +44,7 @@ pub async fn handle_api_worker(routes: Data<Routes>, path: Path<String>) -> Http
         .map(|r| workers.get(&r.worker).expect("unexpected missing worker"));
 
     if let Some(worker) = worker {
-        HttpResponse::Ok().json(WorkerConfig::from(worker))
+        HttpResponse::Ok().json(WorkerConfig::from(worker.as_ref()))
     } else {
         HttpResponse::NotFound().json("{}")
     }
