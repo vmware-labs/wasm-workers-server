@@ -7,13 +7,15 @@ pub type Result<T> = std::result::Result<T, WorkerError>;
 
 #[derive(Debug)]
 pub enum WorkerError {
-    BadWasmModule,
+    BadWasmModuleOrComponent,
     CannotLoadConfig,
     CannotParseConfig {
         path: PathBuf,
         error: toml::de::Error,
     },
-    ConfigureRuntimeError,
+    ConfigureRuntimeError {
+        error: String,
+    },
     DeserializeConfigError,
     FailedToInitialize,
     RuntimeError(wws_runtimes::errors::RuntimeError),
@@ -35,14 +37,16 @@ impl From<wws_runtimes::errors::RuntimeError> for WorkerError {
 impl std::fmt::Display for WorkerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            WorkerError::BadWasmModule => write!(f, "Bad Wasm module"),
+            WorkerError::BadWasmModuleOrComponent => write!(f, "Bad Wasm module or component"),
             WorkerError::CannotLoadConfig => write!(f, "Could not load configuration"),
             WorkerError::CannotParseConfig { path, error } => write!(
                 f,
                 "Could not parse configuration at {:?}: {:?}",
                 path, error
             ),
-            WorkerError::ConfigureRuntimeError => write!(f, "Error configuring runtime"),
+            WorkerError::ConfigureRuntimeError { error } => {
+                write!(f, "Error configuring runtime: {error}")
+            }
             WorkerError::DeserializeConfigError => write!(f, "Error deserializing configuration"),
             WorkerError::FailedToInitialize => write!(f, "Failed to initialize"),
             WorkerError::RuntimeError(error) => {
