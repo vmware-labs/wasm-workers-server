@@ -1,7 +1,7 @@
-// Copyright 2022 VMware, Inc.
+// Copyright 2022-2023 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use super::{assets::handle_assets, not_found::handle_not_found};
+use super::not_found::handle_not_found;
 use crate::{AppData, DataConnectors};
 use actix_web::{
     http::StatusCode,
@@ -42,16 +42,8 @@ pub async fn handle_worker(req: HttpRequest, body: Bytes) -> HttpResponse {
 
     // First, we need to identify the best suited route
     let selected_route = app_data.routes.retrieve_best_route(req.path());
-    if let Some(route) = selected_route {
-        // First, check if there's an existing static file. Static assets have more priority
-        // than dynamic routes. However, I cannot set the static assets as the first service
-        // as it's captures everything.
-        if route.is_dynamic() {
-            if let Ok(existing_file) = handle_assets(&req).await {
-                return existing_file.into_response(&req);
-            }
-        }
 
+    if let Some(route) = selected_route {
         let workers = WORKERS
             .read()
             .expect("error locking worker lock for reading");

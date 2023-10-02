@@ -11,7 +11,7 @@ use std::io::{Error, ErrorKind};
 /// like "public/{uri}/index.html" and "public/{uri}.html".
 ///
 /// If no file is present, it will try to get a default "public/404.html"
-pub async fn handle_assets(req: &HttpRequest) -> Result<NamedFile, Error> {
+pub async fn handle_assets(req: HttpRequest) -> Result<NamedFile, Error> {
     let root_path = &req
         .app_data::<Data<AppData>>()
         .expect("error fetching app data")
@@ -25,7 +25,7 @@ pub async fn handle_assets(req: &HttpRequest) -> Result<NamedFile, Error> {
     // Same as before, but the file is located at ./about.html
     let html_ext_path = root_path.join(format!("public{uri_path}.html"));
 
-    if file_path.exists() {
+    if file_path.exists() && !uri_path.is_empty() && uri_path != "/" {
         NamedFile::open_async(file_path).await
     } else if uri_path.ends_with('/') && index_folder_path.exists() {
         NamedFile::open_async(index_folder_path).await

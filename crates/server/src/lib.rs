@@ -1,21 +1,20 @@
-// Copyright 2022 VMware, Inc.
+// Copyright 2022-2023 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 mod errors;
-use errors::{Result, ServeError};
-
 mod handlers;
+mod static_assets;
 
-use actix_files::Files;
-use actix_web::dev::{fn_service, Server, ServiceRequest, ServiceResponse};
+use actix_web::dev::Server;
 use actix_web::{
     middleware,
     web::{self, Data},
     App, HttpServer,
 };
+use errors::{Result, ServeError};
 use handlers::assets::handle_assets;
-use handlers::not_found::handle_not_found;
 use handlers::worker::handle_worker;
+use static_assets::StaticAssets;
 use std::{path::PathBuf, sync::RwLock};
 use wws_api_manage::config_manage_api_handlers;
 use wws_data_kv::KV;
@@ -75,11 +74,38 @@ impl From<ServeOptions> for AppData {
 /// assets and workers.
 pub async fn serve(serve_options: ServeOptions) -> Result<Server> {
     // Initializes the data connectors. For now, just KV
-    let data_connectors = Data::new(RwLock::new(DataConnectors::default()));
+    let mut data = DataConnectors::default();
 
     let (hostname, port) = (serve_options.hostname.clone(), serve_options.port);
     let serve_options = serve_options.clone();
 
+    let workers = WORKERS
+        .read()
+        .expect("error locking worker lock for reading");
+
+    // Configure the KV store when required
+    for route in serve_options.base_routes.routes.iter() {
+        let worker = workers
+            .get(&route.worker)
+            .expect("unexpected missing worker");
+
+        // Configure KV
+        if let Some(namespace) = worker.config.data_kv_namespace() {
+            data.kv.create_store(&namespace);
+        }
+    }
+
+    // Pre-create the KV namespaces
+    let data_connectors = Data::new(RwLock::new(data));
+
+    // Static assets
+    let mut static_assets =
+        StaticAssets::new(&serve_options.root_path, &serve_options.base_routes.prefix);
+    static_assets
+        .load()
+        .expect("Error loading the static assets");
+
+    // Build the actix server with all the configuration
     let server = HttpServer::new(move || {
         // Initializes the app data for handlers
         let app_data: Data<AppData> = Data::new(
@@ -101,55 +127,13 @@ pub async fn serve(serve_options: ServeOptions) -> Result<Server> {
             app = app.configure(config_manage_api_handlers);
         }
 
-        let workers = WORKERS
-            .read()
-            .expect("error locking worker lock for reading");
-
-        // Append routes to the current service
-        for route in app_data.routes.iter() {
-            app = app.service(web::resource(route.actix_path()).to(handle_worker));
-
-            let worker = workers
-                .get(&route.worker)
-                .expect("unexpected missing worker");
-
-            // Configure KV
-            if let Some(namespace) = worker.config.data_kv_namespace() {
-                data_connectors
-                    .write()
-                    .expect("cannot retrieve shared data")
-                    .kv
-                    .create_store(&namespace);
-            }
+        // Mount static assets
+        for actix_path in static_assets.paths.iter() {
+            app = app.route(actix_path, web::get().to(handle_assets));
         }
 
-        // Serve static files from the static folder
-        let mut static_prefix = app_data.routes.prefix.clone();
-        if static_prefix.is_empty() {
-            static_prefix = String::from("/");
-        }
-
-        app = app.service(
-            Files::new(&static_prefix, app_data.root_path.join("public"))
-                .index_file("index.html")
-                // This handler check if there's an HTML file in the public folder that
-                // can reply to the given request. For example, if someone request /about,
-                // this handler will look for a /public/about.html file.
-                .default_handler(fn_service(|req: ServiceRequest| async {
-                    let (req, _) = req.into_parts();
-
-                    match handle_assets(&req).await {
-                        Ok(existing_file) => {
-                            let res = existing_file.into_response(&req);
-                            Ok(ServiceResponse::new(req, res))
-                        }
-                        Err(_) => {
-                            let res = handle_not_found(&req).await;
-                            Ok(ServiceResponse::new(req, res))
-                        }
-                    }
-                })),
-        );
+        // Default all other routes to the Wasm handler
+        app = app.default_service(web::route().to(handle_worker));
 
         app
     })
