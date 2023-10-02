@@ -452,7 +452,7 @@ dependencies = [
 
 [[package]]
 name = "wasm-workers-rs"
-version = "1.4.0"
+version = "1.5.0"
 dependencies = [
  "anyhow",
  "base64",
@@ -532,7 +532,7 @@ dependencies = [
 
 [[package]]
 name = "worker"
-version = "1.4.0"
+version = "1.5.0"
 dependencies = [
  "anyhow",
  "http",
