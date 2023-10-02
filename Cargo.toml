@@ -64,11 +64,11 @@ members = [
 ]
 # Exclude examples
 exclude = [
-  "examples/pdf-create",
   "examples/rust-basic",
   "examples/rust-fetch",
   "examples/rust-kv",
   "examples/rust-params",
+  "examples/rust-pdf-create",
   "examples/rust-wasi-nn",
   "examples/rust-wasi-nn-preload",
 ]

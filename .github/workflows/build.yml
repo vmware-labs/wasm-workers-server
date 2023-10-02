@@ -63,6 +63,8 @@ jobs:
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Install Wasm32-wasi target
       run: rustup target add wasm32-wasi
+    - name: Install wasm-tools
+      run: cargo install --locked wasm-tools@1.0.44
     - name: Build Rust examples
       working-directory: ./examples
       run: make all
