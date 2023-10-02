@@ -7,6 +7,8 @@
 /docs/start/ /docs/get-started/quickstart 301
 /docs/how-it-works /docs/get-started/how-it-works 301
 /docs/how-it-works/ /docs/get-started/how-it-works 301
+/docs/category/features /docs/features/all/ 301
+/docs/category/features/ /docs/features/all/ 301
 /docs/tutorials/javascript-workers /docs/languages/javascript 301
 /docs/tutorials/javascript-workers/ /docs/languages/javascript 301
 /docs/tutorials/rust-workers /docs/languages/rust 301
