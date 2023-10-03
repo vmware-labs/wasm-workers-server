@@ -1,0 +1,6 @@
+name = "user-generation-python"
+version = "1"
+
+[[folders]]
+from = "./tmp"
+to = "/tmp"
