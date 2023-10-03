@@ -86,27 +86,30 @@ pub async fn serve(
             static_prefix = String::from("/");
         }
 
-        app = app.service(
-            Files::new(&static_prefix, root_path.join("public"))
-                .index_file("index.html")
-                // This handler check if there's an HTML file in the public folder that
-                // can reply to the given request. For example, if someone request /about,
-                // this handler will look for a /public/about.html file.
-                .default_handler(fn_service(|req: ServiceRequest| async {
-                    let (req, _) = req.into_parts();
+        let public_dir = root_path.join("public");
+        if public_dir.exists() {
+            app = app.service(
+                Files::new(&static_prefix, public_dir)
+                    .index_file("index.html")
+                    // This handler check if there's an HTML file in the public folder that
+                    // can reply to the given request. For example, if someone request /about,
+                    // this handler will look for a /public/about.html file.
+                    .default_handler(fn_service(|req: ServiceRequest| async {
+                        let (req, _) = req.into_parts();
 
-                    match handle_assets(&req).await {
-                        Ok(existing_file) => {
-                            let res = existing_file.into_response(&req);
-                            Ok(ServiceResponse::new(req, res))
+                        match handle_assets(&req).await {
+                            Ok(existing_file) => {
+                                let res = existing_file.into_response(&req);
+                                Ok(ServiceResponse::new(req, res))
+                            }
+                            Err(_) => {
+                                let res = handle_not_found(&req).await;
+                                Ok(ServiceResponse::new(req, res))
+                            }
                         }
-                        Err(_) => {
-                            let res = handle_not_found(&req).await;
-                            Ok(ServiceResponse::new(req, res))
-                        }
-                    }
-                })),
-        );
+                    })),
+            );
+        }
 
         app
     })
