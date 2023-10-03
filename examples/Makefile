@@ -18,7 +18,7 @@ rust-params:
 $(COMPONENTS):
 	mkdir -p $@
 	make $(@:components/%=%)
-	cp $(@:components/%=%)/*.toml $@/
+	cp $(@:components/%=%)/$(@:components/%=%).toml $@/
 	wasm-tools component new $(@:components/%=%)/$(@:components/%=%).wasm \
 		--adapt wasi_snapshot_preview1=components/wasi-component-adapter/wasi_snapshot_preview1-command.wasm \
 		-o $@/$(@:components/%=%).wasm
