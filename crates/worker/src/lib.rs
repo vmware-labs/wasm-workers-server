@@ -130,12 +130,25 @@ impl Worker {
         })?;
         let runtime = init_runtime(project_root, path, project_config)?;
         let bytes = runtime.module_bytes()?;
-        let module_or_component = if let Ok(module) = Module::from_binary(&engine, &bytes) {
-            Ok(ModuleOrComponent::Module(module))
-        } else if let Ok(component) = Component::from_binary(&engine, &bytes) {
-            Ok(ModuleOrComponent::Component(component))
+
+        let module_or_component = if wasmparser::Parser::is_core_wasm(&bytes) {
+            Ok(ModuleOrComponent::Module(
+                Module::from_binary(&engine, &bytes).map_err(|err| {
+                    errors::WorkerError::BadWasmCoreModule {
+                        error: format!("{:?}", err),
+                    }
+                })?,
+            ))
+        } else if wasmparser::Parser::is_component(&bytes) {
+            Ok(ModuleOrComponent::Component(
+                Component::from_binary(&engine, &bytes).map_err(|err| {
+                    errors::WorkerError::BadWasmComponent {
+                        error: format!("{:?}", err),
+                    }
+                })?,
+            ))
         } else {
-            Err(errors::WorkerError::BadWasmModuleOrComponent)
+            Err(errors::WorkerError::BadWasmCoreModuleOrComponent)
         }?;
 
         // Prepare the environment if required
