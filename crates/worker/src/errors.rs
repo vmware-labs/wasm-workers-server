@@ -7,7 +7,13 @@ pub type Result<T> = std::result::Result<T, WorkerError>;
 
 #[derive(Debug)]
 pub enum WorkerError {
-    BadWasmModuleOrComponent,
+    BadWasmCoreModule {
+        error: String,
+    },
+    BadWasmComponent {
+        error: String,
+    },
+    BadWasmCoreModuleOrComponent,
     CannotLoadConfig,
     CannotParseConfig {
         path: PathBuf,
@@ -37,7 +43,13 @@ impl From<wws_runtimes::errors::RuntimeError> for WorkerError {
 impl std::fmt::Display for WorkerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            WorkerError::BadWasmModuleOrComponent => write!(f, "Bad Wasm module or component"),
+            WorkerError::BadWasmCoreModule { error } => {
+                write!(f, "Bad Wasm core module: {}", error)
+            }
+            WorkerError::BadWasmComponent { error } => write!(f, "Bad Wasm component: {}", error),
+            WorkerError::BadWasmCoreModuleOrComponent => {
+                write!(f, "Bad Wasm core module or component")
+            }
             WorkerError::CannotLoadConfig => write!(f, "Could not load configuration"),
             WorkerError::CannotParseConfig { path, error } => write!(
                 f,

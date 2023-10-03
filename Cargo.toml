@@ -81,6 +81,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.85"
 tokio = "1.28"
 toml = "0.7.0"
+wasmparser = "0.113.2"
 wws-config = { path = "./crates/config" }
 wws-runtimes = { path = "./crates/runtimes" }
 wws-data-kv = { path = "./crates/data-kv" }
