@@ -26,6 +26,6 @@ wws-data-kv = { workspace = true }
 wws-runtimes = { workspace = true }
 # We didn't integrate components yet. For an initial binding implementation,
 # we will use the wit-bindgen-wasmtime crate maintained by the Fermyon team.
-wit-bindgen-wasmtime = { git = "https://github.com/fermyon/wit-bindgen-backport", rev = "598cd229bb43baceff9616d16930b8a5a3e79d79" }
+wit-bindgen-wasmtime = { git = "https://github.com/fermyon/wit-bindgen-backport", rev = "598cd229bb43baceff9616d16930b8a5a3e79d79", features = ["async"] }
 base64 = "0.21.0"
 sha256 = "1.1.1"

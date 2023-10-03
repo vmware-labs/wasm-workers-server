@@ -7,7 +7,7 @@ use reqwest::Method;
 use tokio::runtime::Builder;
 
 // Implement the HTTP bindings for the workers.
-wit_bindgen_wasmtime::export!({paths: ["../../wit/core/http.wit"]});
+wit_bindgen_wasmtime::export!({paths: ["../../wit/core/http.wit"], async: []});
 use http::{Http, HttpError, HttpMethod, HttpRequest, HttpRequestError, HttpResponse};
 
 pub use http::add_to_linker;
