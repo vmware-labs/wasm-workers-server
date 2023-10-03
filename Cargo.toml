@@ -11,7 +11,7 @@ repository = { workspace = true }
 
 # Common package definition for all crates / kits
 [workspace.package]
-version = "1.5.0"
+version = "1.6.0"
 edition = "2021"
 authors = ["Wasm Labs <https://wasmlabs.dev>"]
 license = "Apache-2.0"
@@ -81,7 +81,6 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.85"
 tokio = "1.28"
 toml = "0.7.0"
-wasmparser = "0.113.2"
 wws-config = { path = "./crates/config" }
 wws-runtimes = { path = "./crates/runtimes" }
 wws-data-kv = { path = "./crates/data-kv" }
@@ -93,6 +92,7 @@ wws-project = { path = "./crates/project" }
 wws-panel = { path = "./crates/panel" }
 wws-api-manage = { path = "./crates/api-manage" }
 wws-api-manage-openapi = { path = "./crates/api-manage-openapi" }
+wasmparser = "0.113.2"
 wasmtime = "13.0.0"
 wasmtime-wasi = "13.0.0"
 wasmtime-wasi-nn = "13.0.0"
