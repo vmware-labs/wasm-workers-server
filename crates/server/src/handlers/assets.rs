@@ -78,30 +78,26 @@ mod tests {
     #[test]
     fn test_clean_up_path() {
         let tests = if cfg!(target_os = "windows") {
-            Vec::from(
-                [
-                    ("/", PathBuf::new()),
-                    ("/index.js", PathBuf::from("index.js")),
-                    ("/my-folder/index.js", PathBuf::from("my-folder\\index.js")),
-                    // These scenarios are unlikely as actix already filters the
-                    // URI, but let's test them too
-                    ("/../index.js", PathBuf::from("index.js")),
-                    ("/../../index.js", PathBuf::from("index.js")),
-                ]
-            )
+            Vec::from([
+                ("/", PathBuf::new()),
+                ("/index.js", PathBuf::from("index.js")),
+                ("/my-folder/index.js", PathBuf::from("my-folder\\index.js")),
+                // These scenarios are unlikely as actix already filters the
+                // URI, but let's test them too
+                ("/../index.js", PathBuf::from("index.js")),
+                ("/../../index.js", PathBuf::from("index.js")),
+            ])
         } else {
-            Vec::from(
-                [
-                    ("/", PathBuf::new()),
-                    ("/index.js", PathBuf::from("index.js")),
-                    ("////index.js", PathBuf::from("index.js")),
-                    ("/my-folder/index.js", PathBuf::from("my-folder/index.js")),
-                    // These scenarios are unlikely as actix already filters the
-                    // URI, but let's test them too
-                    ("/../index.js", PathBuf::from("index.js")),
-                    ("/../../index.js", PathBuf::from("index.js")),
-                ]
-            )
+            Vec::from([
+                ("/", PathBuf::new()),
+                ("/index.js", PathBuf::from("index.js")),
+                ("////index.js", PathBuf::from("index.js")),
+                ("/my-folder/index.js", PathBuf::from("my-folder/index.js")),
+                // These scenarios are unlikely as actix already filters the
+                // URI, but let's test them too
+                ("/../index.js", PathBuf::from("index.js")),
+                ("/../../index.js", PathBuf::from("index.js")),
+            ])
         };
 
         for (uri, path) in tests {
@@ -113,44 +109,40 @@ mod tests {
     fn relative_asset_path_retrieval() {
         let (project_root, tests) = if cfg!(target_os = "windows") {
             let project_root = Path::new("..\\..\\tests\\data");
-            let tests = Vec::from(
-                [
-                    // Existing files
-                    (
-                        Path::new("index.html"),
-                        Some(PathBuf::from("..\\..\\tests\\data\\public\\index.html")),
-                    ),
-                    (
-                        Path::new("main.css"),
-                        Some(PathBuf::from("..\\..\\tests\\data\\public\\main.css")),
-                    ),
-                    // Missing files
-                    (Path::new(""), None),
-                    (Path::new("unknown"), None),
-                    (Path::new("about"), None),
-                ]
-            );
+            let tests = Vec::from([
+                // Existing files
+                (
+                    Path::new("index.html"),
+                    Some(PathBuf::from("..\\..\\tests\\data\\public\\index.html")),
+                ),
+                (
+                    Path::new("main.css"),
+                    Some(PathBuf::from("..\\..\\tests\\data\\public\\main.css")),
+                ),
+                // Missing files
+                (Path::new(""), None),
+                (Path::new("unknown"), None),
+                (Path::new("about"), None),
+            ]);
 
             (project_root, tests)
         } else {
             let project_root = Path::new("../../tests/data");
-            let tests = Vec::from(
-                [
-                    // Existing files
-                    (
-                        Path::new("index.html"),
-                        Some(PathBuf::from("../../tests/data/public/index.html")),
-                    ),
-                    (
-                        Path::new("main.css"),
-                        Some(PathBuf::from("../../tests/data/public/main.css")),
-                    ),
-                    // Missing files
-                    (Path::new(""), None),
-                    (Path::new("unknown"), None),
-                    (Path::new("about"), None),
-                ]
-            );
+            let tests = Vec::from([
+                // Existing files
+                (
+                    Path::new("index.html"),
+                    Some(PathBuf::from("../../tests/data/public/index.html")),
+                ),
+                (
+                    Path::new("main.css"),
+                    Some(PathBuf::from("../../tests/data/public/main.css")),
+                ),
+                // Missing files
+                (Path::new(""), None),
+                (Path::new("unknown"), None),
+                (Path::new("about"), None),
+            ]);
 
             (project_root, tests)
         };
@@ -164,45 +156,41 @@ mod tests {
     fn absolute_asset_path_retrieval() {
         let (project_root, tests) = if cfg!(target_os = "windows") {
             let project_root = Path::new("..\\..\\tests\\data").canonicalize().unwrap();
-            let tests = Vec::from(
-                [
-                    // Existing files
-                    (
-                        Path::new("index.html"),
-                        Some(project_root.join("public\\index.html")),
-                    ),
-                    (
-                        Path::new("main.css"),
-                        Some(project_root.join("public\\main.css")),
-                    ),
-                    // Missing files
-                    (Path::new(""), None),
-                    (Path::new("unknown"), None),
-                    (Path::new("about"), None),
-                ]
-            );
+            let tests = Vec::from([
+                // Existing files
+                (
+                    Path::new("index.html"),
+                    Some(project_root.join("public\\index.html")),
+                ),
+                (
+                    Path::new("main.css"),
+                    Some(project_root.join("public\\main.css")),
+                ),
+                // Missing files
+                (Path::new(""), None),
+                (Path::new("unknown"), None),
+                (Path::new("about"), None),
+            ]);
 
             (project_root, tests)
         } else {
             let project_root = Path::new("../../tests/data").canonicalize().unwrap();
 
-            let tests = Vec::from(
-                [
-                    // Existing files
-                    (
-                        Path::new("index.html"),
-                        Some(project_root.join("public/index.html")),
-                    ),
-                    (
-                        Path::new("main.css"),
-                        Some(project_root.join("public/main.css")),
-                    ),
-                    // Missing files
-                    (Path::new(""), None),
-                    (Path::new("unknown"), None),
-                    (Path::new("about"), None),
-                ]
-            );
+            let tests = Vec::from([
+                // Existing files
+                (
+                    Path::new("index.html"),
+                    Some(project_root.join("public/index.html")),
+                ),
+                (
+                    Path::new("main.css"),
+                    Some(project_root.join("public/main.css")),
+                ),
+                // Missing files
+                (Path::new(""), None),
+                (Path::new("unknown"), None),
+                (Path::new("about"), None),
+            ]);
 
             (project_root, tests)
         };
@@ -216,42 +204,40 @@ mod tests {
     fn relative_asset_index_path_retrieval() {
         let (project_root, tests) = if cfg!(target_os = "windows") {
             let project_root = Path::new("..\\..\\tests\\data");
-            let tests = Vec::from(
-                [
-                    // Existing index files
-                    (
-                        Path::new("about"),
-                        Some(PathBuf::from("..\\..\\tests\\data\\public\\about\\index.html")),
-                    ),
-                    (Path::new(""), Some(PathBuf::from("..\\..\\tests\\data\\public\\index.html"))),
-                    // Missing index files
-                    (
-                        Path::new("main.css"),
-                        None,
-                    ),
-                    (Path::new("unknown"), None),
-                ]
-            );
+            let tests = Vec::from([
+                // Existing index files
+                (
+                    Path::new("about"),
+                    Some(PathBuf::from(
+                        "..\\..\\tests\\data\\public\\about\\index.html",
+                    )),
+                ),
+                (
+                    Path::new(""),
+                    Some(PathBuf::from("..\\..\\tests\\data\\public\\index.html")),
+                ),
+                // Missing index files
+                (Path::new("main.css"), None),
+                (Path::new("unknown"), None),
+            ]);
 
             (project_root, tests)
         } else {
             let project_root = Path::new("../../tests/data");
-            let tests = Vec::from(
-                [
-                    // Existing index files
-                    (
-                        Path::new("about"),
-                        Some(PathBuf::from("../../tests/data/public/about/index.html")),
-                    ),
-                    (Path::new(""), Some(PathBuf::from("../../tests/data/public/index.html"))),
-                    // Missing index files
-                    (
-                        Path::new("main.css"),
-                        None,
-                    ),
-                    (Path::new("unknown"), None)
-                ]
-            );
+            let tests = Vec::from([
+                // Existing index files
+                (
+                    Path::new("about"),
+                    Some(PathBuf::from("../../tests/data/public/about/index.html")),
+                ),
+                (
+                    Path::new(""),
+                    Some(PathBuf::from("../../tests/data/public/index.html")),
+                ),
+                // Missing index files
+                (Path::new("main.css"), None),
+                (Path::new("unknown"), None),
+            ]);
 
             (project_root, tests)
         };
@@ -265,43 +251,33 @@ mod tests {
     fn absolute_asset_index_path_retrieval() {
         let (project_root, tests) = if cfg!(target_os = "windows") {
             let project_root = Path::new("..\\..\\tests\\data").canonicalize().unwrap();
-            let tests = Vec::from(
-                [
-                    // Existing idnex files
-                    (
-                        Path::new("about"),
-                        Some(project_root.join("public\\about\\index.html")),
-                    ),
-                    (Path::new(""), Some(project_root.join("public\\index.html"))),
-                    // Missing index files
-                    (
-                        Path::new("main.css"),
-                        None,
-                    ),
-                    (Path::new("unknown"), None),
-                ]
-            );
+            let tests = Vec::from([
+                // Existing idnex files
+                (
+                    Path::new("about"),
+                    Some(project_root.join("public\\about\\index.html")),
+                ),
+                (Path::new(""), Some(project_root.join("public\\index.html"))),
+                // Missing index files
+                (Path::new("main.css"), None),
+                (Path::new("unknown"), None),
+            ]);
 
             (project_root, tests)
         } else {
             let project_root = Path::new("../../tests/data").canonicalize().unwrap();
 
-            let tests = Vec::from(
-                [
-                    // Existing index files
-                    (
-                        Path::new("about"),
-                        Some(project_root.join("public/about/index.html")),
-                    ),
-                    (Path::new(""), Some(project_root.join("public/index.html"))),
-                    // Missing index files
-                    (
-                        Path::new("main.css"),
-                        None,
-                    ),
-                    (Path::new("unknown"), None),
-                ]
-            );
+            let tests = Vec::from([
+                // Existing index files
+                (
+                    Path::new("about"),
+                    Some(project_root.join("public/about/index.html")),
+                ),
+                (Path::new(""), Some(project_root.join("public/index.html"))),
+                // Missing index files
+                (Path::new("main.css"), None),
+                (Path::new("unknown"), None),
+            ]);
 
             (project_root, tests)
         };
