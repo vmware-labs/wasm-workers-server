@@ -252,7 +252,14 @@ mod test {
         let path = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
         let cargo_toml = path.join("Cargo.toml");
         let cargo_toml_str = if cfg!(target_os = "windows") {
-            format!("http://localhost:8080/{}", cargo_toml.to_string_lossy()).replace(':', "%3A")
+            // Actix doesn't allow : and \ characters
+            // Remove the first two characters (like X:) and the \.
+            let no_root_path = cargo_toml
+                .to_string_lossy()
+                .chars()
+                .skip(3)
+                .collect::<String>();
+            format!("http://localhost:8080/{}", no_root_path).replace('\\', "/")
         } else {
             format!("http://localhost:8080{}", cargo_toml.to_string_lossy())
         };
