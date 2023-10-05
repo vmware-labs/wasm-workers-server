@@ -237,7 +237,7 @@ mod test {
         });
         let path = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
         let cargo_toml = path.join("Cargo.toml");
-        let cargo_toml_str = cargo_toml.to_string_lossy().to_string();
+        let cargo_toml_str = format!("http://localhost:8080{}", cargo_toml.to_string_lossy());
 
         // Test we're not exposing wrong files
         let tests = [
