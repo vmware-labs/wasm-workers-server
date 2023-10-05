@@ -146,8 +146,14 @@ mod test {
     }
 
     #[test]
-    // Use this approach to run tests sequentially
     fn test_end_to_end() {
+        // Run them in a method to ensure they run sequentially
+        examples_end_to_end();
+        not_found_end_to_end();
+    }
+
+    // Use this approach to run tests sequentially
+    fn examples_end_to_end() {
         // Allow configuring waiting times. It avoids having long waiting times
         // in development, while making it configurable in the CI
         let max_timeout = env::var("E2E_MAX_WAITING_TIME").map_or(DEFAULT_MAX_TIMEOUT, |str| {
@@ -228,8 +234,7 @@ mod test {
         }
     }
 
-    #[test]
-    fn test_not_found_examples() {
+    fn not_found_end_to_end() {
         // Allow configuring waiting times. It avoids having long waiting times
         // in development, while making it configurable in the CI
         let max_timeout = env::var("E2E_MAX_WAITING_TIME").map_or(DEFAULT_MAX_TIMEOUT, |str| {
