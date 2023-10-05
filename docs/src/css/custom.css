@@ -55,7 +55,15 @@ html[data-theme='dark'] {
 }
 
 .hero__diagram svg {
+  display: none;
   max-width: 100%;
+}
+
+@media screen and (min-width: 780px) {
+  .hero__diagram svg {
+    display: inline;
+    max-width: 100%;
+  }
 }
 
 .home__main {
