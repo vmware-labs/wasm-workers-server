@@ -17,7 +17,10 @@ fn clean_up_path(uri: &str) -> PathBuf {
 
     let valid_components: Vec<Component<'_>> = path
         .components()
-        // Keep only normal components
+        // Keep only normal components. The relative components should be
+        // strip by actix, but we're double checking it in case of weird encodings
+        // that can be interpreted as parent paths. Note this is a path that will
+        // be appended later to the public folder.
         .filter(|c| matches!(c, Component::Normal(_)))
         .collect();
 

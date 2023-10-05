@@ -242,7 +242,11 @@ mod test {
         });
         let path = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
         let cargo_toml = path.join("Cargo.toml");
-        let cargo_toml_str = format!("http://localhost:8080{}", cargo_toml.to_string_lossy());
+        let cargo_toml_str = if cfg!(target_os = "windows") {
+            format!("http://localhost:8080/{}", cargo_toml.to_string_lossy())
+        } else {
+            format!("http://localhost:8080{}", cargo_toml.to_string_lossy())
+        };
 
         // Test we're not exposing wrong files
         let tests = [
