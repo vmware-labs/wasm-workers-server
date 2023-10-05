@@ -71,6 +71,7 @@ Congrats! You just created your first worker 🎉. From this point, you can expl
   * [Ruby workers](https://workers.wasmlabs.dev/docs/languages/ruby)
   * [Go workers](https://workers.wasmlabs.dev/docs/languages/go)
   * [JavaScript workers](https://workers.wasmlabs.dev/docs/languages/javascript)
+  * [Zig workers](https://workers.wasmlabs.dev/docs/languages/zig)
 
 ### Run in a container
 
