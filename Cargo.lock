@@ -3262,7 +3262,7 @@ dependencies = [
 
 [[package]]
 name = "wasm-workers-rs"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "anyhow",
  "base64",
@@ -3275,7 +3275,7 @@ dependencies = [
 
 [[package]]
 name = "wasm-workers-server"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -4083,7 +4083,7 @@ dependencies = [
 
 [[package]]
 name = "worker"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "anyhow",
  "http",
@@ -4096,7 +4096,7 @@ dependencies = [
 
 [[package]]
 name = "wws-api-manage"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "actix-web",
  "serde",
@@ -4108,7 +4108,7 @@ dependencies = [
 
 [[package]]
 name = "wws-api-manage-openapi"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "utoipa",
  "wws-api-manage",
@@ -4116,7 +4116,7 @@ dependencies = [
 
 [[package]]
 name = "wws-config"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -4126,7 +4126,7 @@ dependencies = [
 
 [[package]]
 name = "wws-data-kv"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -4134,7 +4134,7 @@ dependencies = [
 
 [[package]]
 name = "wws-panel"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "actix-web",
  "mime_guess",
@@ -4143,7 +4143,7 @@ dependencies = [
 
 [[package]]
 name = "wws-project"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "git2",
  "openssl",
@@ -4160,7 +4160,7 @@ dependencies = [
 
 [[package]]
 name = "wws-router"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "lazy_static",
  "path-slash",
@@ -4174,7 +4174,7 @@ dependencies = [
 
 [[package]]
 name = "wws-runtimes"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -4186,7 +4186,7 @@ dependencies = [
 
 [[package]]
 name = "wws-server"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "actix-files",
  "actix-web",
@@ -4199,14 +4199,14 @@ dependencies = [
 
 [[package]]
 name = "wws-store"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "blake3",
 ]
 
 [[package]]
 name = "wws-worker"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "actix-web",
  "base64",
