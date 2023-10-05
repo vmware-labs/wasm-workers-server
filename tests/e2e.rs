@@ -15,9 +15,9 @@ mod test {
         let path = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
 
         let binary = if cfg!(target_os = "windows") {
-            "wws"
-        } else {
             "wws.exe"
+        } else {
+            "wws"
         };
 
         // Use release when it's available
