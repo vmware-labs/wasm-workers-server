@@ -99,7 +99,9 @@ impl Runtime for ExternalRuntime {
                         "/src",
                     )?
                     .args(&self.metadata.args)
-                    .map_err(|_| errors::RuntimeError::WasiContextError)?;
+                    .map_err(|err| errors::RuntimeError::WasiContextError {
+                        error: format!("{}", err),
+                    })?;
             }
             CtxBuilder::Preview2(ref mut builder) => {
                 builder

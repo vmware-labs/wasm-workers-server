@@ -11,7 +11,7 @@ pub enum RuntimeError {
     IOError(std::io::Error),
     MissingRuntime { extension: String },
     StoreError(wws_store::errors::StoreError),
-    WasiContextError,
+    WasiContextError { error: String },
     WasiError(Option<wasmtime_wasi::Error>),
 }
 
