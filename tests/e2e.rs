@@ -130,9 +130,18 @@ mod test {
                 }
             };
 
+            let body = match request_body(url) {
+                Ok(body) => body,
+                Err(err) => {
+                    eprintln!("[E2E] Error getting the body from the request to {url}");
+                    eprintln!("[E2E] Error: {}", err);
+                    String::new()
+                }
+            };
+
             codes.push((url, code));
 
-            println!("[E2E] URL: {url} / Status code: {code}");
+            println!("[E2E] URL: {url} / Status code: {code} / Body: {body}");
         }
 
         println!("[E2E] Stopping wws process [{}]", &child.id());
