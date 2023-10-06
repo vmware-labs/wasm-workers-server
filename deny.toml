@@ -20,9 +20,7 @@ unmaintained = "warn"
 yanked = "warn"
 notice = "warn"
 # A list of advisory IDs to ignore.
-ignore = [
-    #"RUSTSEC-0000-0000",
-]
+ignore = ["RUSTSEC-2023-0044"]
 
 # More documentation for the licenses section can be found here:
 # https://embarkstudios.github.io/cargo-deny/checks/licenses/cfg.html
@@ -40,7 +38,7 @@ allow = [
     "MIT",
     "MPL-2.0",
     "Unicode-DFS-2016",
-    "Zlib"
+    "Zlib",
 ]
 
 # More documentation about the 'bans' section can be found here:
