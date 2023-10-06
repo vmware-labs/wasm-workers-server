@@ -2946,7 +2946,7 @@ dependencies = [
 
 [[package]]
 name = "wasm-workers-rs"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -2958,7 +2958,7 @@ dependencies = [
 
 [[package]]
 name = "wasm-workers-server"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -3498,7 +3498,7 @@ dependencies = [
 
 [[package]]
 name = "worker"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "anyhow",
  "http",
@@ -3511,7 +3511,7 @@ dependencies = [
 
 [[package]]
 name = "wws-config"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "anyhow",
  "serde",
@@ -3522,7 +3522,7 @@ dependencies = [
 
 [[package]]
 name = "wws-data-kv"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "anyhow",
  "serde",
@@ -3531,7 +3531,7 @@ dependencies = [
 
 [[package]]
 name = "wws-router"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "lazy_static",
  "regex",
@@ -3544,7 +3544,7 @@ dependencies = [
 
 [[package]]
 name = "wws-runtimes"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "anyhow",
  "serde",
@@ -3557,7 +3557,7 @@ dependencies = [
 
 [[package]]
 name = "wws-runtimes-manager"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "anyhow",
  "reqwest",
@@ -3571,7 +3571,7 @@ dependencies = [
 
 [[package]]
 name = "wws-server"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "actix-files",
  "actix-web",
@@ -3583,7 +3583,7 @@ dependencies = [
 
 [[package]]
 name = "wws-store"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "anyhow",
  "blake3",
@@ -3591,7 +3591,7 @@ dependencies = [
 
 [[package]]
 name = "wws-worker"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "actix-web",
  "anyhow",
