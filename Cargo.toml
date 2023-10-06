@@ -11,9 +11,9 @@ repository = { workspace = true }
 
 # Common package definition for all crates / kits
 [workspace.package]
-version = "1.2.0"
+version = "1.2.1"
 edition = "2021"
-authors = [ "Wasm Labs <https://wasmlabs.dev>" ]
+authors = ["Wasm Labs <https://wasmlabs.dev>"]
 license = "Apache-2.0"
 repository = "https://github.com/vmware-labs/wasm-workers-server/"
 
@@ -54,14 +54,14 @@ members = [
   "crates/worker",
   "kits/rust",
   "kits/rust/worker",
-  "kits/javascript"
+  "kits/javascript",
 ]
 # Exclude examples
 exclude = [
   "examples/pdf-create",
   "examples/rust-basic",
   "examples/rust-kv",
-  "examples/rust-params"
+  "examples/rust-params",
 ]
 
 [workspace.dependencies]
