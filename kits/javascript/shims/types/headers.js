@@ -9,7 +9,12 @@ class Headers {
 
     // Initialize the headers
     for (const key in initialHeaders) {
-      headers[key] = initialHeaders[key];
+      let value = initialHeaders[key];
+
+      // Allow only string values
+      if (typeof value === "string") {
+        headers[key] = value;
+      }
     }
 
     this.headers = headers;
