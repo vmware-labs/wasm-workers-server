@@ -10,7 +10,15 @@ import httpStatus from "http-status";
 class Response {
   constructor(body, options = {}) {
     this.body = body;
-    this.headers = new Headers(options.headers || {});
+
+    if (options.headers instanceof Headers) {
+      this.headers = options.headers;
+    } else if (options.headers instanceof Object) {
+      this.headers = new Headers(options.headers);
+    } else {
+      this.headers = new Headers({});
+    }
+
     this.status = options.status || 200;
     this.statusText = options.statusText || httpStatus[this.status];
   }
