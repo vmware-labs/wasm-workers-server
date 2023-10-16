@@ -19,7 +19,7 @@ globalThis.TextDecoder = TextDecoder;
 // Main logic
 let handlerFunction;
 
-let addEventListener = (_eventName, handler) => {
+globalThis.addEventListener = (_eventName, handler) => {
   // Store the callback globally
   handlerFunction = handler;
 };
@@ -60,10 +60,10 @@ const requestToHandler = input => {
 };
 
 // This is the entrypoint for the project.
-entrypoint = requestToHandler;
+globalThis.entrypoint = requestToHandler;
 
 // Set the result
-result = {};
+globalThis.result = {};
 
 // Save errors
-error = null
+globalThis.error = null

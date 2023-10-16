@@ -49,7 +49,19 @@ fn main() {
         },
     }
 
-    context.eval_global("handler.js", &contents).unwrap();
+    // Checks if the given code uses ECMAScript modules.
+    if contents.contains("export default") {
+        let _ = context.eval_module("handler.mjs", &contents).unwrap();
+        let _ = context
+            .eval_module(
+                "runtime.mjs",
+                &format!("import {{ default as handler }} from 'handler.mjs'; addEventListener('fetch', (e) => {{ e.respondWith(handler.fetch(e.request)) }});"),
+            )
+            .unwrap();
+    } else {
+        context.eval_global("handler.js", &contents).unwrap();
+    }
+
     let global = context.global_object().unwrap();
     let entrypoint = global.get_property("entrypoint").unwrap();
 

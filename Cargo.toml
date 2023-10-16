@@ -60,7 +60,6 @@ members = [
   "crates/worker",
   "kits/rust",
   "kits/rust/worker",
-  "kits/javascript",
 ]
 # Exclude examples
 exclude = [
@@ -71,6 +70,8 @@ exclude = [
   "examples/rust-pdf-create",
   "examples/rust-wasi-nn",
   "examples/rust-wasi-nn-preload",
+  # It uses incompatible crate versions
+  "kits/javascript",
 ]
 
 [workspace.dependencies]
