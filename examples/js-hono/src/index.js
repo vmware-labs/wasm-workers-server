@@ -19,4 +19,4 @@ app.notFound((c) => {
   return c.text('Awww! This page is missing', 404)
 })
 
-app.fire();
+export default app;
