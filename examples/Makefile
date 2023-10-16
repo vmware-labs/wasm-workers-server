@@ -3,7 +3,7 @@ COMPONENTS = components/rust-basic components/rust-kv
 
 all: $(SUBDIRS) rust-params $(COMPONENTS) components/rust-params
 
-.PHONY: $(SUBDIRS) rust-params $(COMPONENTS) components/rust-params
+.PHONY: $(SUBDIRS) rust-params $(COMPONENTS) components/rust-params js-hono
 
 $(SUBDIRS):
 	cd $@ && \
@@ -14,6 +14,10 @@ rust-params:
 	cd $@ && \
 		cargo build --target wasm32-wasi --release && \
 			cp target/wasm32-wasi/release/$@.wasm "./[id].wasm"
+
+js-hono:
+	cd $@/src && \
+		npm install && npm run build
 
 $(COMPONENTS):
 	mkdir -p $@

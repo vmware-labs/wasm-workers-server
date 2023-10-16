@@ -236,6 +236,9 @@ impl Worker {
         Ok(())
     }
 
+    /// Run the worker that will process the given URL. This method sets the
+    /// module context including all the required features like WASI and WASI-NN.
+    /// Then, it loads the module, run it and process the output.
     pub async fn run(
         &self,
         request: &HttpRequest,

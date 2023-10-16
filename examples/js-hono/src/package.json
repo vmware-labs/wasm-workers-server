@@ -1,0 +1,17 @@
+{
+  "name": "wws-hono-sample",
+  "version": "1.0.0",
+  "description": "",
+  "private": "true",
+  "main": "index.js",
+  "keywords": [],
+  "author": "Wasm Labs <https://wasmlabs.dev>",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "esbuild index.js --bundle --minify --outfile=../dist/[...app].js"
+  },
+  "dependencies": {
+    "esbuild": "^0.19.4",
+    "hono": "^3.7.5"
+  }
+}
