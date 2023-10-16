@@ -6,3 +6,4 @@ examples/*.toml
 .wws
 **/zig-cache
 **/zig-out
+node_modules
