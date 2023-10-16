@@ -4,7 +4,7 @@
 use crate::errors::{self, Result, WorkerError};
 
 use actix_web::{
-    http::{header::HeaderMap, StatusCode},
+    http::{header::HeaderMap, StatusCode, Uri},
     HttpRequest,
 };
 use base64::{engine::general_purpose, Engine as _};
@@ -16,7 +16,7 @@ use std::collections::HashMap;
 #[derive(Serialize, Deserialize)]
 pub struct WasmInput<'a> {
     /// Request full URL
-    url: &'a str,
+    url: String,
     /// Request method
     method: &'a str,
     /// Request headers
@@ -43,10 +43,7 @@ impl<'a> WasmInput<'a> {
             params.insert(k.to_string(), v.to_string());
         }
 
-        let url = match request.uri().path_and_query() {
-            Some(path) => path.as_str(),
-            None => request.uri().path(),
-        };
+        let url = Self::build_url(request);
 
         Self {
             url,
@@ -55,6 +52,21 @@ impl<'a> WasmInput<'a> {
             body,
             kv: kv.unwrap_or_default(),
             params,
+        }
+    }
+
+    /// Prepare the URL from the given actix HTTP request. It will try to
+    /// load the full URL including the authority and the schema. This is
+    /// required by different frameworks.
+    fn build_url(request: &HttpRequest) -> String {
+        match Uri::builder()
+            .scheme(request.connection_info().scheme())
+            .authority(request.connection_info().host())
+            .path_and_query(request.uri().to_string())
+            .build()
+        {
+            Ok(uri) => uri.to_string(),
+            Err(_) => request.uri().to_string(),
         }
     }
 
