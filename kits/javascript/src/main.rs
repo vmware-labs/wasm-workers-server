@@ -6,6 +6,7 @@ mod error;
 
 use bindings::load_bindings_into_global;
 use javy::{json, Runtime};
+use regex::Regex;
 use std::{
     env, fs,
     io::{stdin, stdout, Read, Write},
@@ -16,6 +17,28 @@ wit_bindgen_rust::import!({paths: ["../../wit/core/http.wit"]});
 
 // JS polyfill
 static POLYFILL: &str = include_str!("../shims/dist/index.js");
+
+/// Determine the worker JS type
+enum JSWorkerType {
+    /// Relies on the global scope. No ECMA modules.
+    Global,
+    /// Exports a default function which is the one replying to the events.
+    DefaultExport,
+}
+
+/// Identify the worker source code to run it properly.
+fn identify_type(src: &str) -> JSWorkerType {
+    // Detect default exported functions
+    let default_regex = Regex::new(r"export\s+default\s+\w+;?").unwrap();
+    // Detect exported functions with the "as" syntax like "export { app as default }";
+    let default_as_regex = Regex::new(r"export\s*\{\s*\w+\s+(as default){1}\s*\};?").unwrap();
+
+    if default_regex.is_match(src) || default_as_regex.is_match(src) {
+        JSWorkerType::DefaultExport
+    } else {
+        JSWorkerType::Global
+    }
+}
 
 fn main() {
     let runtime = Runtime::default();
@@ -49,17 +72,23 @@ fn main() {
         },
     }
 
-    // Checks if the given code uses ECMAScript modules.
-    if contents.contains("export default") {
-        let _ = context.eval_module("handler.mjs", &contents).unwrap();
-        let _ = context
-            .eval_module(
-                "runtime.mjs",
-                &format!("import {{ default as handler }} from 'handler.mjs'; addEventListener('fetch', (e) => {{ e.respondWith(handler.fetch(e.request)) }});"),
-            )
-            .unwrap();
-    } else {
-        context.eval_global("handler.js", &contents).unwrap();
+    // Checks if the given code uses ECMAScript modules. Currently, we don't plan to integrate
+    // a full JavaScript parser for this, so we are going to rely on regexps. This implementation
+    // has limitations like detecting "// export default app;" as a module. In the future,
+    // we may add more complete checks.
+    match identify_type(&contents) {
+        JSWorkerType::DefaultExport => {
+            let _ = context.eval_module("handler.mjs", &contents).unwrap();
+            let _ = context
+                .eval_module(
+                    "runtime.mjs",
+                    &format!("import {{ default as handler }} from 'handler.mjs'; addEventListener('fetch', (e) => {{ e.respondWith(handler.fetch(e.request)) }});"),
+                )
+                .unwrap();
+        }
+        _ => {
+            context.eval_global("handler.js", &contents).unwrap();
+        }
     }
 
     let global = context.global_object().unwrap();
