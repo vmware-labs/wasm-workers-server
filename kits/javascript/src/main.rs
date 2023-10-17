@@ -29,11 +29,11 @@ enum JSWorkerType {
 /// Identify the worker source code to run it properly.
 fn identify_type(src: &str) -> JSWorkerType {
     // Detect default exported functions and objects
-    let default_regex = Regex::new(r"export\s+default\s+\w+;?").unwrap();
+    let default_regex = Regex::new(r"(?-u)export\s+default\s+\w+;?").unwrap();
     // Detect default exported object
-    let default_block_regex = Regex::new(r"export\s+default\s*\{(\s.+)*\};?").unwrap();
+    let default_block_regex = Regex::new(r"(?-u)export\s+default\s*\{(\s.*)*\};?").unwrap();
     // Detect exported functions with the "as" syntax like "export { app as default }";
-    let default_as_regex = Regex::new(r"export\s*\{\s*\w+\s+(as default){1}\s*\};?").unwrap();
+    let default_as_regex = Regex::new(r"(?-u)export\s*\{\s*\w+\s+(as default){1}\s*\};?").unwrap();
 
     if default_regex.is_match(src)
         || default_block_regex.is_match(src)
