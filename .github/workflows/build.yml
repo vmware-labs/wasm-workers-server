@@ -71,4 +71,4 @@ jobs:
     - name: Build wws on release mode
       run: cargo build --verbose --release
     - name: Test
-      run: cargo test --workspace --exclude wasm-workers-quick-js-engine -- --show-output
+      run: cargo test --workspace -- --show-output
