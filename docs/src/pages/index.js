@@ -42,6 +42,8 @@ export default function Home() {
         <pre className={styles.codeHero}>
           <code>{`$ curl -fsSL https://workers.wasmlabs.dev/install | bash
 $ wws --help
+A WebAssembly framework to develop and run serverless applications anywhere
+
 Usage: wws [OPTIONS] [PATH] [COMMAND]
 
 Commands:
@@ -49,14 +51,22 @@ Commands:
   help      Print this message or the help of the given subcommand(s)
 
 Arguments:
-  [PATH]  Folder to read WebAssembly modules from [default: .]
+  [PATH]  Location of the wws project. It could be a local folder or a git repository [default: .]
 
 Options:
-      --host <HOSTNAME>  Hostname to initiate the server [default: 127.0.0.1]
-  -p, --port <PORT>      Port to initiate the server [default: 8080]
-      --prefix <PREFIX>  Prepend the given path to all URLs [default: ]
-  -h, --help             Print help information
-  -V, --version          Print version information`}</code></pre>
+      --host <HOSTNAME>          Hostname to initiate the server [default: 127.0.0.1]
+  -p, --port <PORT>              Port to initiate the server [default: 8080]
+      --prefix <PREFIX>          Prepend the given path to all URLs [default: ]
+      --ignore <IGNORE>          Patterns to ignore when looking for worker files [default: ]
+  -i, --install-runtimes         Install missing runtimes automatically
+      --git-commit <GIT_COMMIT>  Set the commit when using a git repository as project
+      --git-tag <GIT_TAG>        Set the tag when using a git repository as project
+      --git-branch <GIT_BRANCH>  Set the branch when using a git repository as project
+      --git-folder <GIT_FOLDER>  Change the directory when using a git repository as project
+      --enable-panel             Enable the administration panel
+      --cors <CORS>              CORS headers to add to all workers if not already set by the worker
+  -h, --help                     Print help
+  -V, --version                  Print version`}</code></pre>
       </main>
     </Layout>
   );
