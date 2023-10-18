@@ -9,7 +9,12 @@ import httpStatus from "http-status";
 // It contains different helpers
 class Response {
   constructor(body, options = {}) {
-    this.body = body;
+    // Process the body
+    if (body instanceof String) {
+      this.body = body.toString();
+    } else {
+      this.body = body;
+    }
 
     if (options.headers instanceof Headers) {
       this.headers = options.headers;
