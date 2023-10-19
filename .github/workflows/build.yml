@@ -7,6 +7,10 @@ on:
     branches: [ "main", "v[0-9]+.[0-9]+" ]
 
 env:
+  # Disabling debug info and incremental builds to speed up builds a bunch.
+  # See https://matklad.github.io/2021/09/04/fast-rust-builds.html#CI-Workflow
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
   CARGO_TERM_COLOR: always
 
 jobs:
@@ -70,5 +74,7 @@ jobs:
       run: make all
     - name: Build wws on release mode
       run: cargo build --verbose --release
+    - name: Compile test
+      run: cargo test --no-run --locked
     - name: Test
       run: cargo test --workspace -- --show-output

@@ -122,12 +122,14 @@ pub async fn handle_worker(req: HttpRequest, body: Bytes) -> HttpResponse {
     }
 
     // Write to the state if required
-    if handler_success && kv_namespace.is_some() {
-        data_connectors
-            .write()
-            .expect("error locking data connectors lock for writing")
-            .kv
-            .replace_store(&kv_namespace.unwrap(), &handler_result.kv)
+    if handler_success {
+        if let Some(kv_namespace) = kv_namespace {
+            data_connectors
+                .write()
+                .expect("error locking data connectors lock for writing")
+                .kv
+                .replace_store(&kv_namespace, &handler_result.kv)
+        }
     }
 
     match handler_result.body() {
