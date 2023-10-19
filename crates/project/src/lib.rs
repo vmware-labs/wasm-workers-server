@@ -40,8 +40,8 @@ pub async fn prepare_project(
     force_type: Option<ProjectType>,
     options: Options,
 ) -> Result<PathBuf> {
-    let project_type = if force_type.is_some() {
-        force_type.unwrap()
+    let project_type = if let Some(new_type) = force_type {
+        new_type
     } else {
         identify_type(location)?
     };

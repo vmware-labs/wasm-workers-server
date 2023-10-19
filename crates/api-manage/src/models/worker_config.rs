@@ -42,7 +42,7 @@ impl From<&Worker> for WorkerConfig {
                     .map(WorkerFolder::from)
                     .collect::<Vec<WorkerFolder>>()
             })
-            .unwrap_or(Vec::new());
+            .unwrap_or_default();
 
         Self {
             id: value.id.clone(),
