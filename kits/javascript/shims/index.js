@@ -55,7 +55,7 @@ const requestToHandler = input => {
         error = `Couldn't process the response from the handler:\n${err}`;
       });
   } catch (err) {
-    error = `There was an error running the handler:\n${err}`;
+    error = `There was an error running the handler:\n${err}\n${err.stack}`;
   }
 };
 
