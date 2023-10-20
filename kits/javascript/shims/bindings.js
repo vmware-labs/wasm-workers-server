@@ -53,6 +53,9 @@ import { Response } from "./types/response";
     },
     warn(msg) {
       this.log(msg);
+    },
+    trace(msg) {
+      this.log(msg);
     }
   }
 
