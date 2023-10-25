@@ -30,12 +30,12 @@ where
 {
     let method = match *req.method() {
         Method::GET => HttpMethod::Get,
-        Method::POST => HttpMethod::Get,
-        Method::PUT => HttpMethod::Get,
-        Method::PATCH => HttpMethod::Get,
-        Method::DELETE => HttpMethod::Get,
-        Method::OPTIONS => HttpMethod::Get,
-        Method::HEAD => HttpMethod::Get,
+        Method::POST => HttpMethod::Post,
+        Method::PUT => HttpMethod::Put,
+        Method::PATCH => HttpMethod::Patch,
+        Method::DELETE => HttpMethod::Delete,
+        Method::OPTIONS => HttpMethod::Options,
+        Method::HEAD => HttpMethod::Head,
         _ => HttpMethod::Get,
     };
 
