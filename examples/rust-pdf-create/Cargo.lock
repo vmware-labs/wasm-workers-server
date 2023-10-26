@@ -660,7 +660,7 @@ checksum = "1c38c045535d93ec4f0b4defec448e4291638ee608530863b1e2ba115d4fff7f"
 
 [[package]]
 name = "wasm-workers-rs"
-version = "1.6.0"
+version = "1.7.0"
 dependencies = [
  "anyhow",
  "base64",
@@ -762,7 +762,7 @@ dependencies = [
 
 [[package]]
 name = "worker"
-version = "1.6.0"
+version = "1.7.0"
 dependencies = [
  "anyhow",
  "http",
