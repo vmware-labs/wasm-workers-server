@@ -24,7 +24,7 @@ In this example, the worker will get a request and print all the related informa
 
     ```shell-session
     mkdir lib
-    wget -O ./lib/worker.zig https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/kits/zig/worker/worker.zig
+    wget -O ./lib/worker.zig https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/kits/zig/worker/src/worker.zig
     ```
 
 3. Edit the `src/main.zig`  to match the following contents:
