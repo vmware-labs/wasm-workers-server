@@ -43,8 +43,6 @@ wws_config = []
 wws_router = []
 wws_server = []
 
-vendored-openssl = ["wws-project/vendored-openssl"]
-
 [workspace]
 members = [
   "crates/api-manage",
@@ -77,7 +75,7 @@ exclude = [
 [workspace.dependencies]
 actix-web = "4"
 lazy_static = "1.4.0"
-reqwest = "0.11"
+reqwest = { version = "0.11", features = ["rustls"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.85"
 tokio = "1.28"
@@ -99,4 +97,3 @@ wasmtime-wasi = "13.0.0"
 wasmtime-wasi-nn = "13.0.0"
 wasi-common = "13.0.0"
 path-slash = "0.2.1"
-openssl = { version = "=0.10.55" }

@@ -2,10 +2,9 @@
 # is mainly used to build the preview / release container images in
 # GitHub actions
 
-# Retrieve the certificates to install runtimes later on.
+# Create the folders for the main container
 FROM --platform=$TARGETPLATFORM bitnami/minideb:latest AS sysroot
 RUN mkdir -p /target/app /target/opt
-RUN install_packages ca-certificates
 
 # Build the final image
 FROM --platform=$TARGETPLATFORM scratch
@@ -17,7 +16,6 @@ LABEL org.opencontainers.image.licenses="Apache-2.0"
 
 COPY --from=sysroot /target/app /app
 COPY --from=sysroot /target/opt /opt
-COPY --from=sysroot /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --chmod=755 ./wws-$TARGETARCH /opt/wws
 
 ENTRYPOINT ["/opt/wws"]

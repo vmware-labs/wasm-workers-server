@@ -1,6 +1,4 @@
 # Build wasm_runtime in release mode
-
-
 FROM --platform=$TARGETPLATFORM rust:1.71.0-slim as build-wws
 ARG WWS_BUILD_DIR=/usr/src/wws
 ARG TARGETPLATFORM
@@ -19,15 +17,13 @@ RUN set -eux; \
         *) echo >&2 "unsupported architecture: $BUILDPLATFORM"; exit 1 ;; \
     esac; \
     rustup target add $bldArch; \
-    cargo build --release --features vendored-openssl --target=$bldArch; \
+    cargo build --release --target=$bldArch; \
     mkdir ./build; \
     cp ./target/$bldArch/release/wws ./build/wws
 
-
+# Build the image
 FROM --platform=$TARGETPLATFORM debian:bullseye-slim
 ARG WWS_BUILD_DIR=/usr/src/wws
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates
 RUN mkdir -p /app
 RUN mkdir -p /opt
 COPY --from=build-wws ${WWS_BUILD_DIR}/build/wws /opt
