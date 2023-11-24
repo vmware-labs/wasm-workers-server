@@ -33,7 +33,7 @@ exclude = [
     "wit-bindgen-wasmtime",
     "wit-bindgen-gen-wasmtime",
     "wit-bindgen-gen-rust",
-    "wit-bindgen-gen-core"
+    "wit-bindgen-gen-core",
 ]
 
 # More documentation for the advisories section can be found here:
@@ -63,9 +63,16 @@ allow = [
     "ISC",
     "MIT",
     "MPL-2.0",
+    "OpenSSL",
     "Unicode-DFS-2016",
-    "Zlib"
+    "Zlib",
 ]
+
+# Special case for Ring, which includes multiple licenses
+[[licenses.clarify]]
+name = "ring"
+expression = "MIT AND ISC AND OpenSSL"
+license-files = [{ path = "LICENSE", hash = 0xbd0eed23 }]
 
 # More documentation about the 'bans' section can be found here:
 # https://embarkstudios.github.io/cargo-deny/checks/bans/cfg.html
