@@ -34,7 +34,7 @@ wws-server = { workspace = true }
 wws-project = { workspace = true }
 
 [dev-dependencies]
-reqwest = { version = "0.11", features = ["blocking"] }
+reqwest = { version = "0.11", features = ["rustls", "blocking"] }
 
 [features]
 default = ["all"]
