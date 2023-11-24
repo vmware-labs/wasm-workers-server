@@ -6,6 +6,7 @@ mod error;
 
 use bindings::load_bindings_into_global;
 use javy::{json, Runtime};
+use once_cell::sync::OnceCell;
 use regex::Regex;
 use std::{
     env, fs,
@@ -15,8 +16,27 @@ use std::{
 // Load bindings from WIT file.
 wit_bindgen_rust::import!({paths: ["../../wit/core/http.wit"]});
 
+/// Ready to use runtime + polyfill
+static mut RUNTIME: OnceCell<Runtime> = OnceCell::new();
+
 // JS polyfill
 static POLYFILL: &str = include_str!("../shims/dist/index.js");
+
+/// Preinitialize the module with Wizer
+#[export_name = "wizer.initialize"]
+pub extern "C" fn init() {
+    let runtime = Runtime::default();
+
+    // Precompile the Polyfill to bytecode
+    let context = runtime.context();
+    let bytecode = context.compile_global("polyfill.js", POLYFILL).unwrap();
+
+    // Preload it
+    let _ = context.eval_binary(&bytecode);
+
+    // Store result
+    unsafe { RUNTIME.set(runtime).unwrap() };
+}
 
 /// Determine the worker JS type
 enum JSWorkerType {
@@ -47,13 +67,12 @@ fn identify_type(src: &str) -> JSWorkerType {
 }
 
 fn main() {
-    let runtime = Runtime::default();
+    let runtime = unsafe { RUNTIME.get().unwrap() };
     let context = runtime.context();
 
     let source = fs::read_to_string("/src/index.js");
     let mut contents = String::new();
     let mut request = String::new();
-    contents.push_str(POLYFILL);
 
     stdin().read_to_string(&mut request).unwrap();
 

@@ -897,6 +897,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "javy",
+ "once_cell",
  "regex",
  "wit-bindgen-rust",
 ]
