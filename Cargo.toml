@@ -99,4 +99,4 @@ wasmtime-wasi = "13.0.0"
 wasmtime-wasi-nn = "13.0.0"
 wasi-common = "13.0.0"
 path-slash = "0.2.1"
-openssl = { version = "=0.10.55" }
+openssl = { version = "^0.10.60" }
