@@ -12,6 +12,6 @@
   },
   "dependencies": {
     "esbuild": "^0.19.4",
-    "hono": "^3.7.5"
+    "hono": "^3.11.8"
   }
 }
