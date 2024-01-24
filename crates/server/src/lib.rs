@@ -82,10 +82,7 @@ pub async fn serve(serve_options: ServeOptions) -> Result<Server> {
 
     let server = HttpServer::new(move || {
         // Initializes the app data for handlers
-        let app_data: Data<AppData> = Data::new(
-            <ServeOptions as TryInto<AppData>>::try_into(serve_options.clone())
-                .expect("failed initializing server"),
-        );
+        let app_data: Data<AppData> = Data::new(serve_options.clone().into());
 
         let mut app = App::new()
             // enable logger
