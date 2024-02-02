@@ -8,15 +8,15 @@ fn requestFn(resp: *worker.Response, r: *worker.Request) void {
     var cache = r.context.cache;
     var counter: i32 = 0;
 
-    var v = cache.getOrPut("counter") catch undefined;
+    const v = cache.getOrPut("counter") catch undefined;
 
     if (!v.found_existing) {
         v.value_ptr.* = "0";
     } else {
-        var counterValue = v.value_ptr.*;
-        var num = std.fmt.parseInt(i32, counterValue, 10) catch undefined;
+        const counterValue = v.value_ptr.*;
+        const num = std.fmt.parseInt(i32, counterValue, 10) catch undefined;
         counter = num + 1;
-        var num_s = std.fmt.allocPrint(allocator, "{d}", .{ counter }) catch undefined;
+        const num_s = std.fmt.allocPrint(allocator, "{d}", .{counter}) catch undefined;
         _ = cache.put("counter", num_s) catch undefined;
     }
 
@@ -35,7 +35,7 @@ fn requestFn(resp: *worker.Response, r: *worker.Request) void {
         \\</body>
     ;
 
-    var body = std.fmt.allocPrint(allocator, s, .{ counter }) catch undefined; // add useragent
+    const body = std.fmt.allocPrint(allocator, s, .{counter}) catch undefined; // add useragent
 
     _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
     _ = &resp.writeAll(body);

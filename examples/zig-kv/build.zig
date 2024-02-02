@@ -1,13 +1,16 @@
 const std = @import("std");
 
-const examples = [1][]const u8{ "worker-kv" };
+const examples = [1][]const u8{"worker-kv"};
 
 pub fn build(b: *std.Build) !void {
-    const target = try std.zig.CrossTarget.parse(.{ .arch_os_abi = "wasm32-wasi" });
+    const target = b.resolveTargetQuery(.{
+        .cpu_arch = .wasm32,
+        .os_tag = .wasi,
+    });
     const optimize = b.standardOptimizeOption(.{});
 
     const worker_module = b.createModule(.{
-        .source_file = .{ .path = "../../kits/zig/worker/src/worker.zig" },
+        .root_source_file = .{ .path = "../../kits/zig/worker/src/worker.zig" },
     });
 
     inline for (examples) |example| {
@@ -19,7 +22,7 @@ pub fn build(b: *std.Build) !void {
         });
 
         exe.wasi_exec_model = .reactor;
-        exe.addModule("worker", worker_module);
+        exe.root_module.addImport("worker", worker_module);
 
         b.installArtifact(exe);
     }

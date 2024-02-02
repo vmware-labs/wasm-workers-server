@@ -49,19 +49,19 @@ pub const Input = struct {
 };
 
 pub const Output = struct {
-	data: []const u8,
-	headers: std.StringArrayHashMap([]const u8),
-	status:  u16,
-	base64:  bool,
+    data: []const u8,
+    headers: std.StringArrayHashMap([]const u8),
+    status: u16,
+    base64: bool,
 
-	httpHeader: http.Headers,
+    httpHeader: http.Headers,
 
     const Self = @This();
 
     pub fn init() Self {
         return .{
             .data = "",
-            .headers =  std.StringArrayHashMap([]const u8).init(allocator),
+            .headers = std.StringArrayHashMap([]const u8).init(allocator),
             .status = 0,
             .base64 = false,
             .httpHeader = http.Headers.init(allocator),
@@ -80,7 +80,7 @@ pub const Output = struct {
         self.status = statusCode;
     }
 
-     pub fn write(self: *Self, response: Response) !u32 {
+    pub fn write(self: *Self, response: Response) !u32 {
         self.base64 = response.base64;
         if (response.base64) {
             self.data = base64Encode(response.body);
@@ -124,7 +124,9 @@ pub const Output = struct {
         const result = slice_stream.getWritten();
 
         const stdout = std.io.getStdOut().writer();
-        try stdout.print("{s}", .{ result });
+        try stdout.print("{s}", .{result});
+
+        std.debug.print("{s}\n", .{result});
 
         return self.data.len;
     }
@@ -133,7 +135,7 @@ pub const Output = struct {
 fn base64Encode(data: []const u8) []const u8 {
     // This initializing Base64Encoder throws weird error if not wrapped in function (maybe Zig bug?)
     var enc = std.base64.Base64Encoder.init(std.base64.standard_alphabet_chars, '=');
-    var data_len = enc.calcSize(data.len);
+    const data_len = enc.calcSize(data.len);
     var buf: [16384]u8 = undefined;
     return enc.encode(buf[0..data_len], data);
 }
@@ -143,7 +145,7 @@ fn getHeadersJsonObject(s: std.StringArrayHashMap([]const u8)) !std.json.Value {
 
     var i = s.iterator();
     while (i.next()) |kv| {
-        try value.object.put(kv.key_ptr.*, std.json.Value{ .string = kv.value_ptr.*});
+        try value.object.put(kv.key_ptr.*, std.json.Value{ .string = kv.value_ptr.* });
     }
 
     return value;
@@ -154,7 +156,7 @@ fn getCacheJsonObject(s: std.StringHashMap([]const u8)) !std.json.Value {
 
     var i = s.iterator();
     while (i.next()) |entry| {
-        try value.object.put(entry.key_ptr.*, std.json.Value{ .string = entry.value_ptr.*});
+        try value.object.put(entry.key_ptr.*, std.json.Value{ .string = entry.value_ptr.* });
     }
 
     return value;
@@ -165,7 +167,8 @@ pub fn readInput() !Input {
     var buf = std.io.bufferedReader(in.reader());
     var r = buf.reader();
 
-    var msg = try r.readAllAlloc(allocator, std.math.maxInt(u32));
+    const msg = try r.readAllAlloc(allocator, std.math.maxInt(u32));
+    std.debug.print("in {s}\n", .{msg});
     return getInput(msg);
 }
 
@@ -224,12 +227,12 @@ pub fn getWriterRequest() !RequestAndOutput {
         return std.os.exit(1);
     };
 
-    var req = createRequest(&in) catch |err| {
+    const req = createRequest(&in) catch |err| {
         std.debug.print("error creating request : {!}\n", .{err});
         return std.os.exit(1);
     };
 
-    var output = Output.init();
+    const output = Output.init();
 
     return RequestAndOutput{
         .request = req,
@@ -250,17 +253,22 @@ pub const Context = struct {
 };
 
 pub fn ServeFunc(requestFn: *const fn (*Response, *Request) void) void {
-    var r = try getWriterRequest();
+    const r = try getWriterRequest();
     var request = r.request;
     var output = r.output;
 
-    var response = Response{ .body = "", .base64 = false, .headers = http.Headers.init(allocator), .request = request, };
+    var response = Response{
+        .body = "",
+        .base64 = false,
+        .headers = http.Headers.init(allocator),
+        .request = request,
+    };
 
     requestFn(&response, &request);
 
     output.httpHeader = response.headers;
 
     _ = output.write(response) catch |err| {
-        std.debug.print("error writing data: {!} \n", .{ err });
+        std.debug.print("error writing data: {!} \n", .{err});
     };
 }
