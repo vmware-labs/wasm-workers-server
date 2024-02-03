@@ -3,185 +3,52 @@ const std = @import("std");
 pub const Method = std.http.Method;
 pub const Headers = std.http.Headers;
 
-pub const Request = struct {
-    url: []const u8,
-    body: []const u8,
-    method: Method,
-    headers: *Headers,
-    storage: *std.StringHashMap([]const u8),
-    params: *std.StringHashMap([]const u8),
-};
-
 const InputStreamType = enum {
     stdin,
+    bytes,
 };
 
 const InputStream = union(InputStreamType) {
     stdin: void,
+    bytes: []const u8,
 };
 
-const ParseStreamError = error{ OutOfMemory, UnknownError, MalformedRequestObject };
+const ParseStreamError = error{Unknown};
 
 const ParseStreamOptions = struct {
     input_stream: InputStream = .stdin,
 };
 
-const ParseStreamResult = struct {
-    allocator: std.mem.Allocator,
-    request: *Request,
-
-    pub fn destroy(self: *ParseStreamResult) void {
-        {
-            var it = self.request.params.iterator();
-            while (it.next()) |*entry| {
-                self.allocator.free(entry.key_ptr.*);
-                self.allocator.free(entry.value_ptr.*);
-            }
-            self.request.params.deinit();
-            self.allocator.destroy(self.request.params);
-        }
-
-        {
-            var it = self.request.storage.iterator();
-            while (it.next()) |*entry| {
-                self.allocator.free(entry.key_ptr.*);
-                self.allocator.free(entry.value_ptr.*);
-            }
-            self.request.storage.deinit();
-            self.allocator.destroy(self.request.storage);
-        }
-
-        self.request.headers.deinit();
-        self.allocator.destroy(self.request.headers);
-
-        self.allocator.free(self.request.url);
-        self.allocator.free(self.request.body);
-
-        self.allocator.destroy(self.request);
-    }
+const Request = struct {
+    url: []const u8,
+    method: Method,
+    body: []const u8,
+    headers: std.json.ArrayHashMap([]const u8),
+    kv: std.json.ArrayHashMap([]const u8),
+    params: std.json.ArrayHashMap([]const u8),
 };
 
 /// Caller owns the memory
-pub fn parseStream(allocator: std.mem.Allocator, options: ParseStreamOptions) ParseStreamError!ParseStreamResult {
-    const stream = switch (options.input_stream) {
-        .stdin => std.io.getStdIn().reader(),
-    };
-
+pub fn parseStream(allocator: std.mem.Allocator, options: ParseStreamOptions) ParseStreamError!std.json.Parsed(Request) {
     var input = std.ArrayList(u8).init(allocator);
     defer input.deinit();
 
-    stream.readAllArrayList(&input, std.math.maxInt(usize)) catch return ParseStreamError.UnknownError;
-
-    var json = std.json.parseFromSlice(std.json.Value, allocator, input.items, .{}) catch return ParseStreamError.UnknownError;
-    defer json.deinit();
-
-    const r = try allocator.create(Request);
-
-    switch (json.value) {
-        .object => |root| {
-            switch (root.get("url") orelse return ParseStreamError.MalformedRequestObject) {
-                .string => |s| {
-                    r.*.url = try allocator.dupe(u8, s);
-                },
-                else => return ParseStreamError.MalformedRequestObject,
-            }
-
-            switch (root.get("method") orelse return ParseStreamError.MalformedRequestObject) {
-                .string => |s| {
-                    r.*.method = @enumFromInt(Method.parse(s));
-                },
-                else => return ParseStreamError.MalformedRequestObject,
-            }
-
-            switch (root.get("headers") orelse return ParseStreamError.MalformedRequestObject) {
-                .object => |o| {
-                    const headers = try allocator.create(Headers);
-                    headers.* = Headers.init(allocator);
-                    errdefer headers.deinit();
-
-                    var it = o.iterator();
-                    while (it.next()) |kv| {
-                        switch (kv.value_ptr.*) {
-                            .string => |v| {
-                                try headers.append(kv.key_ptr.*, v);
-                            },
-                            else => return ParseStreamError.MalformedRequestObject,
-                        }
-                    }
-
-                    r.*.headers = headers;
-                },
-                else => return ParseStreamError.MalformedRequestObject,
-            }
-
-            switch (root.get("body") orelse return ParseStreamError.MalformedRequestObject) {
-                .string => |s| {
-                    r.*.body = try allocator.dupe(u8, s);
-                },
-                else => return ParseStreamError.MalformedRequestObject,
-            }
-
-            switch (root.get("kv") orelse return ParseStreamError.MalformedRequestObject) {
-                .object => |o| {
-                    const storage = try allocator.create(std.StringHashMap([]const u8));
-                    storage.* = std.StringHashMap([]const u8).init(allocator);
-                    errdefer storage.deinit();
-
-                    var it = o.iterator();
-                    while (it.next()) |kv| {
-                        switch (kv.value_ptr.*) {
-                            .string => |v| {
-                                const owned_key = try allocator.dupe(u8, kv.key_ptr.*);
-                                errdefer allocator.free(owned_key);
-
-                                const owned_value = try allocator.dupe(u8, v);
-                                errdefer allocator.free(owned_value);
-
-                                try storage.put(owned_key, owned_value);
-                            },
-                            else => return ParseStreamError.MalformedRequestObject,
-                        }
-                    }
-
-                    r.*.storage = storage;
-                },
-                else => return ParseStreamError.MalformedRequestObject,
-            }
-
-            switch (root.get("params") orelse return ParseStreamError.MalformedRequestObject) {
-                .object => |o| {
-                    const params = try allocator.create(std.StringHashMap([]const u8));
-                    params.* = std.StringHashMap([]const u8).init(allocator);
-                    errdefer params.deinit();
-
-                    var it = o.iterator();
-                    while (it.next()) |kv| {
-                        switch (kv.value_ptr.*) {
-                            .string => |v| {
-                                const owned_key = try allocator.dupe(u8, kv.key_ptr.*);
-                                errdefer allocator.free(owned_key);
-
-                                const owned_value = try allocator.dupe(u8, v);
-                                errdefer allocator.free(owned_value);
-
-                                try params.put(owned_key, owned_value);
-                            },
-                            else => return ParseStreamError.MalformedRequestObject,
-                        }
-                    }
-
-                    r.*.params = params;
-                },
-                else => return ParseStreamError.MalformedRequestObject,
-            }
+    switch (options.input_stream) {
+        .stdin => {
+            const stdin = std.io.getStdIn().reader();
+            stdin.readAllArrayList(&input, std.math.maxInt(usize)) catch return ParseStreamError.Unknown;
         },
-        else => return ParseStreamError.MalformedRequestObject,
+        .bytes => |s| {
+            input.appendSlice(s) catch return ParseStreamError.Unknown;
+        },
     }
 
-    return .{
-        .allocator = allocator,
-        .request = r,
-    };
+    return std.json.parseFromSlice(
+        Request,
+        allocator,
+        input.items,
+        .{ .allocate = .alloc_always },
+    ) catch ParseStreamError.Unknown;
 }
 
 const FormatResponseOptions = struct {
@@ -192,7 +59,7 @@ const FormatResponseOptions = struct {
 };
 
 const FormatResponseError = error{
-    UnknownError,
+    Unknown,
     OutOfMemory,
 };
 
@@ -238,5 +105,5 @@ pub fn formatResponse(allocator: std.mem.Allocator, options: FormatResponseOptio
         try w.endObject();
     }
 
-    return buf.toOwnedSlice() catch FormatResponseError.UnknownError;
+    return buf.toOwnedSlice() catch FormatResponseError.Unknown;
 }
