@@ -14,6 +14,8 @@ pub const Request = struct {
 pub const Response = struct {
     headers: std.json.ArrayHashMap([]const u8) = .{},
     data: []const u8 = "",
+    // TODO Use std.http.Status when Response has its own
+    // json serialization helper functions
     status: usize = 200,
     kv: std.json.ArrayHashMap([]const u8) = .{},
 };
