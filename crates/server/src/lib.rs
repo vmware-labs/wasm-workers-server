@@ -83,6 +83,7 @@ pub async fn serve(serve_options: ServeOptions) -> Result<Server> {
     let server = HttpServer::new(move || {
         // Initializes the app data for handlers
         let app_data: Data<AppData> = Data::new(serve_options.clone().into());
+        let routes_data: Data<Routes> = Data::new(app_data.routes.clone());
 
         let mut app = App::new()
             // enable logger
@@ -90,6 +91,7 @@ pub async fn serve(serve_options: ServeOptions) -> Result<Server> {
             // Clean path before sending it to the service
             .wrap(middleware::NormalizePath::trim())
             .app_data(Data::clone(&app_data))
+            .app_data(Data::clone(&routes_data))
             .app_data(Data::clone(&data_connectors));
 
         // Configure panel
