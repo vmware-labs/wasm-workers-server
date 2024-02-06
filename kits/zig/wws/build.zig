@@ -1,5 +1,7 @@
 const std = @import("std");
 
+pub const Var = struct { []const u8, []const u8 };
+
 pub fn build(b: *std.Build) void {
     _ = b.standardTargetOptions(.{});
     _ = b.standardOptimizeOption(.{});
