@@ -10,19 +10,6 @@ const Example = struct {
 
 const examples = &[_]Example{
     .{
-        .name = "example",
-        .root_source_file = .{ .path = "src/main.zig" },
-        .features = .{
-            .kv = .{
-                .namespace = "example",
-            },
-        },
-    },
-    .{
-        .name = "echo",
-        .root_source_file = .{ .path = "src/echo.zig" },
-    },
-    .{
         .name = "basic",
         .root_source_file = .{ .path = "src/basic.zig" },
     },
@@ -80,6 +67,9 @@ pub fn build(b: *std.Build) !void {
 
         try worker.addToWriteFiles(b, wf);
     }
+
+    // Add folder for mount example
+    _ = wf.addCopyFile(.{ .path = "src/_images/zig.svg" }, "_images/zig.svg");
 
     const install = b.addInstallDirectory(.{
         .source_dir = wf.getDirectory(),
