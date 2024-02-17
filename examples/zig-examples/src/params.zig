@@ -1,30 +1,37 @@
 const std = @import("std");
-const worker = @import("worker");
+const wws = @import("wws");
 
-var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-const allocator = arena.allocator();
+const tmpl =
+    \\Hey! The parameter is: {s}
+;
 
-fn requestFn(resp: *worker.Response, r: *worker.Request) void {
-    var params = r.context.params;
+fn handle(arena: std.mem.Allocator, request: wws.Request) !wws.Response {
+    const id = request.params.map.get("id") orelse "the value is not available";
 
-    var id: []const u8 = "the value is not available";
+    const body = try std.fmt.allocPrint(arena, tmpl, .{id});
 
-    var v = params.get("id");
+    var response = wws.Response{
+        .data = body,
+    };
 
-    if (v) |val| {
-        id = val;
-    }
+    try response.headers.map.put(arena, "x-generated-by", "wasm-workers-server");
 
-    const s =
-        \\Hey! The parameter is: {s}
-    ;
-
-    var body = std.fmt.allocPrint(allocator, s, .{ id }) catch undefined; // add useragent
-
-    _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
-    _ = &resp.writeAll(body);
+    return response;
 }
 
 pub fn main() !void {
-    worker.ServeFunc(requestFn);
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    const parse_result = try wws.parseStream(gpa.allocator(), .{});
+    defer parse_result.deinit();
+
+    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+    defer arena.deinit();
+
+    const request = parse_result.value;
+    const response = try handle(arena.allocator(), request);
+
+    const stdout = std.io.getStdOut();
+    try wws.writeResponse(response, stdout.writer());
 }

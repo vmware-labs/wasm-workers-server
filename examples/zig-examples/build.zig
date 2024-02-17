@@ -55,7 +55,7 @@ const examples = &[_]Example{
     .{
         .name = "params",
         .root_source_file = .{ .path = "src/params.zig" },
-        .path = "[...params]",
+        .path = "params/[id]",
     },
 };
 

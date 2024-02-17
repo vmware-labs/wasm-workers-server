@@ -1,25 +1,33 @@
 const std = @import("std");
-const worker = @import("worker");
+const wws = @import("wws");
 
-var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-const allocator = arena.allocator();
+const tmpl =
+    \\The environment variable value is: {s}
+;
 
-fn requestFn(resp: *worker.Response, r: *worker.Request) void {
-    _ = r;
+fn handle(arena: std.mem.Allocator) !wws.Response {
+    const envvar = std.process.getEnvVarOwned(arena, "MESSAGE") catch "";
 
-    const envvar = std.process.getEnvVarOwned(allocator, "MESSAGE") catch "";
-    defer allocator.free(envvar);
+    const body = try std.fmt.allocPrint(arena, tmpl, .{envvar});
 
-    const s =
-        \\The environment variable value is: {s}
-    ;
+    var response = wws.Response{
+        .data = body,
+    };
 
-    var body = std.fmt.allocPrint(allocator, s, .{ envvar }) catch undefined; // add useragent
+    try response.headers.map.put(arena, "x-generated-by", "wasm-workers-server");
 
-    _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
-    _ = &resp.writeAll(body);
+    return response;
 }
 
 pub fn main() !void {
-    worker.ServeFunc(requestFn);
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+    defer arena.deinit();
+
+    const response = try handle(arena.allocator());
+
+    const stdout = std.io.getStdOut();
+    try wws.writeResponse(response, stdout.writer());
 }
