@@ -1,6 +1,0 @@
-name = "envs"
-version = "1"
-
-[[folders]]
-from = "./_images"
-to = "/src/images"

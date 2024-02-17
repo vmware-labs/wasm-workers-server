@@ -22,6 +22,41 @@ const examples = &[_]Example{
         .name = "echo",
         .root_source_file = .{ .path = "src/echo.zig" },
     },
+    .{
+        .name = "basic",
+        .root_source_file = .{ .path = "src/basic.zig" },
+    },
+    .{
+        .name = "envs",
+        .root_source_file = .{ .path = "src/envs.zig" },
+        .features = .{
+            .vars = &.{
+                .{ .name = "MESSAGE", .value = "Hello! This message comes from an environment variable" },
+            },
+        },
+    },
+    .{
+        .name = "workerkv",
+        .root_source_file = .{ .path = "src/worker-kv.zig" },
+        .features = .{ .kv = .{ .namespace = "workerkv" } },
+    },
+    .{
+        .name = "mount",
+        .root_source_file = .{ .path = "src/mount.zig" },
+        .features = .{
+            .folders = &.{
+                .{
+                    .from = "./_images",
+                    .to = "/src/images",
+                },
+            },
+        },
+    },
+    .{
+        .name = "params",
+        .root_source_file = .{ .path = "src/params.zig" },
+        .path = "[...params]",
+    },
 };
 
 pub fn build(b: *std.Build) !void {

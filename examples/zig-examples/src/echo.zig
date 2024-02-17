@@ -1,14 +1,9 @@
-const std=@import("std");
-const wws=@import("wws");
+const std = @import("std");
+const wws = @import("wws");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer {
-        switch (gpa.deinit()) {
-            .ok => {},
-            .leak => {},
-        }
-    }
+    defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
     // Read request from stdin
