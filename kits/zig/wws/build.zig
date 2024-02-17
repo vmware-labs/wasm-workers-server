@@ -31,9 +31,15 @@ pub const WwsKv = struct {
     namespace: []const u8,
 };
 
+pub const Mount = struct {
+    from: []const u8,
+    to: []const u8,
+};
+
 pub const Features = struct {
     vars: ?[]const EnvVar = null,
     kv: ?WwsKv = null,
+    folders: ?[]const Mount = null,
 };
 
 pub const WwsWorker = struct {
@@ -92,6 +98,28 @@ pub const WwsWorker = struct {
                     kv.namespace,
                 },
             );
+        }
+
+        if (self.options.features.folders) |folders| {
+            try buf.writer().print(
+                \\[[folders]]
+                \\
+            ,
+                .{},
+            );
+
+            for (folders) |f| {
+                try buf.writer().print(
+                    \\from = "{s}"
+                    \\to = "{s}"
+                    \\
+                ,
+                    .{
+                        f.from,
+                        f.to,
+                    },
+                );
+            }
         }
 
         return try buf.toOwnedSlice();
