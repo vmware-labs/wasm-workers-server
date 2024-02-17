@@ -1,13 +1,6 @@
 const std = @import("std");
 const wws = @import("wws");
 
-const Example = struct {
-    name: []const u8,
-    root_source_file: std.Build.LazyPath,
-    path: ?[]const u8 = null,
-    features: ?wws.Features = null,
-};
-
 const examples = &[_]Example{
     .{
         .name = "basic",
@@ -44,6 +37,18 @@ const examples = &[_]Example{
         .root_source_file = .{ .path = "src/params.zig" },
         .path = "params/[id]",
     },
+    .{
+        .name = "router",
+        .root_source_file = .{ .path = "src/router.zig" },
+        .path = "router/[...path]",
+    },
+};
+
+const Example = struct {
+    name: []const u8,
+    root_source_file: std.Build.LazyPath,
+    path: ?[]const u8 = null,
+    features: ?wws.Features = null,
 };
 
 pub fn build(b: *std.Build) !void {
@@ -51,6 +56,7 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
 
     const wws_dep = b.dependency("wws", .{});
+    const zig_router_dep = b.dependency("zig-router", .{});
 
     const wf = b.addWriteFiles();
 
@@ -64,6 +70,8 @@ pub fn build(b: *std.Build) !void {
             .wws = wws_dep,
             .features = e.features orelse .{},
         });
+
+        worker.exe.root_module.addImport("zig-router", zig_router_dep.module("zig-router"));
 
         try worker.addToWriteFiles(b, wf);
     }
