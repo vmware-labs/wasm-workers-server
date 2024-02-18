@@ -2,7 +2,7 @@ const std = @import("std");
 const wws = @import("wws");
 
 fn handle(arena: std.mem.Allocator) !wws.Response {
-    const file = try std.fs.Dir.openFileWasi(std.fs.cwd(), "zig.svg", .{
+    const file = try std.fs.Dir.openFile(std.fs.cwd(), "zig.svg", .{
         .mode = std.fs.File.OpenMode.read_only,
         .lock = std.fs.File.Lock.none,
     });
