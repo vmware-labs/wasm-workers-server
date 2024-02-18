@@ -25,6 +25,10 @@ const examples = &[_]Example{
         .root_source_file = .{ .path = "src/no-alloc-kv.zig" },
     },
     .{
+        .name = "mixed-alloc-kv",
+        .root_source_file = .{ .path = "src/mixed-alloc-kv.zig" },
+    },
+    .{
         .name = "mount",
         .root_source_file = .{ .path = "src/mount.zig" },
         .features = .{
