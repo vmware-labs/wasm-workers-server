@@ -41,10 +41,10 @@
         .wws = .{
             .path = "../../kits/zig/wws",
         },
-        //.@"zig-router" = .{
-        //    .url = "https://github.com/Cloudef/zig-router/archive/dc438755c5a6d5fec2efb9e413e8c03a3f637585.tar.gz",
-        //    .hash = "1220a53ebca3e6d9958341c83767ef9763f947ef68e60362764d12a972227a1339bc",
-        //},
+        .@"zig-router" = .{
+            .url = "https://github.com/Cloudef/zig-router/archive/e8df16c9281969aef3cbb3c788f2c8c2b4f9ec30.tar.gz",
+            .hash = "1220fabbdaa72ff4801b62cc577e2e63849e960fbc22b67d560080726c53fb7c28cc",
+        },
     },
 
     // Specifies the set of files and directories that are included in this package.

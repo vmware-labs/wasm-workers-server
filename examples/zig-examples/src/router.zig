@@ -31,8 +31,8 @@ fn handle(arena: std.mem.Allocator, request: wws.Request) !wws.Response {
     const router = zig_router.Router(
         .{},
         .{
-            zig_router.Route(.GET, "/router/hello", getHello),
-            zig_router.Route(.GET, "/router/post/:id", getBlogPost),
+            zig_router.Route(.GET, "/router/hello", getHello, .{}),
+            zig_router.Route(.GET, "/router/post/:id", getBlogPost, .{}),
         },
     );
 
