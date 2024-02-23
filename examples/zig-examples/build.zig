@@ -23,10 +23,12 @@ const examples = &[_]Example{
     .{
         .name = "no-alloc-kv",
         .root_source_file = .{ .path = "src/no-alloc-kv.zig" },
+        .features = .{ .kv = .{ .namespace = "workerkv" } },
     },
     .{
         .name = "mixed-alloc-kv",
         .root_source_file = .{ .path = "src/mixed-alloc-kv.zig" },
+        .features = .{ .kv = .{ .namespace = "workerkv" } },
     },
     .{
         .name = "mount",
