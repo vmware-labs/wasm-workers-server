@@ -126,8 +126,6 @@ pub const Output = struct {
         const stdout = std.io.getStdOut().writer();
         try stdout.print("{s}", .{result});
 
-        std.debug.print("{s}\n", .{result});
-
         return self.data.len;
     }
 };
@@ -168,7 +166,6 @@ pub fn readInput() !Input {
     var r = buf.reader();
 
     const msg = try r.readAllAlloc(allocator, std.math.maxInt(u32));
-    std.debug.print("in {s}\n", .{msg});
     return getInput(msg);
 }
 
