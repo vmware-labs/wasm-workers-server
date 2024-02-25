@@ -4,369 +4,465 @@ sidebar_position: 6
 
 # Zig
 
-Zig workers are tested with Zig version `0.11.0`. Then, they are loaded by Wasm Workers Server and start processing requests.
+Zig workers are tested with Zig version `0.12.0`. Then, they are loaded by Wasm Workers Server and start processing requests.
 
 ## Your first Zig worker
 
-The recommended way to implement workers is by using the `worker.ServeFunc` function.
+The recommended way to implement workers is by using the `wws.zig` SDK.
 
 In this example, the worker will get a request and print all the related information.
 
 1. Create a new Zig project:
 
     ```shell-session
-    zig init-exe
+    zig init
     ```
 
 2. Add Wasm Workers Server Zig dependency
 
-    At this point in time Zigs Package manager is not yet available. We will therefore clone the repository to make the library locally available.
+    At this point in time, the Zig SDK is located at a subpath of the wasm-workers-server repo. Zig's package manager works with archives and does not support referencing a package as a subpath of an archive. We will therefore add wasm-workers-server as a submodule of our project.
 
     ```shell-session
     mkdir lib
-    wget -O ./lib/worker.zig https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/kits/zig/worker/src/worker.zig
+    git submodule add https://github.com/vmware-labs/wasm-workers-server.git lib/wws
     ```
 
-3. Edit the `src/main.zig`  to match the following contents:
+3. Add the wws dependency to `build.zig.zon`
 
-    ```c title="worker.zig"
-    const std = @import("std");
-    const worker = @import("worker");
+    We can now modify the `build.zig.zon` file to include the Zig SDK as a dependency:
 
-    fn requestFn(resp: *worker.Response, r: *worker.Request) void {
-        _ = r;
-
-        _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
-        _ = &resp.writeAll("hello from zig");
-    }
-
-    pub fn main() !void {
-        worker.ServeFunc(requestFn);
+    ```zig title="build.zig.zon"
+    .{
+        // ...
+        .dependencies = .{
+            // Add this to dependencies
+            .wws = .{
+                .path = "lib/wws/kits/zig/wws",
+            },
+        },
+        // ...
     }
     ```
 
-4. Additionally, you can now go further add all the information from the received `worker.Request`:
+4. Edit the `build.zig`
 
-    ```c title="worker.zig"
+    The WWS Zig SDK exports a few build-time helpers to compile your executable to WASM and generate your worker config. Let's update the `build.zig` to include the `wws` dependency and build our worker and its associated config.
+
+    ```zig title="build.zig"
     const std = @import("std");
-    const worker = @import("worker");
+    const wws = @import("wws");
 
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    const allocator = arena.allocator();
+    pub fn build(b: *std.Build) !void {
+        // getTarget is a helper to get the proper wasm target
+        const target = wws.getTarget(b);
 
-    fn requestFn(resp: *worker.Response, r: *worker.Request) void {
-        std.debug.print("Hello from function\n", .{ });
+        const optimize = b.standardOptimizeOption(.{});
 
-        // // TODO: prepare to read request body and send it back
-        std.debug.print("+++ doing payload \n", .{ });
+        // This references the wws dependency we added to build.zig.zon
+        const wws_dep = b.dependency("wws", .{});
 
-        var payload: []const u8 = "";
-        var reqBody = r.data;
+        // addWorker lets us specify similar options to std.Build.addExecutable
+        const worker = try wws.addWorker(b, .{
+            .name = "example",
+            // path lets us specify the file path for our worker and its config.
+            // This will affect routing.
+            .path = "hello/[name]",
+            .root_source_file = .{ .path = "src/main.zig" },
+            .target = target,
+            .optimize = optimize,
+            // We need to pass the wws dependency to addWorker so it can make sure
+            // that the wws module is provided to your application.
+            .wws = wws_dep,
+            // features lets you specify which WWS features your worker will have
+            // access to.
+            .features = .{ .kv = .{ .namespace = "example" } },
+        });
 
-        if (reqBody.len == 0) {
-            payload = "-";
-        } else {
-            payload = reqBody;
+        // We use addWriteFiles to provide an output destination for our worker
+        // and its config.
+        const wf = b.addWriteFiles();
+
+        // addToWriteFiles will add the compiled wasm and worker config to a subpath
+        // determined by the path provided to addWorker above.
+        try worker.addToWriteFiles(b, wf);
+
+        {
+            // Copy the wf directory contents into the zig-out directory.
+            const install = b.addInstallDirectory(.{
+                .source_dir = wf.getDirectory(),
+                .install_dir = .prefix,
+                // The contents of wf will be accessible in zig-out/root.
+                .install_subdir = "root",
+            });
+
+            b.getInstallStep().dependOn(&install.step);
         }
+    }
+    ```
 
-        const s =
-            \\<!DOCTYPE html>
-            \\<head>
-            \\<title>Wasm Workers Server</title>
-            \\<meta name="viewport" content="width=device-width,initial-scale=1">
-            \\<meta charset="UTF-8">
-            \\<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
-    		\\<style>
-    		\\body {{ max-width: 1000px; }}
-    		\\main {{ margin: 5rem 0; }}
-    		\\h1, p {{ text-align: center; }}
-    		\\h1 {{ margin-bottom: 2rem; }}
-    		\\pre {{ font-size: .9rem; }}
-    		\\pre > code {{ padding: 2rem; }}
-    		\\p {{ margin-top: 2rem; }}
-    		\\</style>
-            \\</head>
-            \\<body>
-            \\<main>
-            \\<h1>Hello from Wasm Workers Server 👋</h1>
-            \\<pre><code>Replying to {s}
-            \\Method: {s}
-            \\User Agent: {s}
-            \\Payload: {s}</code></pre>
-            \\<p>
-            \\This page was generated by a Zig⚡️ file running in WebAssembly.
-            \\</p>
-            \\</main>
-            \\</body>
-        ;
+5. Edit `src/main.zig`  to match the following contents:
 
-        var body = std.fmt.allocPrint(allocator, s, .{ r.url.path, r.method, "-", payload }) catch undefined;
+    ```zig title="src/main.zig"
+    const std = @import("std");
+    const wws = @import("wws");
 
-        _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
-        _ = &resp.writeAll(body);
+    const tmpl =
+        \\<!DOCTYPE html>
+        \\<head>
+        \\<title>Wasm Workers Server</title>
+        \\<meta name="viewport" content="width=device-width,initial-scale=1">
+        \\<meta charset="UTF-8">
+        \\<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+        \\<style>
+        \\body {{ max-width: 1000px; }}
+        \\main {{ margin: 5rem 0; }}
+        \\h1, p {{ text-align: center; }}
+        \\h1 {{ margin-bottom: 2rem; }}
+        \\pre {{ font-size: .9rem; }}
+        \\pre > code {{ padding: 2rem; }}
+        \\p {{ margin-top: 2rem; }}
+        \\</style>
+        \\</head>
+        \\<body>
+        \\<main>
+        \\<h1>Hello {[name]s} from Wasm Workers Server 👋</h1>
+        \\<pre><code>Replying to {[url]s}
+        \\Method: {[method]s}
+        \\User Agent: {[user_agent]s}
+        \\Payload: {[payload]s}</code></pre>
+        \\<p>
+        \\This page was generated by a Zig⚡️ file running in WebAssembly.
+        \\</p>
+        \\<form method="POST">
+        \\<div><label>What is your name? <input type="text" name="name" value="WWS"/></label></div>
+        \\<div><label>What is your favourite programming language? <input type="text" name="language" value="Zig"/></label></div>
+        \\<input type="submit" value="Submit" />
+        \\</form>
+        \\</main>
+        \\</body>
+    ;
+
+    fn handle(arena: std.mem.Allocator, request: wws.Request) !wws.Response {
+        const payload = if (request.body.len == 0) "-" else request.body;
+        const user_agent = request.headers.map.get("user-agent") orelse "-";
+        const name = request.params.map.get("name") orelse "world";
+
+        const body = try std.fmt.allocPrint(arena, tmpl, .{
+            .url = request.url,
+            .method = request.method,
+            .user_agent = user_agent,
+            .payload = payload,
+            .name = name,
+        });
+
+        var response = wws.Response{
+            .data = body,
+        };
+
+        try response.headers.map.put(arena, "x-generated-by", "wasm-workers-server");
+
+        return response;
     }
 
     pub fn main() !void {
-        worker.ServeFunc(requestFn);
+        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        defer _ = gpa.deinit();
+
+        const parse_result = try wws.parseStream(gpa.allocator(), .{});
+        defer parse_result.deinit();
+
+        var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+        defer arena.deinit();
+
+        const request = parse_result.value;
+        const response = try handle(arena.allocator(), request);
+
+        const stdout = std.io.getStdOut();
+        try wws.writeResponse(response, stdout.writer());
     }
     ```
 
-5. Compile the project
+6. Compile the project
 
     ```shell-session
-    zig build-exe src/main.zig \
-        --name worker \
-        -mexec-model=reactor \
-        -target wasm32-wasi \
-        --mod worker::lib/worker.zig \
-        --deps worker
+    $ zig build
+    $ tree zig-out
+    zig-out
+    └── root
+        └── hello
+            ├── [name].toml
+            └── [name].wasm
     ```
 
-    You can also use a build script to build the project with a simple `zig build`, please find some inspiration in our [zig examples](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/).
-
-6. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
+7. Run your worker with `wws`. If you haven't downloaded the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
 
     ```shell-session
-    wws .
-
-    ⚙️ Loading routes from: .
-    🗺 Detected routes:
-    - http://127.0.0.1:8080/worker
-    => worker.wasm (name: default)
+    $ wws zig-out/root/
+    ⚙️  Preparing the project from: zig-out/root/
+    ⚙️  Loading routes from: zig-out/root/
+    ⏳ Loading workers from 1 routes...
+    ✅ Workers loaded in 35.659083ms.
+        - http://127.0.0.1:8080/hello/[name]
+          => zig-out/root/hello/[name].wasm
     🚀 Start serving requests at http://127.0.0.1:8080
     ```
 
-7. Finally, open <http://127.0.0.1:8080/worker> in your browser.
+8. Finally, open <http://127.0.0.1:8080/hello/world> in your browser.
 
 ## Add a Key / Value store
 
 Wasm Workers allows you to add a Key / Value store to your workers. Read more information about this feature in the [Key / Value store](../features/key-value.md) section.
 
-To add a KV store to your worker, follow these steps:
+We can add a KV store to our Zig worker by specifying it inside `features` when we call `wws.addWorker`:
 
-1. Create a new Zig project:
+```zig title="build.zig"
+pub fn build(b: *std.Build) !void {
+    // ...
 
-    ```shell-session
-    zig init-exe
-    ```
+    const worker = try wws.addWorker(b, .{
+        .name = "workerkv",
+        .root_source_file = .{ .path = "src/main.zig" },
+        .target = target,
+        .optimize = optimize,
+        .wws = wws_dep,
+        .features = .{
+            // Define your KV namespace here
+            .kv = .{ .namespace = "workerkv" },
+        },
+    });
 
-2. Add Wasm Workers Server Zig dependency
+    // ...
+}
+```
 
-    At this point in time Zigs Package manager is not yet available. We will therefore clone the repository to make the library locally available.
+We can see the resulting TOML configuration file when we call `build.zig`:
 
-    ```shell-session
-    mkdir lib
-    wget -O ./lib/worker.zig https://raw.githubusercontent.com/vmware-labs/wasm-workers-server/main/kits/zig/worker/worker.zig ./lib
-    ```
+```shell-session
+$ zig build
+$ tree zig-out/root
+zig-out/root/
+├── workerkv.toml
+├── workerkv.wasm
+$ cat zig-out/root/workerkv.toml
+name = "workerkv"
+version = "1"
+[data]
+[data.kv]
+namespace = "workerkv"
+```
 
-1. Edit `src/main.zig` file with the following contents:
+Then, we can read from/write to the KV store with the following example:
 
-    ```c title="main.zig"
-    const std = @import("std");
-    const worker = @import("worker");
+```zig title="src/main.zig"
+const std = @import("std");
+const wws = @import("wws");
 
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    const allocator = arena.allocator();
+const tmpl =
+    \\<!DOCTYPE html>
+    \\<head>
+    \\<title>
+    \\Wasm Workers Server - KV example</title>
+    \\<meta name="viewport" content="width=device-width,initial-scale=1">
+    \\<meta charset="UTF-8">
+    \\</head>
+    \\<body>
+    \\<h1>Key / Value store in Zig</h1>
+    \\<p>Counter: {d}</p>
+    \\<p>This page was generated by a Zig⚡️ file running in WebAssembly.</p>
+    \\</body>
+;
 
-    fn requestFn(resp: *worker.Response, r: *worker.Request) void {
-        var cache = r.context.cache;
-        var counter: i32 = 0;
+fn handle(arena: std.mem.Allocator, request: wws.Request) !wws.Response {
+    const value = request.kv.map.get("counter") orelse "0";
+    var counter = std.fmt.parseInt(i32, value, 10) catch 0;
 
-        var v = cache.getOrPut("counter") catch undefined;
+    counter += 1;
 
-        if (!v.found_existing) {
-            v.value_ptr.* = "0";
-        } else {
-            var counterValue = v.value_ptr.*;
-            var num = std.fmt.parseInt(i32, counterValue, 10) catch undefined;
-            counter = num + 1;
-            var num_s = std.fmt.allocPrint(allocator, "{d}", .{ counter }) catch undefined;
-            _ = cache.put("counter", num_s) catch undefined;
-        }
+    const body = try std.fmt.allocPrint(arena, tmpl, .{counter});
 
-        const s =
-            \\<!DOCTYPE html>
-            \\<head>
-            \\<title>
-            \\Wasm Workers Server - KV example</title>
-            \\<meta name="viewport" content="width=device-width,initial-scale=1">
-            \\<meta charset="UTF-8">
-            \\</head>
-            \\<body>
-            \\<h1>Key / Value store in Zig</h1>
-            \\<p>Counter: {d}</p>
-            \\<p>This page was generated by a Zig⚡️ file running in WebAssembly.</p>
-            \\</body>
-        ;
+    var response = wws.Response{
+        .data = body,
+    };
 
-        var body = std.fmt.allocPrint(allocator, s, .{ counter }) catch undefined; // add useragent
+    const num_s = try std.fmt.allocPrint(arena, "{d}", .{counter});
+    try response.kv.map.put(arena, "counter", num_s);
 
-        _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
-        _ = &resp.writeAll(body);
-    }
+    try response.headers.map.put(arena, "x-generated-by", "wasm-workers-server");
 
-    pub fn main() !void {
-        worker.ServeFunc(requestFn);
-    }
-    ```
+    return response;
+}
 
-5. Compile the project
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
 
-    ```shell-session
-    zig build-exe src/main.zig \
-        --name worker-kv \
-        -mexec-model=reactor \
-        -target wasm32-wasi \
-        --mod worker::lib/worker.zig \
-        --deps worker
-    ```
+    const parse_result = try wws.parseStream(gpa.allocator(), .{});
+    defer parse_result.deinit();
 
-    You can also use a build script to build the project with a simple `zig build`, please find some inspiration in our [zig examples](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/).
+    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+    defer arena.deinit();
 
-1. Create a `worker-kv.toml` file with the following content. Note the name of the TOML file must match the name of the worker. In this case we have `worker-kv.wasm` and `worker-kv.toml` in the same folder:
+    const request = parse_result.value;
+    const response = try handle(arena.allocator(), request);
 
-    ```toml title="worker-kv.toml"
-    name = "workerkv"
-    version = "1"
-
-    [data]
-    [data.kv]
-    namespace = "workerkv"
-    ```
-
-1. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
-
-    ```shell-session
-    wws .
-
-    ⚙️ Loading routes from: .
-    🗺 Detected routes:
-    - http://127.0.0.1:8080/worker-kv
-    => worker-kv.wasm (name: default)
-    🚀 Start serving requests at http://127.0.0.1:8080
-    ```
-
-1. Finally, open <http://127.0.0.1:8080/worker-kv> in your browser.
-
+    const stdout = std.io.getStdOut();
+    try wws.writeResponse(response, stdout.writer());
+}
+```
 
 ## Dynamic routes
 
-You can define [dynamic routes by adding route parameters to your worker files](../features/dynamic-routes.md) (like `[id].wasm`). To read them in Zig, follow these steps:
+You can define [dynamic routes by adding route parameters to your worker files](../features/dynamic-routes.md) (like `[id].wasm`). Using the Zig SDK, you can configure this in your `build.zig` when you declare your worker:
 
-1. Use the `worker.ParamsKey` context value to read in the passed in parameters:
+```zig title="build.zig"
+pub fn build(b: *std.Build) !void {
+    // ...
 
-    ```c title="main.zig"
-    const std = @import("std");
-    const worker = @import("worker");
+    const worker = try wws.addWorker(b, .{
+        .name = "params",
+        // We specify the file path (and therefore the HTTP route) of our worker
+        .path = "params/[id]",
+        .root_source_file = .{ .path = "src/main.zig" },
+        .target = target,
+        .optimize = optimize,
+        .wws = wws_dep,
+    });
 
-    fn requestFn(resp: *worker.Response, r: *worker.Request) void {
-        var params = r.context.params;
+    // ...
+}
+```
 
-        ...
-    }
-    ```
+If we run `zig build`, we can see the resulting file tree:
 
-2. Then, you can read the values as follows:
+```shell-session
+$ zig build
+$ tree zig-out/root
+zig-out/root/
+├── params/[id].toml
+├── params/[id].wasm
+```
 
-    ```c title="main.zig"
-    const std = @import("std");
-    const worker = @import("worker");
+Then, you can read the params from the request with the following example:
 
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    const allocator = arena.allocator();
+```zig title="src/main.zig"
+const std = @import("std");
+const wws = @import("wws");
 
-    fn requestFn(resp: *worker.Response, r: *worker.Request) void {
-        var params = r.context.params;
+const tmpl =
+    \\Hey! The parameter is: {s}
+;
 
-        var id: []const u8 = "the value is not available";
+fn handle(arena: std.mem.Allocator, request: wws.Request) !wws.Response {
+    const id = request.params.map.get("id") orelse "the value is not available";
 
-        var v = params.get("id");
+    const body = try std.fmt.allocPrint(arena, tmpl, .{id});
 
-        if (v) |val| {
-            id = val;
-        }
+    var response = wws.Response{
+        .data = body,
+    };
 
-        const s =
-            \\Hey! The parameter is: {s}
-        ;
+    try response.headers.map.put(arena, "x-generated-by", "wasm-workers-server");
 
-        var body = std.fmt.allocPrint(allocator, s, .{ id }) catch undefined; // add useragent
+    return response;
+}
 
-        _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
-        _ = &resp.writeAll(body);
-    }
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
 
-    pub fn main() !void {
-        worker.ServeFunc(requestFn);
-    }
-    ```
+    const parse_result = try wws.parseStream(allocator, .{});
+    defer parse_result.deinit();
+    const request = parse_result.value;
 
-3. Compile the project
+    var arena_impl = std.heap.ArenaAllocator.init(allocator);
+    defer arena_impl.deinit();
+    const arena = arena_impl.allocator();
 
-    ```shell-session
-    zig build-exe src/main.zig \
-        --name "[id]" \
-        -mexec-model=reactor \
-        -target wasm32-wasi \
-        --mod worker::lib/worker.zig \
-        --deps worker
-    ```
+    const response = try handle(arena, request);
 
-    You can also use a build script to build the project with a simple `zig build`, please find some inspiration in our [zig examples](https://github.com/vmware-labs/wasm-workers-server/tree/main/examples/).
-
-4. Run your worker with `wws`. If you didn't download the `wws` server yet, check our [Getting Started](../get-started/quickstart.md) guide.
-
-    ```shell-session
-    wws .
-
-    ⚙️ Loading routes from: .
-    🗺 Detected routes:
-    - http://127.0.0.1:8080/[id]
-    => worker-kv.wasm (name: default)
-    🚀 Start serving requests at http://127.0.0.1:8080
-    ```
-
-5. Finally, open <http://127.0.0.1:8080/hello> in your browser.
+    const stdout = std.io.getStdOut();
+    try wws.writeResponse(response, stdout.writer());
+}
+```
 
 ## Read environment variables
 
-Environment variables are configured [via the related TOML configuration file](../features/environment-variables.md). These variables are accessible via `std.process.getEnvMap` or `std.process.getEnvVarOwned` in your worker. To read them, just use the same name you configured in your TOML file:
+Environment variables are configured [via the related TOML configuration file](../features/environment-variables.md). While using the Zig SDK, this configuration file is generated for us when we call `wws.addWorker` in our `build.zig`:
 
-```toml title="envs.toml"
+```zig title="build.zig"
+pub fn build(b: *std.Build) !void {
+    // ...
+
+    const worker = try wws.addWorker(b, .{
+        .name = "envs",
+        .root_source_file = .{ .path = "src/main.zig" },
+        .target = target,
+        .optimize = optimize,
+        .wws = wws_dep,
+        .features = .{
+            // Define your environment variables here
+            .vars = &.{
+                .{
+                    .name = "MESSAGE",
+                    .value = "Hello 👋! This message comes from an environment variable",
+                },
+            },
+        },
+    });
+
+    // ...
+}
+```
+
+```shell-session
+$ zig build
+$ tree zig-out/root
+zig-out/root/
+├── envs.toml
+├── envs.wasm
+$ cat zig-out/root/envs.toml
 name = "envs"
 version = "1"
-
 [vars]
 MESSAGE = "Hello 👋! This message comes from an environment variable"
 ```
 
-Now, you can read the `MESSAGE` variable using either the `std.process.getEnvMap` or the `std.process.getEnvVarOwned` functions:
+These variables are accessible via `std.process.getEnvMap` or `std.process.getEnvVarOwned` in your worker. To read them, just use the same name you configured in `build.zig`:
 
-```c title="envs.zig"
+```zig title="envs.zig"
 const std = @import("std");
-const worker = @import("worker");
+const wws = @import("wws");
 
-var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-const allocator = arena.allocator();
+const tmpl =
+    \\The environment variable value is: {s}
+;
 
-fn requestFn(resp: *worker.Response, r: *worker.Request) void {
-    _ = r;
+fn handle(arena: std.mem.Allocator) !wws.Response {
+    const envvar = std.process.getEnvVarOwned(arena, "MESSAGE") catch "";
 
-    const envvar = std.process.getEnvVarOwned(allocator, "MESSAGE") catch "";
-    defer allocator.free(envvar);
+    const body = try std.fmt.allocPrint(arena, tmpl, .{envvar});
 
-    const s =
-        \\The environment variable value is: {s}
-    ;
+    var response = wws.Response{
+        .data = body,
+    };
 
-    var body = std.fmt.allocPrint(allocator, s, .{ envvar }) catch undefined; // add useragent
+    try response.headers.map.put(arena, "x-generated-by", "wasm-workers-server");
 
-    _ = &resp.headers.append("x-generated-by", "wasm-workers-server");
-    _ = &resp.writeAll(body);
+    return response;
 }
 
 pub fn main() !void {
-    worker.ServeFunc(requestFn);
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+    defer arena.deinit();
+
+    const response = try handle(arena.allocator());
+
+    const stdout = std.io.getStdOut();
+    try wws.writeResponse(response, stdout.writer());
 }
 ```
 
@@ -378,7 +474,7 @@ Find other examples in the [`/examples` directory](https://github.com/vmware-lab
 
 ## Contributors
 
-The Zig kit was originally authored by Christoph Voigt ([@voigt](https://github.com/voigt)).
+The Zig kit was originally authored for Zig 0.11 by Christoph Voigt ([@voigt](https://github.com/voigt)). It was then updated for Zig 0.12 by Christopher Grass([@sea-grass](https://github.com/sea-grass)).
 
 ## Feature compatibility
 
