@@ -72,6 +72,8 @@ exclude = [
   "examples/rust-wasi-nn-preload",
   # It uses incompatible crate versions
   "kits/javascript",
+  # Not part of the main workspace
+  "runtimes/python-http",
 ]
 
 [workspace.dependencies]
