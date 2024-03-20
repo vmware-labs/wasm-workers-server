@@ -9,15 +9,15 @@ use crate::utils::runtimes::install_missing_runtimes;
 use clap::Parser;
 use commands::main::Main;
 use commands::runtimes::RuntimesCommands;
+use log::LevelFilter;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
-use std::str::FromStr;
 use std::process::exit;
+use std::str::FromStr;
 use wws_config::Config;
 use wws_project::{identify_type, prepare_project, ProjectType};
 use wws_router::Routes;
 use wws_server::{serve, ServeOptions};
-use log::LevelFilter;
 
 // Arguments
 #[derive(Parser, Debug)]
@@ -84,16 +84,14 @@ async fn main() -> std::io::Result<()> {
     let args = Args::parse();
 
     match std::env::var("RUST_LOG") {
-        Ok(_) => {},
-        Err(_) => {
-            match args.log_level {
-                LevelFilter::Off => std::env::set_var("RUST_LOG", ""),
-                LevelFilter::Error => std::env::set_var("RUST_LOG", "actix_web=error"),
-                LevelFilter::Warn => std::env::set_var("RUST_LOG", "actix_web=warn"),
-                LevelFilter::Info => std::env::set_var("RUST_LOG", "actix_web=info"),
-                LevelFilter::Debug => std::env::set_var("RUST_LOG", "actix_web=debug"),
-                LevelFilter::Trace => std::env::set_var("RUST_LOG", "actix_web=trace"),
-            }
+        Ok(_) => {}
+        Err(_) => match args.log_level {
+            LevelFilter::Off => std::env::set_var("RUST_LOG", ""),
+            LevelFilter::Error => std::env::set_var("RUST_LOG", "actix_web=error"),
+            LevelFilter::Warn => std::env::set_var("RUST_LOG", "actix_web=warn"),
+            LevelFilter::Info => std::env::set_var("RUST_LOG", "actix_web=info"),
+            LevelFilter::Debug => std::env::set_var("RUST_LOG", "actix_web=debug"),
+            LevelFilter::Trace => std::env::set_var("RUST_LOG", "actix_web=trace"),
         },
     }
 
@@ -203,14 +201,14 @@ async fn main() -> std::io::Result<()> {
                 args.port,
                 route.path,
                 route.handler.display()
-                );
+            );
         }
 
         if args.enable_panel {
             println!(
                 "🎛️  The admin panel is available at http://{}:{}/_panel/",
                 &args.hostname, args.port
-                );
+            );
         }
 
         let server = serve(ServeOptions {
@@ -222,12 +220,12 @@ async fn main() -> std::io::Result<()> {
             cors_origins: args.cors,
         })
         .await
-            .map_err(|err| Error::new(ErrorKind::AddrInUse, err))?;
+        .map_err(|err| Error::new(ErrorKind::AddrInUse, err))?;
 
         println!(
             "🚀 Start serving requests at http://{}:{}\n",
             args.hostname, args.port
-            );
+        );
 
         // Run the server
         server.await
