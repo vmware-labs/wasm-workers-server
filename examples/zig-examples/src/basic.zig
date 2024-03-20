@@ -22,7 +22,7 @@ const tmpl =
     \\<main>
     \\<h1>Hello from Wasm Workers Server 👋</h1>
     \\<pre><code>Replying to {s}
-    \\Method: {s}
+    \\Method: {d}
     \\User Agent: {s}
     \\Payload: {s}</code></pre>
     \\<p>
