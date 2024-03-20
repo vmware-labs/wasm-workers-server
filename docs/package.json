@@ -16,8 +16,8 @@
     "publish": "npm run clean && npm run build && npx wrangler pages deploy ./build"
   },
   "dependencies": {
-    "@docusaurus/core": "^2.4.1",
-    "@docusaurus/preset-classic": "^2.4.1",
+    "@docusaurus/core": "=2.4.1",
+    "@docusaurus/preset-classic": "=2.4.1",
     "@mdx-js/react": "^1.6.22",
     "clsx": "^1.2.1",
     "got": ">=11.8.5",
@@ -28,7 +28,7 @@
     "trim": ">=0.0.3"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "^2.4.1"
+    "@docusaurus/module-type-aliases": "=2.4.1"
   },
   "browserslist": {
     "production": [
