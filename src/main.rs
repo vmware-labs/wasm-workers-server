@@ -9,9 +9,11 @@ use crate::utils::runtimes::install_missing_runtimes;
 use clap::Parser;
 use commands::main::Main;
 use commands::runtimes::RuntimesCommands;
+use log::LevelFilter;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
 use std::process::exit;
+use std::str::FromStr;
 use wws_config::Config;
 use wws_project::{identify_type, prepare_project, ProjectType};
 use wws_router::Routes;
@@ -44,6 +46,9 @@ pub struct Args {
     /// Install missing runtimes automatically.
     #[arg(long, short)]
     install_runtimes: bool,
+
+    #[arg(short, long, value_parser = LevelFilter::from_str, default_value = "info")]
+    log_level: LevelFilter,
 
     /// Set the commit when using a git repository as project
     #[arg(long)]
@@ -78,7 +83,18 @@ pub struct Args {
 async fn main() -> std::io::Result<()> {
     let args = Args::parse();
 
-    std::env::set_var("RUST_LOG", "actix_web=info");
+    match std::env::var("RUST_LOG") {
+        Ok(_) => {}
+        Err(_) => match args.log_level {
+            LevelFilter::Off => std::env::set_var("RUST_LOG", ""),
+            LevelFilter::Error => std::env::set_var("RUST_LOG", "actix_web=error"),
+            LevelFilter::Warn => std::env::set_var("RUST_LOG", "actix_web=warn"),
+            LevelFilter::Info => std::env::set_var("RUST_LOG", "actix_web=info"),
+            LevelFilter::Debug => std::env::set_var("RUST_LOG", "actix_web=debug"),
+            LevelFilter::Trace => std::env::set_var("RUST_LOG", "actix_web=trace"),
+        },
+    }
+
     env_logger::init();
 
     // Check the given subcommand
