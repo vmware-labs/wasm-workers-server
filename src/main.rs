@@ -11,11 +11,13 @@ use commands::main::Main;
 use commands::runtimes::RuntimesCommands;
 use std::io::{Error, ErrorKind};
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::process::exit;
 use wws_config::Config;
 use wws_project::{identify_type, prepare_project, ProjectType};
 use wws_router::Routes;
 use wws_server::{serve, ServeOptions};
+use log::LevelFilter;
 
 // Arguments
 #[derive(Parser, Debug)]
@@ -44,6 +46,9 @@ pub struct Args {
     /// Install missing runtimes automatically.
     #[arg(long, short)]
     install_runtimes: bool,
+
+    #[arg(short, long, value_parser = LevelFilter::from_str, default_value = "info")]
+    log_level: LevelFilter,
 
     /// Set the commit when using a git repository as project
     #[arg(long)]
@@ -78,7 +83,20 @@ pub struct Args {
 async fn main() -> std::io::Result<()> {
     let args = Args::parse();
 
-    std::env::set_var("RUST_LOG", "actix_web=info");
+    match std::env::var("RUST_LOG") {
+        Ok(_) => {},
+        Err(_) => {
+            match args.log_level {
+                LevelFilter::Off => std::env::set_var("RUST_LOG", ""),
+                LevelFilter::Error => std::env::set_var("RUST_LOG", "actix_web=error"),
+                LevelFilter::Warn => std::env::set_var("RUST_LOG", "actix_web=warn"),
+                LevelFilter::Info => std::env::set_var("RUST_LOG", "actix_web=info"),
+                LevelFilter::Debug => std::env::set_var("RUST_LOG", "actix_web=debug"),
+                LevelFilter::Trace => std::env::set_var("RUST_LOG", "actix_web=trace"),
+            }
+        },
+    }
+
     env_logger::init();
 
     // Check the given subcommand
@@ -185,14 +203,14 @@ async fn main() -> std::io::Result<()> {
                 args.port,
                 route.path,
                 route.handler.display()
-            );
+                );
         }
 
         if args.enable_panel {
             println!(
                 "🎛️  The admin panel is available at http://{}:{}/_panel/",
                 &args.hostname, args.port
-            );
+                );
         }
 
         let server = serve(ServeOptions {
@@ -204,12 +222,12 @@ async fn main() -> std::io::Result<()> {
             cors_origins: args.cors,
         })
         .await
-        .map_err(|err| Error::new(ErrorKind::AddrInUse, err))?;
+            .map_err(|err| Error::new(ErrorKind::AddrInUse, err))?;
 
         println!(
             "🚀 Start serving requests at http://{}:{}\n",
             args.hostname, args.port
-        );
+            );
 
         // Run the server
         server.await
