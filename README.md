@@ -1,3 +1,9 @@
+<br/>
+
+## ⚠️ This project will be archived soon. The development will continue as an independent community fork on: https://github.com/webassemblylabs/wasm-workers-server
+
+<br/>
+
 <h1 align="center">Wasm Workers Server</h1>
 
 <p align="center">
